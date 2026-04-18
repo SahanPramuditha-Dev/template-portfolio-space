@@ -42,8 +42,8 @@ const CustomCursor = () => {
 
   useEffect(() => {
     if (!enabled) {
-      setTrail([]);
-      return undefined;
+      const frame = requestAnimationFrame(() => setTrail([]));
+      return () => cancelAnimationFrame(frame);
     }
     let lastTrailUpdate = 0;
     const moveCursor = (e) => {
@@ -104,7 +104,7 @@ const CustomCursor = () => {
   return (
     <>
       {/* Trail Effect */}
-      {trail.map((point, index) => (
+      {trail.map((point) => (
         <motion.div
           key={point.id}
           className="fixed pointer-events-none z-[9998] rounded-full hidden md:block"

@@ -2,8 +2,10 @@ import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Calendar, MapPin, Briefcase } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
+import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 
-const experienceData = [
+/*
+const EXPERIENCE_DATA = [
   {
     type: 'education',
     title: 'Bachelor of Information and Communication Technology (BICT)',
@@ -59,6 +61,7 @@ const experienceData = [
     skills: ['English Medium', 'Academic Foundation']
   }
 ];
+*/
 
 const ExperienceCard = ({ item, index }) => {
   return (
@@ -113,7 +116,7 @@ const ExperienceCard = ({ item, index }) => {
           </p>
 
           <div className="flex flex-wrap gap-2">
-            {item.skills.map((skill) => (
+            {(Array.isArray(item.skills) ? item.skills : []).map((skill) => (
               <span 
                 key={skill} 
                 className="px-3 py-1 text-xs font-mono rounded-full bg-primary border border-secondary text-accent hover:bg-accent hover:text-white transition-colors cursor-default"
@@ -130,12 +133,14 @@ const ExperienceCard = ({ item, index }) => {
 
 const Experience = () => {
   const ref = useRef(null);
+  const { data } = useCmsDoc(CMS_DOCS.experience, { items: [] });
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start end", "end start"]
   });
 
   const lineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+  const experienceItems = Array.isArray(data?.items) ? data.items : [];
 
   return (
     <SectionWrapper id="experience">
@@ -147,20 +152,26 @@ const Experience = () => {
             <span className="h-px bg-secondary flex-grow min-w-[60px] ml-0 sm:ml-4 opacity-50 w-full sm:w-auto order-3 sm:order-none"></span>
           </h2>
 
-          <div className="relative space-y-12">
-            {/* Center Line Background */}
-            <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-1 bg-secondary -translate-x-1/2 rounded-full" />
-            
-            {/* Animated Progress Line */}
-            <motion.div 
-              style={{ height: lineHeight }}
-              className="absolute left-8 md:left-1/2 top-0 w-1 bg-accent -translate-x-1/2 rounded-full z-0 shadow-[0_0_15px_rgb(var(--color-accent-rgb)_/_0.8)]"
-            />
+          {experienceItems.length === 0 ? (
+            <div className="rounded-2xl border border-secondary/50 bg-secondary/20 px-6 py-16 text-center text-text-muted">
+              No experience entries have been added yet. Use the admin panel to publish the timeline.
+            </div>
+          ) : (
+            <div className="relative space-y-12">
+              {/* Center Line Background */}
+              <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-1 bg-secondary -translate-x-1/2 rounded-full" />
+              
+              {/* Animated Progress Line */}
+              <motion.div 
+                style={{ height: lineHeight }}
+                className="absolute left-8 md:left-1/2 top-0 w-1 bg-accent -translate-x-1/2 rounded-full z-0 shadow-[0_0_15px_rgb(var(--color-accent-rgb)_/_0.8)]"
+              />
 
-            {experienceData.map((item, index) => (
-              <ExperienceCard key={index} item={item} index={index} />
-            ))}
-          </div>
+              {experienceItems.map((item, index) => (
+                <ExperienceCard key={item.title || index} item={item} index={index} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </SectionWrapper>

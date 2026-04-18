@@ -1,16 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Sparkles } from '@react-three/drei';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SectionWrapper from './SectionWrapper';
 import TiltCard from './TiltCard';
-import ISS3D from './ISS3D';
 import { shouldDisableHeavyVisuals } from '../utils/runtimeGuards';
+import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 
 gsap.registerPlugin(ScrollTrigger);
+const ISS3D = lazy(() => import('./ISS3D'));
 
-const skillCategories = [
+/*
+const SKILL_CATEGORIES = [
   {
     title: "Languages",
     skills: [
@@ -48,6 +50,7 @@ const skillCategories = [
     ]
   }
 ];
+*/
 
 const Skills = () => {
   const sectionRef = useRef(null);
@@ -58,6 +61,32 @@ const Skills = () => {
   const [highlightCategory, setHighlightCategory] = useState(null);
   const [issInfo, setIssInfo] = useState(null);
   const [issError, setIssError] = useState(false);
+  const { data: skillsDoc } = useCmsDoc(CMS_DOCS.skills, { items: [] });
+  const { data: siteDoc } = useCmsDoc(CMS_DOCS.site, null);
+  const skillGroups = Array.isArray(skillsDoc?.items) ? skillsDoc.items : [];
+  const hasSkills = skillGroups.length > 0;
+  const currentLearning = Array.isArray(siteDoc?.currentLearningJson) ? siteDoc.currentLearningJson : [];
+  const devEnvironment = Array.isArray(siteDoc?.devEnvironmentJson) ? siteDoc.devEnvironmentJson : [];
+
+const normalizeSkill = (skill) => {
+  if (typeof skill === 'string') {
+    return {
+      name: skill,
+      level: null,
+      proficiency: '',
+      rationale: '',
+      iconUrl: '',
+    };
+  }
+
+  return {
+    name: skill?.name || skill?.title || '',
+    level: Number.isFinite(Number(skill?.level)) ? Number(skill.level) : null,
+    proficiency: skill?.proficiency || '',
+    rationale: skill?.rationale || '',
+    iconUrl: skill?.iconUrl || skill?.imageUrl || skill?.icon || '',
+  };
+};
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -152,43 +181,144 @@ const Skills = () => {
           orbiting station.
         </p>
 
+        <div className="mb-8 grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-white/10 bg-secondary/20 p-5">
+            <h3 className="mb-2 text-lg font-bold text-text">Currently Learning</h3>
+            {currentLearning.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {currentLearning.map((item) => (
+                  <span key={item} className="rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-mono text-accent">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-text-muted">Add currently learning topics in the admin panel.</p>
+            )}
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-secondary/20 p-5">
+            <h3 className="mb-2 text-lg font-bold text-text">Dev Environment</h3>
+            {devEnvironment.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {devEnvironment.map((item) => (
+                  <span key={item} className="rounded-full border border-secondary/40 bg-primary/50 px-3 py-1 text-xs text-text-muted">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-text-muted">Add your development environment details in the admin panel.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="mb-8 flex flex-wrap items-center gap-3">
+          <a
+            href="#certifications"
+            className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-4 py-2 text-xs font-mono uppercase tracking-[0.14em] text-accent"
+          >
+            Certifications quick-links
+          </a>
+          <a
+            href="/resume"
+            className="inline-flex items-center gap-2 rounded-full border border-secondary/40 bg-primary/40 px-4 py-2 text-xs font-mono uppercase tracking-[0.14em] text-text-muted"
+          >
+            Dev environment + CV
+          </a>
+        </div>
+
         <div className="flex flex-col lg:flex-row gap-10 sm:gap-16 items-start skills-wrapper">
           {/* Left Column: Categorized Skills */}
-          <div className="w-full lg:w-3/5 space-y-12">
-            {skillCategories.map((category, idx) => (
-              <div
-                key={idx}
-                className="skill-category"
-                onMouseEnter={() => setHighlightCategory(category.title)}
-                onMouseLeave={() => setHighlightCategory(null)}
-              >
-                <h3 className="text-xl font-bold text-accent mb-6 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-accent rounded-full"></span>
-                  {category.title}
-                </h3>
-                <div className="grid md:grid-cols-2 gap-6">
-                  {category.skills.map((skill) => (
-                    <TiltCard key={skill.name}>
-                      <div className="group bg-primary/50 p-4 rounded-lg border border-secondary hover:border-accent/50 transition-colors h-full">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="font-bold text-text">{skill.name}</span>
-                          <span className="text-xs font-mono px-2 py-1 bg-secondary rounded text-accent">
-                            {skill.proficiency}
-                          </span>
-                        </div>
-                        <div className="h-1.5 bg-secondary rounded-full overflow-hidden mb-2">
-                          <div 
-                            className="h-full bg-accent rounded-full transform origin-left transition-transform duration-1000"
-                            style={{ width: `${skill.level}%` }}
-                          ></div>
-                        </div>
-                        <p className="text-xs text-text-muted">{skill.rationale}</p>
-                      </div>
-                    </TiltCard>
-                  ))}
-                </div>
+          <div className="w-full lg:w-3/5">
+            {!hasSkills ? (
+              <div className="rounded-2xl border border-secondary/50 bg-secondary/20 px-6 py-16 text-center text-text-muted">
+                No skills have been added yet. Use the admin panel to publish skill groups.
               </div>
-            ))}
+            ) : (
+              <div className="space-y-12">
+                {skillGroups.map((category, idx) => (
+                  (() => {
+                    const groupSkills = Array.isArray(category.skills)
+                      ? category.skills
+                      : Array.isArray(category.skillsJson)
+                        ? category.skillsJson
+                        : [];
+
+                    return (
+                  <div
+                    key={category.title || idx}
+                    className="skill-category"
+                    onMouseEnter={() => setHighlightCategory(category.title)}
+                    onMouseLeave={() => setHighlightCategory(null)}
+                  >
+                    <h3 className="text-xl font-bold text-accent mb-6 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-accent rounded-full"></span>
+                      {category.title}
+                    </h3>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {groupSkills.map((skill) => (
+                        <TiltCard key={typeof skill === 'string' ? skill : skill.name || skill.title || JSON.stringify(skill)}>
+                          <div className="group bg-primary/50 p-4 rounded-lg border border-secondary hover:border-accent/50 transition-colors h-full">
+                      <div className="flex items-start gap-3 mb-2">
+                              {(() => {
+                                const normalized = normalizeSkill(skill);
+                                return (
+                                  <>
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-secondary bg-background/40">
+                          {normalized.iconUrl ? (
+                            <img
+                              src={normalized.iconUrl}
+                              alt=""
+                              loading="lazy"
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent">
+                              {normalized.name ? normalized.name.slice(0, 2) : 'Sk'}
+                            </span>
+                          )}
+                        </div>
+                        <span className="min-w-0 truncate font-bold text-text">{normalized.name || 'Skill'}</span>
+                                    {normalized.proficiency ? (
+                                      <span className="text-xs font-mono px-2 py-1 bg-secondary rounded text-accent">
+                                        {normalized.proficiency}
+                                      </span>
+                                    ) : null}
+                                  </>
+                                );
+                              })()}
+                            </div>
+                            {(() => {
+                              const normalized = normalizeSkill(skill);
+                              return normalized.level !== null ? (
+                                <div className="h-1.5 bg-secondary rounded-full overflow-hidden mb-2">
+                                  <div
+                                    className="h-full bg-accent rounded-full transform origin-left transition-transform duration-1000"
+                                    style={{ width: `${normalized.level}%` }}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="mb-2 inline-flex rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-mono text-accent">
+                                  Added in admin
+                                </div>
+                              );
+                            })()}
+                            {(() => {
+                              const normalized = normalizeSkill(skill);
+                              return normalized.rationale ? (
+                                <p className="text-xs text-text-muted">{normalized.rationale}</p>
+                              ) : null;
+                            })()}
+                          </div>
+                        </TiltCard>
+                      ))}
+                    </div>
+                  </div>
+                    );
+                  })()
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right Column: ISS (Local GLB) */}
@@ -223,15 +353,17 @@ const Skills = () => {
                      <pointLight position={[-6, 2, -4]} intensity={0.6} color="#93c5fd" />
                      <pointLight position={[6, 3, 4]} intensity={0.8} />
 
-                    <ISS3D highlightCategory={highlightCategory} />
-                    <Sparkles
-                      count={50}
-                      scale={10}
-                      size={2}
-                      speed={0.3}
-                      opacity={0.4}
-                      color="#60a5fa"
-                    />
+                     <Suspense fallback={null}>
+                       <ISS3D highlightCategory={highlightCategory} />
+                     </Suspense>
+                     <Sparkles
+                       count={50}
+                       scale={10}
+                       size={2}
+                       speed={0.3}
+                       opacity={0.4}
+                       color="#60a5fa"
+                     />
 
                      <OrbitControls
                        ref={controlsRef}

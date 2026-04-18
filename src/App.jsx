@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useEffect } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -11,8 +11,6 @@ import Testimonials from './components/Testimonials';
 import Blog from './components/Blog';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
-import ThreeBackground from './components/ThreeBackground';
-import CustomCursor from './components/CustomCursor';
 import Preloader from './components/Preloader';
 import SEO from './components/SEO';
 import StructuredData from './components/StructuredData';
@@ -24,7 +22,9 @@ import SmoothScroll from './components/SmoothScroll';
 import { Analytics } from '@vercel/analytics/react';
 import { isBotUserAgent, shouldDisableHeavyVisuals } from './utils/runtimeGuards';
 
-// Ensure React is not duplicated and hooks are used correctly
+const ThreeBackground = lazy(() => import('./components/ThreeBackground'));
+const CustomCursor = lazy(() => import('./components/CustomCursor'));
+
 function App() {
   const [loading, setLoading] = useState(() => !isBotUserAgent());
   const [heavyVisualsEnabled, setHeavyVisualsEnabled] = useState(() => !shouldDisableHeavyVisuals());
@@ -36,21 +36,21 @@ function App() {
       if (animationFrameId) return;
 
       animationFrameId = requestAnimationFrame(() => {
-        const cards = document.getElementsByClassName("glass-card");
+        const cards = document.getElementsByClassName('glass-card');
         for (const card of cards) {
           const rect = card.getBoundingClientRect();
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;
-          card.style.setProperty("--mouse-x", `${x}px`);
-          card.style.setProperty("--mouse-y", `${y}px`);
+          card.style.setProperty('--mouse-x', `${x}px`);
+          card.style.setProperty('--mouse-y', `${y}px`);
         }
         animationFrameId = null;
       });
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove);
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener('mousemove', handleMouseMove);
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
   }, []);
@@ -79,18 +79,22 @@ function App() {
       <ScrollToTop />
       <SmoothScroll />
       <AnimatePresence mode="wait">
-        {loading && <Preloader onComplete={() => setLoading(false)} />}
+        {loading && <Preloader brand="Sahan - Space Portfolio" onComplete={() => setLoading(false)} />}
       </AnimatePresence>
 
       {!loading && (
         <div className="bg-primary min-h-screen text-text-muted selection:bg-accent selection:text-primary transition-colors duration-300">
-          {heavyVisualsEnabled && <CustomCursor />}
+          {heavyVisualsEnabled && (
+            <Suspense fallback={null}>
+              <CustomCursor />
+            </Suspense>
+          )}
           {heavyVisualsEnabled && (
             <Suspense fallback={null}>
               <ThreeBackground />
             </Suspense>
           )}
-          
+
           <div className="relative z-10">
             <Navbar />
             <main id="main-content">

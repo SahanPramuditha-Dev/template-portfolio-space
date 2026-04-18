@@ -1,4 +1,5 @@
 import React from 'react';
+import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 
 const DEFAULT_SITE_URL = 'https://www.sahanpramuditha.me';
 
@@ -12,18 +13,20 @@ const normalizeSiteUrl = (rawUrl) => {
 
 const StructuredData = () => {
   const siteUrl = normalizeSiteUrl(import.meta.env.VITE_SITE_URL || DEFAULT_SITE_URL);
+  const { data: siteDoc } = useCmsDoc(CMS_DOCS.site, null);
+  const socialLinks = Array.isArray(siteDoc?.socialLinksJson) ? siteDoc.socialLinksJson : [];
+  const sameAs = socialLinks.map((link) => link.href).filter(Boolean);
+  const alumniOf = Array.isArray(siteDoc?.educationJson) && siteDoc.educationJson.length > 0
+    ? siteDoc.educationJson[0].institution
+    : 'University of Colombo - Faculty of Technology';
 
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Person",
-    "name": "Sahan Pramuditha",
-    "jobTitle": "Software Engineer & Creative Developer",
+    "name": siteDoc?.heroTitle || "Sahan Pramuditha",
+    "jobTitle": siteDoc?.heroSubtitle || "Software Engineer & Creative Developer",
     "url": siteUrl,
-    "sameAs": [
-      "https://github.com/SahanPramuditha-Dev",
-      "https://www.linkedin.com/in/sahan-pramuditha-754761356/",
-      "https://twitter.com/sahanpramuditha"
-    ],
+    "sameAs": sameAs,
     "address": {
       "@type": "PostalAddress",
       "addressCountry": "LK",
@@ -31,7 +34,7 @@ const StructuredData = () => {
     },
     "alumniOf": {
       "@type": "EducationalOrganization",
-      "name": "University of Colombo - Faculty of Technology"
+      "name": alumniOf
     },
     "knowsAbout": [
       "Software Engineering",
@@ -45,11 +48,11 @@ const StructuredData = () => {
   const websiteStructuredData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "Sahan Pramuditha Portfolio",
+    "name": `${siteDoc?.heroTitle || 'Sahan Pramuditha'} Portfolio`,
     "url": siteUrl,
     "author": {
       "@type": "Person",
-      "name": "Sahan Pramuditha"
+      "name": siteDoc?.heroTitle || "Sahan Pramuditha"
     }
   };
 

@@ -4,6 +4,11 @@ import { Float, Sphere, MeshDistortMaterial, OrbitControls, Stars } from '@react
 import { useTheme } from '../context/ThemeContext';
 import { shouldDisableHeavyVisuals } from '../utils/runtimeGuards';
 
+const seededValue = (seed, offset = 0) => {
+  const x = Math.sin(seed * 12.9898 + offset * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+};
+
 const PaperPlane = ({ theme }) => {
   const ref = useRef();
   
@@ -59,10 +64,10 @@ const AbstractMailbox = () => {
       
       {/* Floating Particles */}
       {Array.from({ length: 20 }).map((_, i) => (
-        <Float key={i} speed={1 + Math.random()} rotationIntensity={2} floatIntensity={2} position={[
-          (Math.random() - 0.5) * 6,
-          (Math.random() - 0.5) * 6,
-          (Math.random() - 0.5) * 6
+        <Float key={i} speed={1 + seededValue(i, 1)} rotationIntensity={2} floatIntensity={2} position={[
+          (seededValue(i, 2) - 0.5) * 6,
+          (seededValue(i, 3) - 0.5) * 6,
+          (seededValue(i, 4) - 0.5) * 6
         ]}>
           <mesh>
             <boxGeometry args={[0.1, 0.1, 0.1]} />
@@ -83,9 +88,10 @@ const Contact3D = () => {
     const update = () => {
       setEnabled(!shouldDisableHeavyVisuals());
     };
-    update();
+    const frame = requestAnimationFrame(update);
     reduceMotionQuery.addEventListener('change', update);
     return () => {
+      cancelAnimationFrame(frame);
       reduceMotionQuery.removeEventListener('change', update);
     };
   }, []);

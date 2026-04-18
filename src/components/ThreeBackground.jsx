@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Points, PointMaterial, Float, Icosahedron } from '@react-three/drei';
 import * as random from 'maath/random/dist/maath-random.esm';
@@ -12,19 +12,20 @@ gsap.registerPlugin(ScrollTrigger);
 const FloatingShapes = () => {
   const { theme } = useTheme();
   const color = theme === 'dark' ? "#38bdf8" : "#0284c7";
-  const [shapes, setShapes] = useState([]);
-
-  useEffect(() => {
-    const arr = Array.from({ length: 15 }).map(() => ({
+  const shapes = useMemo(() => {
+    const seed = (i, offset = 0) => {
+      const x = Math.sin(i * 12.9898 + offset * 78.233) * 43758.5453;
+      return x - Math.floor(x);
+    };
+    return Array.from({ length: 15 }, (_, i) => ({
       position: [
-        (Math.random() - 0.5) * 10,
-        (Math.random() - 0.5) * 10,
-        (Math.random() - 0.5) * 2
+        (seed(i, 1) - 0.5) * 10,
+        (seed(i, 2) - 0.5) * 10,
+        (seed(i, 3) - 0.5) * 2
       ],
-      scale: Math.random() * 0.05 + 0.02,
-      speed: Math.random() * 2 + 1,
+      scale: seed(i, 4) * 0.05 + 0.02,
+      speed: seed(i, 5) * 2 + 1,
     }));
-    setShapes(arr);
   }, []);
 
   return (
@@ -107,9 +108,10 @@ const ThreeBackground = () => {
       setEnabled(!shouldDisableHeavyVisuals());
     };
 
-    update();
+    const frame = requestAnimationFrame(update);
     reduceMotionQuery.addEventListener('change', update);
     return () => {
+      cancelAnimationFrame(frame);
       reduceMotionQuery.removeEventListener('change', update);
     };
   }, []);

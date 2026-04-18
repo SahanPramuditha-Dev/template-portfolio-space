@@ -10,7 +10,10 @@ const KeyboardShortcuts = () => {
     { key: '?', description: 'Show/hide keyboard shortcuts' },
     { key: 'G H', description: 'Go to Home' },
     { key: 'G A', description: 'Go to About' },
+    { key: 'G E', description: 'Go to Experience' },
     { key: 'G P', description: 'Go to Projects' },
+    { key: 'G T', description: 'Go to Testimonials' },
+    { key: 'G B', description: 'Go to Blog' },
     { key: 'G C', description: 'Go to Contact' },
     { key: 'ESC', description: 'Close modals/dialogs' },
   ];
@@ -48,8 +51,20 @@ const KeyboardShortcuts = () => {
               document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' });
               setIsOpen(false);
               break;
+            case 'e':
+              document.querySelector('#experience')?.scrollIntoView({ behavior: 'smooth' });
+              setIsOpen(false);
+              break;
             case 'p':
               document.querySelector('#projects')?.scrollIntoView({ behavior: 'smooth' });
+              setIsOpen(false);
+              break;
+            case 't':
+              document.querySelector('#testimonials')?.scrollIntoView({ behavior: 'smooth' });
+              setIsOpen(false);
+              break;
+            case 'b':
+              document.querySelector('#blog')?.scrollIntoView({ behavior: 'smooth' });
               setIsOpen(false);
               break;
             case 'c':
@@ -81,7 +96,10 @@ const KeyboardShortcuts = () => {
             <p className="text-text font-mono text-sm">
               Press <kbd className="px-2 py-1 bg-primary rounded border border-accent/30">H</kbd> for Home,{' '}
               <kbd className="px-2 py-1 bg-primary rounded border border-accent/30">A</kbd> for About,{' '}
+              <kbd className="px-2 py-1 bg-primary rounded border border-accent/30">E</kbd> for Experience,{' '}
               <kbd className="px-2 py-1 bg-primary rounded border border-accent/30">P</kbd> for Projects,{' '}
+              <kbd className="px-2 py-1 bg-primary rounded border border-accent/30">T</kbd> for Testimonials,{' '}
+              <kbd className="px-2 py-1 bg-primary rounded border border-accent/30">B</kbd> for Blog,{' '}
               <kbd className="px-2 py-1 bg-primary rounded border border-accent/30">C</kbd> for Contact
             </p>
           </motion.div>

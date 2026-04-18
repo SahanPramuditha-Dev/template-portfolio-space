@@ -6,6 +6,7 @@ import { shouldDisableHeavyVisuals } from '../utils/runtimeGuards';
 
 const FloatingShape = ({ position, color, speed, rotationIntensity, floatIntensity, Component }) => {
   const ref = useRef();
+  const ShapeComponent = Component;
   
   useFrame((state) => {
     if (!ref.current) return;
@@ -16,7 +17,7 @@ const FloatingShape = ({ position, color, speed, rotationIntensity, floatIntensi
 
   return (
     <Float speed={speed} rotationIntensity={rotationIntensity} floatIntensity={floatIntensity} position={position}>
-      <Component args={[1, 0]} ref={ref} scale={0.8}>
+      <ShapeComponent args={[1, 0]} ref={ref} scale={0.8}>
         <MeshDistortMaterial
             color={color}
             speed={2}
@@ -24,7 +25,7 @@ const FloatingShape = ({ position, color, speed, rotationIntensity, floatIntensi
             roughness={0.2}
             metalness={0.8}
         />
-      </Component>
+      </ShapeComponent>
     </Float>
   );
 };

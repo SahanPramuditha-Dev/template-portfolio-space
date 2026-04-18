@@ -13,6 +13,20 @@ import './index.print.css'
 import App from './App.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import AdminPage from './pages/AdminPage.jsx'
+import BlogPage from './pages/BlogPage.jsx'
+import BlogPostPage from './pages/BlogPostPage.jsx'
+import ResumePage from './pages/ResumePage.jsx'
+import ResourcesPage from './pages/ResourcesPage.jsx'
+import TestimonialsPage from './pages/TestimonialsPage.jsx'
+import ServicesPage from './pages/ServicesPage.jsx'
+import OpenSourcePage from './pages/OpenSourcePage.jsx'
+import PrivacyPage from './pages/PrivacyPage.jsx'
+import CookiePolicyPage from './pages/CookiePolicyPage.jsx'
+import ContactPage from './pages/ContactPage.jsx'
+import NotFoundPage from './pages/NotFoundPage.jsx'
+import RouteAnalytics from './components/RouteAnalytics.jsx'
 
 // Smooth Scroll Polyfill for browsers without native scroll-behavior support
 (() => {
@@ -46,7 +60,24 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
       <ThemeProvider>
-        <App />
+        <BrowserRouter>
+          <RouteAnalytics />
+          <Routes>
+            <Route path="/" element={<App />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/blog/:slug" element={<BlogPostPage />} />
+            <Route path="/resume" element={<ResumePage />} />
+            <Route path="/resources" element={<ResourcesPage />} />
+            <Route path="/testimonials" element={<TestimonialsPage />} />
+            <Route path="/services" element={<ServicesPage />} />
+            <Route path="/opensource" element={<OpenSourcePage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/cookies" element={<CookiePolicyPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </BrowserRouter>
       </ThemeProvider>
     </ErrorBoundary>
   </StrictMode>,

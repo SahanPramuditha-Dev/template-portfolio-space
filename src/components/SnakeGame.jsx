@@ -85,10 +85,10 @@ const SnakeGame = ({ isOpen, onClose }) => {
     generateFood();
   };
 
-  const togglePause = () => {
+  const togglePause = useCallback(() => {
     if (gameOver || !isPlaying) return;
     setIsPaused(prev => !prev);
-  };
+  }, [gameOver, isPlaying]);
 
   const spawnParticles = (x, y, color) => {
     const newParticles = [];
@@ -178,7 +178,7 @@ const SnakeGame = ({ isOpen, onClose }) => {
     };
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isOpen, handleInput, isPlaying, isPaused]);
+  }, [isOpen, handleInput, isPlaying, togglePause]);
 
   const handleTouchStart = (e) => {
     touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };

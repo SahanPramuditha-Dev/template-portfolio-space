@@ -6,6 +6,11 @@ import gsap from 'gsap';
 import { getPerformanceConfig, earthConfig } from '../config/earthConfig';
 import { shouldDisableHeavyVisuals } from '../utils/runtimeGuards';
 
+const seededValue = (seed, offset = 0) => {
+  const x = Math.sin(seed * 12.9898 + offset * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+};
+
 const AtmosphereShaderMaterial = {
   uniforms: {
     viewVector: { value: new THREE.Vector3(0, 0, 1) },
@@ -201,9 +206,8 @@ const TechIcon = ({ color, position, explode, onExplosionComplete, onFlash }) =>
     );
 };
 
-const OrbitingSatellite = ({ color, radius = 2.5, speed = 0.35, phase = 0, tilt = [0, 0, 0], explode, onExplosionComplete, onFlash }) => {
+const OrbitingSatellite = ({ color, radius = 2.5, speed = 0.35, phase = 0, tilt = [0, 0, 0], explode, onExplosionComplete, onFlash, explodePosRef }) => {
   const groupRef = useRef();
-  const { scene } = useThree();
 
   useFrame((state) => {
     if (!groupRef.current) return;
@@ -214,10 +218,10 @@ const OrbitingSatellite = ({ color, radius = 2.5, speed = 0.35, phase = 0, tilt 
     groupRef.current.position.set(x, y, z);
     groupRef.current.rotation.y = -t + Math.PI / 2;
 
-    if (explode && scene.userData) {
+    if (explode && explodePosRef) {
       const pos = new THREE.Vector3();
       groupRef.current.getWorldPosition(pos);
-      scene.userData.explodePos = pos;
+      explodePosRef.current = pos;
     }
   });
 
@@ -271,37 +275,34 @@ const OrbitTrail = ({ radius = 2.5, tilt = [0, 0, 0], color = '#38bdf8', opacity
 
 const StarWarp = ({ count = 2000, paused = false, dim = 0 }) => {
     const mesh = useRef();
-    const light = useRef();
     
     const dummy = useMemo(() => new THREE.Object3D(), []);
     const particles = useMemo(() => {
         const temp = [];
         for (let i = 0; i < count; i++) {
-            const t = Math.random() * 100;
-            const factor = 20 + Math.random() * 100;
-            const speed = 0.01 + Math.random() / 200;
-            const xFactor = -50 + Math.random() * 100;
-            const yFactor = -50 + Math.random() * 100;
-            const zFactor = -50 + Math.random() * 100;
+            const t = seededValue(i, 1) * 100;
+            const factor = 20 + seededValue(i, 2) * 100;
+            const speed = 0.01 + seededValue(i, 3) / 200;
+            const xFactor = -50 + seededValue(i, 4) * 100;
+            const yFactor = -50 + seededValue(i, 5) * 100;
+            const zFactor = -50 + seededValue(i, 6) * 100;
             temp.push({ t, factor, speed, xFactor, yFactor, zFactor, mx: 0, my: 0 });
         }
         return temp;
     }, [count]);
 
-    useFrame((state) => {
+    useFrame(() => {
         if (paused) return;
         particles.forEach((particle, i) => {
-            let { t, factor, speed, xFactor, yFactor, zFactor } = particle;
+            let { t, factor, speed } = particle;
             t = particle.t += speed / 2;
-            const a = Math.cos(t) + Math.sin(t * 1) / 10;
-            const b = Math.sin(t) + Math.cos(t * 2) / 10;
             const s = Math.cos(t);
             
             particle.zFactor += 0.1;
             if (particle.zFactor > 50) particle.zFactor = -50;
 
             dummy.position.set(
-                (particle.xFactor + Math.cos((t / 10) * factor) + (Math.sin(t * 1) * factor) / 10),
+                (particle.xFactor + Math.cos((t / 10) * factor) + (Math.sin(t) * factor) / 10),
                 (particle.yFactor + Math.sin((t / 10) * factor) + (Math.cos(t * 2) * factor) / 10),
                 particle.zFactor
             );
@@ -328,12 +329,11 @@ const StarWarp = ({ count = 2000, paused = false, dim = 0 }) => {
     );
 };
 
-const EarthSystem = ({ explode, onExplosionComplete, focused, cinematic, destructing, blackout, config: customConfig }) => {
+const EarthSystem = ({ explode, onExplosionComplete, focused, cinematic, destructing, blackout, config: customConfig, lightDirRef, explodePosRef }) => {
   const earthRef = useRef();
   const earthWireframeRef = useRef();
   const earthShadowRef = useRef();
   const terminatorRef = useRef();
-  const { scene } = useThree();
   const moonGroupRef = useRef();
   const moonRef = useRef();
   const techRingRef = useRef();
@@ -412,7 +412,7 @@ const EarthSystem = ({ explode, onExplosionComplete, focused, cinematic, destruc
       particleRef.current.rotation.x += delta * config.particles.rotationSpeed.x;
     }
 
-    const baseDir = scene.userData?.lightDir || new THREE.Vector3(1, 0, 0);
+    const baseDir = lightDirRef?.current || new THREE.Vector3(1, 0, 0);
     if (terminatorRef.current) {
       terminatorRef.current.material.uniforms.lightDir.value.copy(baseDir);
     }
@@ -616,6 +616,7 @@ const EarthSystem = ({ explode, onExplosionComplete, focused, cinematic, destruc
             explode={explode} 
             onExplosionComplete={onExplosionComplete} 
             onFlash={() => { flashRef.current = 1; }}
+            explodePosRef={explodePosRef}
         />
         <OrbitingSatellite color="#f7df1e" radius={2.45} speed={0.4} phase={1.7} tilt={[0, 0, 0.2]} />
         <OrbitingSatellite color="#68a063" radius={2.6} speed={0.32} phase={3.1} tilt={[0.2, 0, 0]} />
@@ -640,32 +641,28 @@ const EarthSystem = ({ explode, onExplosionComplete, focused, cinematic, destruc
 };
 
 const SatelliteExplosion = ({ onComplete, onFlash }) => {
-  const [debrisRender, setDebrisRender] = useState([]);
-  const debrisRef = useRef([]);
-  useEffect(() => {
-    const arr = Array.from({ length: 160 }, () => {
-      const t = Math.random();
+  const debris = useMemo(() => {
+    return Array.from({ length: 160 }, (_, i) => {
+      const t = seededValue(i, 1);
       const type = t < 0.4 ? 'box' : t < 0.8 ? 'tetra' : 'panel';
-      const speed = 6 + Math.random() * 8;
+      const speed = 6 + seededValue(i, 2) * 8;
       const dir = new THREE.Vector3(
-        (Math.random() - 0.5),
-        (Math.random() - 0.5),
-        (Math.random() - 0.5)
+        seededValue(i, 3) - 0.5,
+        seededValue(i, 4) - 0.5,
+        seededValue(i, 5) - 0.5
       ).normalize().multiplyScalar(speed);
-      const entry = {
+      return {
         velocity: dir,
-        angular: new THREE.Vector3(Math.random(), Math.random(), Math.random()).multiplyScalar(2),
-        scale: 0.25 + Math.random() * 0.35,
+        angular: new THREE.Vector3(seededValue(i, 6), seededValue(i, 7), seededValue(i, 8)).multiplyScalar(2),
+        scale: 0.25 + seededValue(i, 9) * 0.35,
         life: 1,
-        color: Math.random() > 0.5 ? '#f59e0b' : '#ef4444',
-        metal: Math.random() > 0.7,
-        type
+        color: seededValue(i, 10) > 0.5 ? '#f59e0b' : '#ef4444',
+        metal: seededValue(i, 11) > 0.7,
+        type,
       };
-      return entry;
     });
-    debrisRef.current = arr;
-    setDebrisRender(arr.map(p => ({ type: p.type, color: p.color, metal: p.metal, scale: p.scale })));
   }, []);
+  const debrisRef = useRef(debris.map((p) => ({ ...p })));
 
   const group = useRef();
   const shockwaveRef = useRef();
@@ -673,7 +670,7 @@ const SatelliteExplosion = ({ onComplete, onFlash }) => {
   const flashRef = useRef();
   const timeRef = useRef(0);
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     timeRef.current += delta;
     const d = Math.min(delta, 0.033);
 
@@ -728,11 +725,11 @@ const SatelliteExplosion = ({ onComplete, onFlash }) => {
     }
     const timeout = setTimeout(onComplete, 2400);
     return () => clearTimeout(timeout);
-  }, [onComplete]);
+  }, [onComplete, onFlash]);
 
   return (
     <group ref={group} position={[0, 0, 0]}>
-      {debrisRender.map((p, i) => (
+      {debris.map((p, i) => (
         <mesh key={i}>
           {p.type === 'box' && <boxGeometry args={[0.18, 0.18, 0.18]} />}
           {p.type === 'tetra' && <tetrahedronGeometry args={[0.2, 0]} />}
@@ -759,14 +756,14 @@ const SatelliteExplosion = ({ onComplete, onFlash }) => {
   );
 };
 
-const CameraRig = ({ controlsRef, focused, cinematic, destructing, trackLat = 7.0, trackLon = 80.0 }) => {
-  const { camera, scene } = useThree();
+const CameraRig = ({ controlsRef, focused, cinematic, destructing, trackLat = 7.0, trackLon = 80.0, explodePosRef }) => {
+  const { camera } = useThree();
 
   useEffect(() => {
     if (!controlsRef.current) return;
     
     if (destructing) {
-      const target = scene.userData?.explodePos || new THREE.Vector3(2.5, 0, 0);
+      const target = explodePosRef?.current || new THREE.Vector3(2.5, 0, 0);
       const normal = target.clone().normalize();
       const camPos = target.clone().add(normal.multiplyScalar(1.2));
       gsap.to(camera.position, { x: camPos.x, y: camPos.y + 0.25, z: camPos.z, duration: 1.2, ease: 'power2.out' });
@@ -793,7 +790,7 @@ const CameraRig = ({ controlsRef, focused, cinematic, destructing, trackLat = 7.
         onUpdate: () => controlsRef.current.update()
       });
     }
-  }, [focused, cinematic, destructing, camera, controlsRef]);
+  }, [focused, cinematic, destructing, camera, controlsRef, explodePosRef]);
 
   useEffect(() => {
     const desired = cinematic || destructing ? 40 : 45;
@@ -981,6 +978,11 @@ const TechAnimation3D = () => {
     };
   }, [zoomEnabled, enabled]);
 
+  const controlsRef = useRef();
+  const mainLightRef = useRef();
+  const lightDirRef = useRef(new THREE.Vector3(1, 0, 0));
+  const explodePosRef = useRef(null);
+
   if (!enabled) {
     return (
       <div
@@ -990,32 +992,13 @@ const TechAnimation3D = () => {
     );
   }
 
-  const controlsRef = useRef();
-  const mainLightRef = useRef();
-  const lightDirRef = useRef(new THREE.Vector3(1, 0, 0));
-
   const LightSync = () => {
-    const { scene } = useThree();
     useFrame(() => {
       if (!mainLightRef.current) return;
       const worldPos = new THREE.Vector3();
       mainLightRef.current.getWorldPosition(worldPos);
       lightDirRef.current.copy(worldPos).normalize();
-      if (scene.userData && scene.userData.lightDir) {
-        scene.userData.lightDir.copy(lightDirRef.current);
-      }
     });
-    return null;
-  };
-
-  const LightBridge = () => {
-    const { scene } = useThree();
-    useEffect(() => {
-      scene.userData.lightDir = lightDirRef.current;
-      return () => {
-        scene.userData.lightDir = null;
-      };
-    }, [scene]);
     return null;
   };
 
@@ -1033,7 +1016,6 @@ const TechAnimation3D = () => {
             <pointLight position={[-5, -3, -5]} intensity={1.2} color="#3b82f6" />
             <spotLight position={[5, 0, 5]} intensity={2.2} angle={0.55} penumbra={1} color="#a855f7" />
 
-            <LightBridge />
             <LightSync />
 
             <React.Suspense fallback={null}>
@@ -1045,10 +1027,12 @@ const TechAnimation3D = () => {
                   destructing={destructing}
                   blackout={blackoutLevel > 0.4}
                   config={earthConfig}
+                  lightDirRef={lightDirRef}
+                  explodePosRef={explodePosRef}
                />
             </React.Suspense>
             
-            <CameraRig controlsRef={controlsRef} focused={focused} cinematic={cinematic} destructing={destructing} trackLat={trackLat} trackLon={trackLon} />
+            <CameraRig controlsRef={controlsRef} focused={focused} cinematic={cinematic} destructing={destructing} trackLat={trackLat} trackLon={trackLon} explodePosRef={explodePosRef} />
             <OrbitControls 
                 ref={controlsRef}
                 enableZoom={false} 

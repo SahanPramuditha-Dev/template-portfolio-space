@@ -6,6 +6,7 @@ const ImageWithFallback = ({
   alt, 
   className = '', 
   fallbackClassName = '',
+  sources = [],
   onError,
   ...props 
 }) => {
@@ -42,16 +43,39 @@ const ImageWithFallback = ({
       {isLoading && (
         <div className={`absolute inset-0 bg-secondary/20 animate-pulse rounded ${className.split(' ')[0] || ''}`} />
       )}
-      <img
-        src={src}
-        alt={alt}
-        className={`${className} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
-        onError={handleError}
-        onLoad={handleLoad}
-        loading="lazy"
-        decoding="async"
-        {...props}
-      />
+      {Array.isArray(sources) && sources.length > 0 ? (
+        <picture className="block">
+          {sources.map((source) => (
+            <source
+              key={`${source.type || 'image'}-${source.srcSet}`}
+              srcSet={source.srcSet}
+              type={source.type}
+              media={source.media}
+            />
+          ))}
+          <img
+            src={src}
+            alt={alt}
+            className={`${className} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+            onError={handleError}
+            onLoad={handleLoad}
+            loading="lazy"
+            decoding="async"
+            {...props}
+          />
+        </picture>
+      ) : (
+        <img
+          src={src}
+          alt={alt}
+          className={`${className} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+          onError={handleError}
+          onLoad={handleLoad}
+          loading="lazy"
+          decoding="async"
+          {...props}
+        />
+      )}
     </div>
   );
 };

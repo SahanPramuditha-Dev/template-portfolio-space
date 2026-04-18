@@ -1,14 +1,24 @@
 import React, { useState } from 'react';
-import { Palette, Check } from 'lucide-react';
+import { Palette, Check, Moon, SunMedium } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ThemeToggle = () => {
-  const { accentColor, changeAccentColor, colors } = useTheme();
+  const { theme, toggleTheme, accentColor, changeAccentColor, colors } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="flex items-center gap-2 relative">
+      <motion.button
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
+        onClick={toggleTheme}
+        className="p-2 rounded-full bg-secondary text-accent border border-accent/20 hover:border-accent hover:shadow-[0_0_15px_rgb(var(--color-accent-rgb)_/_0.3)] transition-all duration-300"
+        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+      >
+        {theme === 'dark' ? <SunMedium size={20} /> : <Moon size={20} />}
+      </motion.button>
+
       {/* Color Picker Button */}
       <motion.button
         whileHover={{ scale: 1.1 }}

@@ -1,7 +1,10 @@
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 
-const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const seededValue = (seed, offset = 0) => {
+  const x = Math.sin(seed * 12.9898 + offset * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+};
 
 const SmokePuff = React.forwardRef(({ position, scale, opacity, color = '#94a3b8' }, ref) => (
   <mesh ref={ref} position={position} scale={scale}>
@@ -17,7 +20,7 @@ const SmokePuff = React.forwardRef(({ position, scale, opacity, color = '#94a3b8
 ));
 SmokePuff.displayName = 'SmokePuff';
 
-const Rocket = ({ t }) => {
+const Rocket = ({ clockRef, duration }) => {
   const rocketRef = useRef();
   const flameRef = useRef();
   const lightRef = useRef();
@@ -25,6 +28,7 @@ const Rocket = ({ t }) => {
 
   useFrame(() => {
     if (!rocketRef.current) return;
+    const t = (clockRef.current % duration) / duration;
     rocketRef.current.position.y = t * 6.5;
     rocketRef.current.rotation.z = Math.sin(t * 1.5) * 0.02;
     if (flameRef.current) {
@@ -114,13 +118,13 @@ const RocketLaunch3D = () => {
     () =>
       Array.from({ length: 18 }).map((_, i) => ({
         offset: i * 0.08,
-        baseX: (Math.random() - 0.5) * 1.2,
-        baseZ: (Math.random() - 0.5) * 1.2,
+        baseX: (seededValue(i, 1) - 0.5) * 1.2,
+        baseZ: (seededValue(i, 2) - 0.5) * 1.2,
       })),
     []
   );
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     clockRef.current = (clockRef.current + delta) % duration;
     const t = clockRef.current / duration;
     smokeRef.current.forEach((mesh, i) => {
@@ -144,7 +148,7 @@ const RocketLaunch3D = () => {
       <pointLight position={[2, 1, 2]} intensity={0.6} color="#f97316" />
 
       <LaunchPad />
-      <Rocket t={easeInOutCubic((clockRef.current % duration) / duration)} />
+      <Rocket clockRef={clockRef} duration={duration} />
 
       {smokePuffs.map((_, i) => (
         <SmokePuff

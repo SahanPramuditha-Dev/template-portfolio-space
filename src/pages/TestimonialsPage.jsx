@@ -1,39 +1,32 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Quote, Star } from 'lucide-react';
-import SectionWrapper from './SectionWrapper';
+import { Star, Quote } from 'lucide-react';
+import SEO from '../components/SEO';
+import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 
-const Testimonials = () => {
+const TestimonialsPage = () => {
   const { data } = useCmsDoc(CMS_DOCS.testimonials, { items: [] });
   const testimonials = Array.isArray(data?.items) ? data.items : [];
 
   return (
-    <SectionWrapper id="testimonials" className="relative overflow-hidden py-24">
-      <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
-        <div className="text-center mb-12 md:mb-16">
-          <h2 className="flex items-center justify-center text-2xl md:text-3xl font-bold text-text mb-4 font-display gradient-text">
-            <span className="text-accent font-mono text-xl mr-2">04.</span> Social Proof
-          </h2>
-          <p className="text-text-muted max-w-lg mx-auto">
-            Feedback from clients, peers, and collaborators can live here once added in the admin panel.
-          </p>
-        </div>
-
+    <>
+      <SEO
+        title="Testimonials | Sahan Pramuditha"
+        description="Client, peer, and mentor feedback from projects, collaborations, and professional work."
+        canonicalPath="/testimonials"
+      />
+      <PageShell
+        eyebrow="Social Proof"
+        title="What people say about the work."
+        description="Peer feedback, client notes, and recommendations can live here once added in the admin panel."
+      >
         {testimonials.length === 0 ? (
-          <div className="rounded-3xl border border-white/10 bg-secondary/20 px-6 py-16 text-center text-text-muted">
-            <p className="mx-auto max-w-2xl">
-              No testimonials have been added yet. Open the admin panel and publish your first recommendation card.
-            </p>
-            <a
-              href="/admin"
-              className="mt-6 inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-4 py-2 text-sm font-medium text-accent"
-            >
-              Manage testimonials
-            </a>
+          <div className="rounded-2xl border border-secondary/50 bg-secondary/20 px-6 py-16 text-center text-text-muted">
+            No testimonials yet. Add some in the admin panel.
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 min-h-[320px]">
+          <div className="grid gap-6 md:grid-cols-2">
             {testimonials.map((item, index) => (
               <motion.article
                 key={item.name || index}
@@ -47,7 +40,7 @@ const Testimonials = () => {
                 <p className="text-lg leading-relaxed text-text">"{item.content}"</p>
                 <div className="mt-6 flex items-center justify-between gap-4">
                   <div>
-                    <h3 className="text-xl font-bold text-text">{item.name}</h3>
+                    <h2 className="text-xl font-bold text-text">{item.name}</h2>
                     <p className="text-sm text-text-muted">
                       {item.role}{item.company ? `, ${item.company}` : ''}
                     </p>
@@ -63,9 +56,9 @@ const Testimonials = () => {
             ))}
           </div>
         )}
-      </div>
-    </SectionWrapper>
+      </PageShell>
+    </>
   );
 };
 
-export default Testimonials;
+export default TestimonialsPage;

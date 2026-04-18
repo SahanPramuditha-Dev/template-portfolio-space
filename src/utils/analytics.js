@@ -1,7 +1,7 @@
 // Analytics utility - can be integrated with Google Analytics, Plausible, etc.
 export const trackEvent = (eventName, eventData = {}) => {
   // Only track in production
-  if (process.env.NODE_ENV !== 'production') {
+  if (import.meta.env.MODE !== 'production') {
     console.log('Analytics Event:', eventName, eventData);
     return;
   }
@@ -28,6 +28,10 @@ export const trackEvent = (eventName, eventData = {}) => {
 
 export const trackPageView = (path) => {
   trackEvent('page_view', { path });
+};
+
+export const trackScrollDepth = (path, depth) => {
+  trackEvent('scroll_depth', { path, depth });
 };
 
 export const trackProjectView = (projectTitle) => {

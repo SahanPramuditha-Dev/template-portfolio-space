@@ -1,0 +1,23 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isBootstrapOwner() {
+      return request.auth != null
+        && request.auth.token.email == 'sahanpramuditha91@gmail.com';
+    }
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && (
+          exists(/databases/(default)/documents/admins/$(request.auth.token.email))
+          || isBootstrapOwner()
+        );
+    }
+
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

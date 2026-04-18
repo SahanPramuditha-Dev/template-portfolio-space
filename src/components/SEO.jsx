@@ -28,14 +28,19 @@ const upsertLinkTag = (selector, attributes) => {
   Object.entries(attributes).forEach(([key, value]) => tag.setAttribute(key, value));
 };
 
-const SEO = () => {
+const SEO = ({
+  title = 'Sahan Pramuditha | Software Engineer and Creative Developer',
+  description = 'Sahan Pramuditha is a software engineer and creative developer building accessible, high-performance digital experiences.',
+  canonicalPath = '/',
+  ogImage = null,
+  noindex = false,
+} = {}) => {
   useEffect(() => {
     const siteUrl = normalizeSiteUrl(import.meta.env.VITE_SITE_URL || DEFAULT_SITE_URL);
-    const canonicalUrl = `${siteUrl}/`;
-    const title = 'Sahan Pramuditha | Software Engineer and Creative Developer';
-    const description =
-      'Sahan Pramuditha is a software engineer and creative developer building accessible, high-performance digital experiences.';
-    const ogImage = `${siteUrl}/favicon.svg`;
+    const canonicalUrl = canonicalPath.startsWith('http')
+      ? canonicalPath
+      : `${siteUrl}${canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`}`;
+    const resolvedOgImage = ogImage || `${siteUrl}/favicon.svg`;
     const twitterHandle = '@sahanpramuditha';
     const keywords =
       'Sahan Pramuditha, software engineer, creative developer, web developer, React developer, portfolio, Three.js';
@@ -48,7 +53,7 @@ const SEO = () => {
     upsertMetaTag('meta[name="application-name"]', { name: 'application-name', content: 'Sahan Pramuditha' });
     upsertMetaTag('meta[name="creator"]', { name: 'creator', content: 'Sahan Pramuditha' });
     upsertMetaTag('meta[name="publisher"]', { name: 'publisher', content: 'Sahan Pramuditha' });
-    upsertMetaTag('meta[name="robots"]', { name: 'robots', content: 'index, follow' });
+    upsertMetaTag('meta[name="robots"]', { name: 'robots', content: noindex ? 'noindex, nofollow' : 'index, follow' });
 
     upsertLinkTag('link[rel="canonical"]', { rel: 'canonical', href: canonicalUrl });
 
@@ -57,21 +62,21 @@ const SEO = () => {
     upsertMetaTag('meta[property="og:url"]', { property: 'og:url', content: canonicalUrl });
     upsertMetaTag('meta[property="og:title"]', { property: 'og:title', content: title });
     upsertMetaTag('meta[property="og:description"]', { property: 'og:description', content: description });
-    upsertMetaTag('meta[property="og:image"]', { property: 'og:image', content: ogImage });
+    upsertMetaTag('meta[property="og:image"]', { property: 'og:image', content: resolvedOgImage });
     upsertMetaTag('meta[property="og:site_name"]', { property: 'og:site_name', content: 'Sahan Pramuditha' });
 
     upsertMetaTag('meta[name="twitter:card"]', { name: 'twitter:card', content: 'summary' });
     upsertMetaTag('meta[name="twitter:url"]', { name: 'twitter:url', content: canonicalUrl });
     upsertMetaTag('meta[name="twitter:title"]', { name: 'twitter:title', content: title });
     upsertMetaTag('meta[name="twitter:description"]', { name: 'twitter:description', content: description });
-    upsertMetaTag('meta[name="twitter:image"]', { name: 'twitter:image', content: ogImage });
+    upsertMetaTag('meta[name="twitter:image"]', { name: 'twitter:image', content: resolvedOgImage });
     upsertMetaTag('meta[name="twitter:site"]', { name: 'twitter:site', content: twitterHandle });
     upsertMetaTag('meta[name="twitter:creator"]', { name: 'twitter:creator', content: twitterHandle });
 
     // Note: Profile photo preload removed - the image is already set to loading="eager" 
     // in About.jsx, which is sufficient for fast loading. Vite-processed image imports
     // don't work well with preload links, so we rely on eager loading instead.
-  }, []);
+  }, [title, description, canonicalPath, ogImage, noindex]);
 
   return null;
 };

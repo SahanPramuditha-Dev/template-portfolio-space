@@ -1,9 +1,39 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Github, ExternalLink, Layers, Target, Zap, Award } from 'lucide-react';
+import {
+  X,
+  Github,
+  ExternalLink,
+  Layers,
+  Target,
+  Zap,
+  Award,
+  Lightbulb,
+  Image as ImageIcon,
+  ChevronLeft,
+  ChevronRight,
+  Building2,
+  Users,
+  Clock,
+  Briefcase,
+  ArrowRight,
+} from 'lucide-react';
+import { isUsableHttpUrl } from '../utils/projectUrls';
+import { getImpactMetrics, getMediaSlides } from '../utils/projectNormalize';
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 const ProjectModal = ({ project, isOpen, onClose }) => {
-  if (!project) return null;
+  const [activeMedia, setActiveMedia] = useState(0);
+  const dialogRef = useRef(null);
+  const previousFocusRef = useRef(null);
+
+  const slides = useMemo(() => (project ? getMediaSlides(project) : []), [project]);
+
+  useEffect(() => {
+    setActiveMedia(0);
+  }, [project?.id, project?.title]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -19,158 +49,451 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
     };
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    if (!isOpen || !project) return undefined;
+    const dialog = dialogRef.current;
+    if (!dialog) return undefined;
+    previousFocusRef.current = document.activeElement;
+    const nodes = Array.from(dialog.querySelectorAll(FOCUSABLE_SELECTOR));
+    const list = nodes.filter((el) => {
+      if (el.hasAttribute('disabled')) return false;
+      const style = window.getComputedStyle(el);
+      return style.visibility !== 'hidden' && style.display !== 'none';
+    });
+    const first = list[0];
+    const last = list[list.length - 1];
+    const t = window.setTimeout(() => first?.focus?.(), 0);
+
+    const trap = (e) => {
+      if (e.key !== 'Tab' || !list.length) return;
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        }
+      } else if (document.activeElement === last) {
+        e.preventDefault();
+        first?.focus();
+      }
+    };
+    dialog.addEventListener('keydown', trap);
+    return () => {
+      window.clearTimeout(t);
+      dialog.removeEventListener('keydown', trap);
+      const prev = previousFocusRef.current;
+      if (prev && typeof prev.focus === 'function') {
+        try {
+          prev.focus();
+        } catch {
+          /* ignore */
+        }
+      }
+    };
+  }, [isOpen, project]);
+
+  if (!project) return null;
+
+  const activeSlide = slides[activeMedia] || null;
+  const techList = Array.isArray(project.tech) ? project.tech : [];
+  const hasLive = isUsableHttpUrl(project.external);
+  const hasGithub = isUsableHttpUrl(project.github);
+  const impactMetrics = getImpactMetrics(project);
+
+  const stepMedia = (direction) => {
+    if (!slides.length) return;
+    setActiveMedia((prev) => {
+      const next = prev + direction;
+      if (next < 0) return slides.length - 1;
+      if (next >= slides.length) return 0;
+      return next;
+    });
+  };
+
+  const clientLine = [project.client, project.company].map((s) => String(s || '').trim()).filter(Boolean)[0];
+  const industry = String(project.industry || '').trim();
+  const timeline = String(project.projectTimeline || '').trim();
+  const teamSize = String(project.teamSize || '').trim();
+  const role = String(project.role || '').trim();
+  const lessonsLearned = String(project.lessonsLearned || '').trim();
+  const nextSteps = String(project.nextSteps || '').trim();
+
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
           />
 
-          {/* Modal Container */}
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              ref={dialogRef}
+              initial={{ opacity: 0, scale: 0.96, y: 24 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-primary border border-secondary w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl pointer-events-auto relative flex flex-col md:flex-row"
+              exit={{ opacity: 0, scale: 0.96, y: 24 }}
+              className="relative flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-primary shadow-2xl md:flex-row"
               role="dialog"
               aria-modal="true"
               aria-labelledby="project-modal-title"
               aria-describedby="project-modal-description"
             >
-              {/* Close Button */}
               <button
+                type="button"
                 onClick={onClose}
-                className="absolute top-4 right-4 p-2 bg-black/50 rounded-full hover:bg-accent hover:text-white transition-colors z-20 backdrop-blur-md"
+                className="absolute right-4 top-4 z-20 rounded-full border border-white/10 bg-black/40 p-2 text-white transition-colors hover:bg-accent hover:text-primary"
                 aria-label="Close project details"
               >
-                <X size={24} />
+                <X size={22} />
               </button>
 
-              {/* Image / Visual Side */}
-              <div className="w-full md:w-5/12 bg-secondary/30 relative flex flex-col overflow-hidden">
-                {project.thumbnail || (project.screenshots && project.screenshots.length > 0) ? (
-                  <div className="h-full w-full relative">
-                    <img 
-                      src={project.thumbnail || project.screenshots[0]} 
-                      alt={project.title}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent"></div>
-                    <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
-                      <h3 className="text-2xl font-bold text-text mb-2">{project.title}</h3>
-                      <p className="text-text-muted font-mono text-sm">{project.role}</p>
-                    </div>
-                    {/* Screenshot Gallery Indicator */}
-                    {project.screenshots && project.screenshots.length > 1 && (
-                      <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full text-white text-xs font-mono">
-                        {project.screenshots.length} screenshots
+              <div className="relative w-full border-b border-white/10 bg-secondary/20 md:w-[42%] md:border-b-0 md:border-r">
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-black/40">
+                  {activeSlide ? (
+                    activeSlide.kind === 'video' ? (
+                      <video
+                        key={activeSlide.url}
+                        src={activeSlide.url}
+                        className="h-full w-full object-cover"
+                        controls
+                        playsInline
+                        preload="metadata"
+                      />
+                    ) : (
+                      <img
+                        src={activeSlide.url}
+                        alt={activeSlide.alt || project.title}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    )
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,rgb(var(--color-accent-rgb)/0.18),transparent_50%),linear-gradient(135deg,rgba(15,23,42,1),rgba(30,41,59,1))]">
+                      <div className="text-center">
+                        <Layers size={56} className="mx-auto mb-3 text-accent/80" />
+                        <p className="font-mono text-xs uppercase tracking-[0.2em] text-text-muted">
+                          Visual preview not available
+                        </p>
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="h-64 md:h-full w-full bg-gradient-to-br from-accent/10 to-primary flex items-center justify-center p-8 relative overflow-hidden">
-                    {/* Abstract Pattern */}
-                    <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '20px 20px' }}></div>
-                    
-                    <div className="z-10 text-center">
-                      <Layers size={64} className="text-accent mx-auto mb-4 opacity-50" />
-                      <h3 className="text-2xl font-bold text-text mb-2">{project.title}</h3>
-                      <p className="text-text-muted font-mono text-sm">{project.role}</p>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
 
-              {/* Details Side */}
-              <div className="w-full md:w-7/12 p-8 overflow-y-auto max-h-[60vh] md:max-h-full bg-primary custom-scrollbar">
-                <div className="mb-8">
-                  <div className="flex items-center gap-3 text-accent font-mono text-xs mb-3">
-                    <span className="px-2 py-1 bg-accent/10 rounded">FEATURED PROJECT</span>
-                    <span>•</span>
-                    <span>2023</span>
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent" />
+
+                  <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full border border-accent/25 bg-black/30 px-3 py-1 text-[0.7rem] font-mono uppercase tracking-[0.16em] text-accent">
+                    <span>{project.missionCode}</span>
+                    <span className="text-white/50">•</span>
+                    <span>{project.year}</span>
                   </div>
-                  <h2 id="project-modal-title" className="text-3xl md:text-4xl font-bold text-text mb-4">{project.title}</h2>
-                  <p id="project-modal-description" className="text-text-muted text-lg leading-relaxed">
-                    {project.description}
-                  </p>
+
+                  {slides.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => stepMedia(-1)}
+                        className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/10 bg-black/40 p-2 text-white transition-colors hover:bg-accent hover:text-primary"
+                        aria-label="Previous slide"
+                      >
+                        <ChevronLeft size={18} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => stepMedia(1)}
+                        className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/10 bg-black/40 p-2 text-white transition-colors hover:bg-accent hover:text-primary"
+                        aria-label="Next slide"
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+                    </>
+                  )}
                 </div>
 
-                <div className="space-y-8">
-                  {/* Problem & Solution Grid */}
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <div className="bg-secondary/10 p-5 rounded-xl border border-secondary/50">
-                      <h3 className="text-lg font-bold text-text mb-3 flex items-center gap-2">
-                        <Target size={20} className="text-red-400" /> The Problem
-                      </h3>
-                      <p className="text-text-muted text-sm leading-relaxed">{project.problem || "Information not available."}</p>
-                    </div>
-                    <div className="bg-secondary/10 p-5 rounded-xl border border-secondary/50">
-                      <h3 className="text-lg font-bold text-text mb-3 flex items-center gap-2">
-                        <Zap size={20} className="text-yellow-400" /> The Solution
-                      </h3>
-                      <p className="text-text-muted text-sm leading-relaxed">{project.solution || "Information not available."}</p>
-                    </div>
-                  </div>
+                {activeSlide?.caption && (
+                  <p className="border-b border-white/10 bg-black/25 px-4 py-2 text-center text-xs text-text-muted">
+                    {activeSlide.caption}
+                  </p>
+                )}
 
-                  {/* Challenges & Outcomes */}
-                  <div className="bg-gradient-to-br from-secondary/20 to-primary p-6 rounded-xl border border-accent/20">
-                     <h3 className="text-lg font-bold text-text mb-4 flex items-center gap-2">
-                        <Award size={20} className="text-green-400" /> Key Outcomes & Challenges
-                      </h3>
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="font-bold text-text-muted text-sm mb-1 uppercase tracking-wider text-xs">Impact</h4>
-                          <p className="text-text text-sm">{project.outcomes || "Information not available."}</p>
-                        </div>
-                        <div className="h-px bg-secondary/50 w-full"></div>
-                        <div>
-                          <h4 className="font-bold text-text-muted text-sm mb-1 uppercase tracking-wider text-xs">Technical Challenges</h4>
-                          <p className="text-text-muted text-sm italic">"{project.challenges || "Information not available."}"</p>
-                        </div>
-                      </div>
+                {slides.length > 1 && (
+                  <div className="flex justify-center gap-1.5 border-b border-white/10 py-2">
+                    {slides.map((s, index) => (
+                      <button
+                        key={`${s.url}-${index}`}
+                        type="button"
+                        onClick={() => setActiveMedia(index)}
+                        className={`h-2 w-2 rounded-full transition-colors ${
+                          index === activeMedia ? 'bg-accent' : 'bg-white/25 hover:bg-white/45'
+                        }`}
+                        aria-label={`Go to slide ${index + 1}`}
+                      />
+                    ))}
                   </div>
+                )}
 
-                  {/* Tech Stack */}
+                <div className="space-y-4 p-5">
                   <div>
-                    <h3 className="text-lg font-bold text-text mb-3">Technologies Used</h3>
+                    <h2 id="project-modal-title" className="text-2xl font-bold text-text md:text-3xl">
+                      {project.title}
+                    </h2>
+                    <p className="mt-2 text-sm text-text-muted">{project.role}</p>
+                  </div>
+
+                  {slides.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
+                      {slides.map((s, index) => (
+                        <button
+                          key={`thumb-${s.url}-${index}`}
+                          type="button"
+                          onClick={() => setActiveMedia(index)}
+                          className={`h-16 w-24 shrink-0 overflow-hidden rounded-lg border transition-all ${
+                            index === activeMedia
+                              ? 'border-accent ring-2 ring-accent/20'
+                              : 'border-white/10 opacity-70 hover:opacity-100'
+                          }`}
+                        >
+                          {s.kind === 'video' ? (
+                            <div className="flex h-full w-full items-center justify-center bg-black/50 text-[10px] font-mono text-white/80">
+                              VIDEO
+                            </div>
+                          ) : (
+                            <img src={s.url} alt="" className="h-full w-full object-cover" loading="lazy" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {(clientLine || industry || timeline || teamSize || role) && (
+                    <div className="rounded-2xl border border-accent/20 bg-primary/40 p-4">
+                      <h3 className="mb-3 text-xs font-mono uppercase tracking-[0.16em] text-accent">Quick facts</h3>
+                      <dl className="grid gap-3 text-sm">
+                        {clientLine && (
+                          <div className="flex gap-2">
+                            <dt className="flex shrink-0 items-center gap-1 text-text-muted">
+                              <Building2 size={14} className="text-accent" />
+                              Client
+                            </dt>
+                            <dd className="text-text">{clientLine}</dd>
+                          </div>
+                        )}
+                        {industry && (
+                          <div className="flex gap-2">
+                            <dt className="flex shrink-0 items-center gap-1 text-text-muted">
+                              <Briefcase size={14} className="text-accent" />
+                              Industry
+                            </dt>
+                            <dd className="text-text">{industry}</dd>
+                          </div>
+                        )}
+                        {timeline && (
+                          <div className="flex gap-2">
+                            <dt className="flex shrink-0 items-center gap-1 text-text-muted">
+                              <Clock size={14} className="text-accent" />
+                              Timeline
+                            </dt>
+                            <dd className="text-text">{timeline}</dd>
+                          </div>
+                        )}
+                        {teamSize && (
+                          <div className="flex gap-2">
+                            <dt className="flex shrink-0 items-center gap-1 text-text-muted">
+                              <Users size={14} className="text-accent" />
+                              Team
+                            </dt>
+                            <dd className="text-text">{teamSize}</dd>
+                          </div>
+                        )}
+                        {role && (
+                          <div className="flex gap-2">
+                            <dt className="flex shrink-0 items-center gap-1 text-text-muted">
+                              <Briefcase size={14} className="text-accent" />
+                              Role
+                            </dt>
+                            <dd className="text-text">{role}</dd>
+                          </div>
+                        )}
+                      </dl>
+                    </div>
+                  )}
+
+                  {project.tags?.length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {project.tech.map((t) => (
-                        <span key={t} className="px-3 py-1 bg-secondary text-accent rounded-full text-xs font-mono border border-accent/20 hover:bg-accent/10 transition-colors cursor-default">
-                          {t}
+                      {project.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-mono text-accent"
+                        >
+                          {tag}
                         </span>
                       ))}
                     </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="custom-scrollbar w-full overflow-y-auto bg-primary p-6 md:w-[58%] md:p-8">
+                <p id="project-modal-description" className="text-lg leading-relaxed text-text-muted">
+                  {project.description}
+                </p>
+
+                <div className="mt-8 grid gap-4 md:grid-cols-2">
+                  <div className="rounded-2xl border border-secondary/50 bg-secondary/10 p-5">
+                    <div className="mb-3 flex items-center gap-2 text-text">
+                      <Target size={18} className="text-red-400" />
+                      <h3 className="font-bold">Problem</h3>
+                    </div>
+                    <p className="text-sm leading-relaxed text-text-muted">
+                      {project.problem || 'Information not available.'}
+                    </p>
                   </div>
 
-                  {/* Links */}
-                  <div className="flex gap-4 pt-4 sticky bottom-0 bg-primary pb-2">
-                    <a
-                      href={project.github}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-secondary rounded-xl hover:bg-accent hover:text-white transition-all duration-300 font-bold group"
-                    >
-                      <Github size={20} className="group-hover:scale-110 transition-transform" />
-                      View Code
-                    </a>
+                  <div className="rounded-2xl border border-secondary/50 bg-secondary/10 p-5">
+                    <div className="mb-3 flex items-center gap-2 text-text">
+                      <Zap size={18} className="text-yellow-400" />
+                      <h3 className="font-bold">Solution</h3>
+                    </div>
+                    <p className="text-sm leading-relaxed text-text-muted">
+                      {project.solution || 'Information not available.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 rounded-2xl border border-accent/20 bg-gradient-to-br from-secondary/20 to-primary p-5">
+                  <div className="mb-4 flex items-center gap-2 text-text">
+                    <Award size={18} className="text-green-400" />
+                    <h3 className="font-bold">Architecture & Delivery</h3>
+                  </div>
+                  <p className="text-sm leading-relaxed text-text-muted">
+                    {project.architecture || 'Architecture details not available.'}
+                  </p>
+                </div>
+
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                  <div className="rounded-2xl border border-secondary/50 bg-secondary/10 p-5">
+                    <div className="mb-3 flex items-center gap-2 text-text">
+                      <ImageIcon size={18} className="text-accent" />
+                      <h3 className="font-bold">Key Features</h3>
+                    </div>
+                    <ul className="space-y-2 text-sm text-text-muted">
+                      {(project.features || []).map((feature) => (
+                        <li key={feature} className="flex items-start gap-2">
+                          <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                      {(!project.features || project.features.length === 0) && (
+                        <li>Feature breakdown not available.</li>
+                      )}
+                    </ul>
+                  </div>
+
+                  <div className="rounded-2xl border border-secondary/50 bg-secondary/10 p-5">
+                    <div className="mb-3 flex items-center gap-2 text-text">
+                      <Lightbulb size={18} className="text-amber-400" />
+                      <h3 className="font-bold">What I Learned</h3>
+                    </div>
+                    <p className="text-sm leading-relaxed text-text-muted">
+                      {project.learned || 'Learning notes not available.'}
+                    </p>
+                  </div>
+                </div>
+
+                {impactMetrics.length > 0 && (
+                  <div className="mt-6 rounded-2xl border border-secondary/50 bg-secondary/10 p-5">
+                    <h3 className="mb-4 font-bold text-text">Impact Metrics</h3>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      {impactMetrics.map((metric) => (
+                        <div
+                          key={`${metric.label}-${metric.value}`}
+                          className="rounded-xl border border-secondary/40 bg-primary/50 p-4 text-center"
+                        >
+                          <div className="text-xl font-bold text-accent">
+                            {metric.value}
+                            {metric.suffix ? ` ${metric.suffix}` : ''}
+                          </div>
+                          <div className="mt-1 text-[11px] uppercase tracking-[0.14em] text-text-muted">
+                            {metric.label}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(lessonsLearned || nextSteps) && (
+                  <div className="mt-6 grid gap-4 md:grid-cols-2">
+                    {lessonsLearned && (
+                      <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-5">
+                        <h3 className="mb-2 flex items-center gap-2 font-bold text-text">
+                          <Lightbulb size={18} className="text-emerald-400" />
+                          Lessons learned
+                        </h3>
+                        <p className="text-sm leading-relaxed text-text-muted">{lessonsLearned}</p>
+                      </div>
+                    )}
+                    {nextSteps && (
+                      <div className="rounded-2xl border border-sky-400/20 bg-sky-500/5 p-5">
+                        <h3 className="mb-2 flex items-center gap-2 font-bold text-text">
+                          <ArrowRight size={18} className="text-sky-400" />
+                          Next steps
+                        </h3>
+                        <p className="text-sm leading-relaxed text-text-muted">{nextSteps}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="mt-6">
+                  <h3 className="mb-3 font-bold text-text">Technologies Used</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {techList.map((t) => (
+                      <span
+                        key={t}
+                        className="rounded-full border border-accent/20 bg-secondary/50 px-3 py-1 text-xs font-mono text-accent"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-8 flex flex-col gap-3 border-t border-secondary/40 pt-6 sm:flex-row">
+                  {hasLive ? (
                     <a
                       href={project.external}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex-1 flex items-center justify-center gap-2 px-6 py-4 border border-accent text-accent rounded-xl hover:bg-accent hover:text-white transition-all duration-300 font-bold group"
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-accent px-6 py-4 font-bold text-primary transition-transform hover:scale-[1.01]"
                     >
-                      <ExternalLink size={20} className="group-hover:scale-110 transition-transform" />
+                      <ExternalLink size={18} />
                       Live Demo
                     </a>
-                  </div>
+                  ) : (
+                    <span className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-secondary/40 bg-secondary/20 px-6 py-4 font-bold text-text-muted">
+                      <ExternalLink size={18} />
+                      No live link
+                    </span>
+                  )}
+                  {hasGithub ? (
+                    <a
+                      href={project.github}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-accent px-6 py-4 font-bold text-accent transition-colors hover:bg-accent hover:text-primary"
+                    >
+                      <Github size={18} />
+                      Source Code
+                    </a>
+                  ) : (
+                    <span className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-secondary/40 bg-secondary/20 px-6 py-4 font-bold text-text-muted">
+                      <Github size={18} />
+                      No public repo
+                    </span>
+                  )}
                 </div>
               </div>
             </motion.div>

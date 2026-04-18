@@ -4,6 +4,7 @@ import { Send, CheckCircle, Loader2, FileText, Download } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import SectionWrapper from './SectionWrapper';
 import { trackContactSubmit, trackDownload } from '../utils/analytics';
+import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 const Contact3D = React.lazy(() => import('./Contact3D'));
 
 const Contact = () => {
@@ -11,6 +12,12 @@ const Contact = () => {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [errorMessage, setErrorMessage] = useState('');
   const prefersReducedMotion = useReducedMotion();
+  const { data: siteDoc } = useCmsDoc(CMS_DOCS.site, null);
+  const availability = siteDoc?.availability || 'Open to new work.';
+  const preferredContact = siteDoc?.preferredContact || 'Email works best for detailed inquiries.';
+  const responseSla = siteDoc?.responseSla || 'Usually replies within 1-2 business days.';
+  const contactEmail = siteDoc?.contactEmail || siteDoc?.footerEmail || 'contact@sahanpramuditha.com';
+  const resumeUrl = siteDoc?.resumeUrl || '/resume.pdf';
 
   const triggerConfetti = () => {
     if (prefersReducedMotion) return;
@@ -82,7 +89,7 @@ const Contact = () => {
         });
         if (!res.ok) throw new Error('Failed to submit');
       } else {
-        const mailto = `mailto:contact@sahanpramuditha.com?subject=${encodeURIComponent(
+        const mailto = `mailto:${contactEmail}?subject=${encodeURIComponent(
           'Portfolio Contact'
         )}&body=${encodeURIComponent(
           `Name: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`
@@ -93,9 +100,9 @@ const Contact = () => {
       setFormData({ name: '', email: '', message: '' });
       triggerConfetti();
       trackContactSubmit(true);
-    } catch (err) {
+    } catch {
       setFormState('idle');
-      setErrorMessage('Something went wrong while sending your message. Please try again in a moment or email me directly at contact@sahanpramuditha.com.');
+      setErrorMessage(`Something went wrong while sending your message. Please try again in a moment or email me directly at ${contactEmail}.`);
       trackContactSubmit(false);
     }
   };
@@ -118,9 +125,20 @@ const Contact = () => {
           <p className="text-text-muted text-lg max-w-2xl mx-auto mb-6">
             Although I'm not currently looking for any new opportunities, my inbox is always open. Whether you have a question or just want to say hi, I'll try my best to get back to you!
           </p>
+          <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
+            <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm font-mono text-emerald-300">
+              {availability}
+            </span>
+            <span className="rounded-full border border-secondary/40 bg-secondary/20 px-4 py-2 text-sm text-text-muted">
+              {responseSla}
+            </span>
+          </div>
+          <p className="mx-auto mb-6 max-w-2xl text-sm text-text-muted">
+            Preferred contact method: {preferredContact}
+          </p>
           {/* Resume Download Link */}
           <motion.a
-            href="/resume.pdf"
+            href={resumeUrl}
             target="_blank"
             rel="noopener noreferrer"
             download

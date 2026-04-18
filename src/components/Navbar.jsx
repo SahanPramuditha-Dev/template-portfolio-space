@@ -32,7 +32,7 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
-    const sections = ['home', 'about', 'skills', 'projects', 'certifications', 'contact'];
+    const sections = ['home', 'about', 'skills', 'experience', 'projects', 'certifications', 'testimonials', 'blog', 'contact'];
     let metrics = [];
     let ticking = false;
 
@@ -87,8 +87,11 @@ const Navbar = () => {
     { name: 'Home', href: '#home', id: 'home' },
     { name: 'About', href: '#about', id: 'about' },
     { name: 'Skills', href: '#skills', id: 'skills' },
+    { name: 'Experience', href: '#experience', id: 'experience' },
     { name: 'Projects', href: '#projects', id: 'projects' },
     { name: 'Certifications', href: '#certifications', id: 'certifications' },
+    { name: 'Testimonials', href: '#testimonials', id: 'testimonials' },
+    { name: 'Blog', href: '#blog', id: 'blog' },
     { name: 'Contact', href: '#contact', id: 'contact' },
   ];
 

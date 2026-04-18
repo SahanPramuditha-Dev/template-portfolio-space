@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 const ThemeContext = createContext();
@@ -22,20 +23,29 @@ const hexToRgb = (hex) => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const theme = 'dark';
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === 'undefined') return 'dark';
+    const storedTheme = window.localStorage.getItem('theme');
+    if (storedTheme === 'light' || storedTheme === 'dark') return storedTheme;
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
 
   const [accentColor, setAccentColor] = useState(() => {
-    return localStorage.getItem('accentColor') || 'sky';
+    if (typeof window === 'undefined') return 'sky';
+    return window.localStorage.getItem('accentColor') || 'sky';
   });
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
-    root.classList.add('dark');
-    localStorage.setItem('theme', 'dark');
-  }, []);
+    root.classList.add(theme);
+    root.style.colorScheme = theme;
+    window.localStorage.setItem('theme', theme);
+  }, [theme]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const root = window.document.documentElement;
     const selectedColor = colors[accentColor];
     const accent = theme === 'dark' ? selectedColor.accent : selectedColor.lightAccent;
@@ -58,10 +68,12 @@ export const ThemeProvider = ({ children }) => {
       root.style.setProperty('--color-accent-glow-rgb', glowRgb);
     }
     
-    localStorage.setItem('accentColor', accentColor);
-  }, [accentColor]);
+    window.localStorage.setItem('accentColor', accentColor);
+  }, [accentColor, theme]);
 
-  const toggleTheme = () => {};
+  const toggleTheme = () => {
+    setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'));
+  };
 
   const changeAccentColor = (color) => {
     setAccentColor(color);
