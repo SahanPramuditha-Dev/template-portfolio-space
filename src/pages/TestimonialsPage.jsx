@@ -4,10 +4,26 @@ import { Star, Quote } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
+import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
 
 const TestimonialsPage = () => {
-  const { data } = useCmsDoc(CMS_DOCS.testimonials, { items: [] });
+  const { data, loading } = useCmsDoc(CMS_DOCS.testimonials, { items: [] });
   const testimonials = Array.isArray(data?.items) ? data.items : [];
+
+  if (loading || data === undefined) {
+    return (
+      <>
+        <SEO
+          title="Testimonials | Sahan Pramuditha"
+          description="Client, peer, and mentor feedback from projects, collaborations, and professional work."
+          canonicalPath="/testimonials"
+        />
+        <PageShell eyebrow="Social Proof" title="Testimonials" description="Loading…">
+          <PageBodyCmsSkeleton />
+        </PageShell>
+      </>
+    );
+  }
 
   return (
     <>

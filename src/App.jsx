@@ -1,5 +1,5 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -21,13 +21,29 @@ import ScrollToTop from './components/ScrollToTop';
 import SmoothScroll from './components/SmoothScroll';
 import { Analytics } from '@vercel/analytics/react';
 import { isBotUserAgent, shouldDisableHeavyVisuals } from './utils/runtimeGuards';
+import { waitForHomepageCms } from './lib/cms';
 
 const ThreeBackground = lazy(() => import('./components/ThreeBackground'));
 const CustomCursor = lazy(() => import('./components/CustomCursor'));
 
 function App() {
-  const [loading, setLoading] = useState(() => !isBotUserAgent());
+  const isBot = isBotUserAgent();
+  const cmsBootstrapTask = useMemo(() => waitForHomepageCms(), []);
+
+  const [visualIntroDone, setVisualIntroDone] = useState(isBot);
+  const [appReady, setAppReady] = useState(false);
   const [heavyVisualsEnabled, setHeavyVisualsEnabled] = useState(() => !shouldDisableHeavyVisuals());
+
+  useEffect(() => {
+    if (!visualIntroDone) return undefined;
+    let cancelled = false;
+    cmsBootstrapTask.finally(() => {
+      if (!cancelled) setAppReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [visualIntroDone, cmsBootstrapTask]);
 
   useEffect(() => {
     let animationFrameId;
@@ -72,18 +88,43 @@ function App() {
   return (
     <>
       <SEO />
-      <StructuredData />
+      {appReady ? <StructuredData /> : null}
       <SkipToContent />
       <KeyboardShortcuts />
       <ScrollProgress />
       <ScrollToTop />
       <SmoothScroll />
       <AnimatePresence mode="wait">
-        {loading && <Preloader brand="Sahan - Space Portfolio" onComplete={() => setLoading(false)} />}
+        {!isBot && !visualIntroDone && (
+          <Preloader
+            brand="Sahan - Space Portfolio"
+            tasks={[cmsBootstrapTask]}
+            onComplete={() => setVisualIntroDone(true)}
+          />
+        )}
       </AnimatePresence>
 
-      {!loading && (
-        <div className="bg-primary min-h-screen text-text-muted selection:bg-accent selection:text-primary transition-colors duration-300">
+      {!appReady && (isBot || visualIntroDone) && (
+        <div
+          className="fixed inset-0 z-[95] flex flex-col items-center justify-center gap-4 bg-primary text-text-muted"
+          aria-busy="true"
+          aria-live="polite"
+        >
+          <div
+            className="h-10 w-10 rounded-full border-2 border-accent/35 border-t-accent animate-spin"
+            role="status"
+          />
+          <span className="text-xs font-mono uppercase tracking-[0.2em]">Syncing content</span>
+        </div>
+      )}
+
+      {appReady && (
+        <motion.div
+          className="bg-primary min-h-screen text-text-muted selection:bg-accent selection:text-primary transition-colors duration-300"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        >
           {heavyVisualsEnabled && (
             <Suspense fallback={null}>
               <CustomCursor />
@@ -100,8 +141,8 @@ function App() {
             <main id="main-content">
               <Hero />
               <About />
-              <Experience />
               <Skills />
+              <Experience />
               <Projects />
               <Certifications />
               <Testimonials />
@@ -111,7 +152,7 @@ function App() {
             <Footer />
           </div>
           <Analytics />
-        </div>
+        </motion.div>
       )}
     </>
   );

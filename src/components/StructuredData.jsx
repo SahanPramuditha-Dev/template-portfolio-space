@@ -13,7 +13,12 @@ const normalizeSiteUrl = (rawUrl) => {
 
 const StructuredData = () => {
   const siteUrl = normalizeSiteUrl(import.meta.env.VITE_SITE_URL || DEFAULT_SITE_URL);
-  const { data: siteDoc } = useCmsDoc(CMS_DOCS.site, null);
+  const { data: siteDoc, loading } = useCmsDoc(CMS_DOCS.site, null);
+
+  if (loading || siteDoc === undefined) {
+    return null;
+  }
+
   const socialLinks = Array.isArray(siteDoc?.socialLinksJson) ? siteDoc.socialLinksJson : [];
   const sameAs = socialLinks.map((link) => link.href).filter(Boolean);
   const alumniOf = Array.isArray(siteDoc?.educationJson) && siteDoc.educationJson.length > 0

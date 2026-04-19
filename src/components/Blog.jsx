@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { BookOpen, Calendar, Clock, Tag } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
+import { CmsSectionSkeleton } from './CmsShapeSkeleton';
 
 const splitCsv = (value) =>
   String(value || '')
@@ -11,9 +12,13 @@ const splitCsv = (value) =>
     .filter(Boolean);
 
 const Blog = () => {
-  const { data } = useCmsDoc(CMS_DOCS.blog, { items: [] });
+  const { data, loading } = useCmsDoc(CMS_DOCS.blog, { items: [] });
   const posts = Array.isArray(data?.items) ? data.items : [];
   const latestPosts = posts.slice(0, 3);
+
+  if (loading || data === undefined) {
+    return <CmsSectionSkeleton id="blog" />;
+  }
 
   return (
     <SectionWrapper id="blog">

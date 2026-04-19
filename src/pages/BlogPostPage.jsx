@@ -4,6 +4,7 @@ import { Calendar, Clock, Tag, ChevronLeft, Code2 } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
+import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
 
 const splitCsv = (value) =>
   String(value || '')
@@ -20,9 +21,20 @@ const slugify = (value) =>
 
 const BlogPostPage = () => {
   const { slug } = useParams();
-  const { data } = useCmsDoc(CMS_DOCS.blog, { items: [] });
+  const { data, loading } = useCmsDoc(CMS_DOCS.blog, { items: [] });
   const posts = useMemo(() => (Array.isArray(data?.items) ? data.items : []), [data]);
   const post = posts.find((item) => (item.slug || slugify(item.title)) === slug) || null;
+
+  if (loading || data === undefined) {
+    return (
+      <>
+        <SEO title="Blog | Sahan Pramuditha" description="Loading article…" canonicalPath={`/blog/${slug || ''}`} />
+        <PageShell eyebrow="Blog" title="Loading" description="Fetching post content…">
+          <PageBodyCmsSkeleton />
+        </PageShell>
+      </>
+    );
+  }
 
   if (!post) {
     return (

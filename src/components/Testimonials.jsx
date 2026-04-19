@@ -3,10 +3,15 @@ import { motion } from 'framer-motion';
 import { Quote, Star } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
+import { CmsSectionSkeleton } from './CmsShapeSkeleton';
 
 const Testimonials = () => {
-  const { data } = useCmsDoc(CMS_DOCS.testimonials, { items: [] });
+  const { data, loading } = useCmsDoc(CMS_DOCS.testimonials, { items: [] });
   const testimonials = Array.isArray(data?.items) ? data.items : [];
+
+  if (loading || data === undefined) {
+    return <CmsSectionSkeleton id="testimonials" />;
+  }
 
   return (
     <SectionWrapper id="testimonials" className="relative overflow-hidden py-24">

@@ -614,7 +614,7 @@ const Projects = () => {
           </div>
         )}
 
-        {loading && projectsList.length === 0 ? (
+        {loading || projectsDoc === undefined ? (
           <ProjectsSkeleton />
         ) : isEmpty ? (
           <motion.div

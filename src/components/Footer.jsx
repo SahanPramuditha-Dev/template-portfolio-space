@@ -2,10 +2,15 @@ import React from 'react';
 import { Github, Linkedin, Mail, Facebook, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
+import { FooterCmsSkeleton } from './CmsShapeSkeleton';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  const { data: siteDoc, exists } = useCmsDoc(CMS_DOCS.site, null);
+  const { data: siteDoc, exists, loading } = useCmsDoc(CMS_DOCS.site, null);
+
+  if (loading || siteDoc === undefined) {
+    return <FooterCmsSkeleton />;
+  }
 
   const socialLinks = exists && Array.isArray(siteDoc?.socialLinksJson) && siteDoc.socialLinksJson.length > 0
     ? siteDoc.socialLinksJson.map((link) => ({

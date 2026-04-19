@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { trackSocialClick, trackDownload } from '../utils/analytics';
 import { shouldDisableHeavyVisuals } from '../utils/runtimeGuards';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
+import { HeroCmsSkeleton } from './CmsShapeSkeleton';
 
 const DEFAULT_RESUME_URL = '/resume.pdf';
 const TechAnimation3D = lazy(() => import('./TechAnimation3D'));
@@ -78,8 +79,8 @@ const isVideoAsset = (src) => /\.(mp4|webm)(\?|#|$)/i.test(src || '');
 const Hero = () => {
   const compRef = useRef(null);
   const prefersReducedMotion = useReducedMotion();
-  const { data: siteDoc } = useCmsDoc(CMS_DOCS.site, null);
-  const { data: projectsDoc } = useCmsDoc(CMS_DOCS.projects, { items: [] });
+  const { data: siteDoc, loading: siteLoading } = useCmsDoc(CMS_DOCS.site, null);
+  const { data: projectsDoc, loading: projectsLoading } = useCmsDoc(CMS_DOCS.projects, { items: [] });
   const resumeUrl = siteDoc?.resumeUrl || (import.meta.env.VITE_RESUME_URL || '').trim() || DEFAULT_RESUME_URL;
   const resumeAvailable = Boolean(resumeUrl);
   const [downloading, setDownloading] = useState(false);
@@ -124,6 +125,12 @@ const Hero = () => {
     };
   }, []);
 
+  const cmsPending =
+    siteLoading ||
+    projectsLoading ||
+    siteDoc === undefined ||
+    projectsDoc === undefined;
+
   const handleResumeDownload = async (e) => {
     e.preventDefault();
     if (!resumeUrl || downloading) return;
@@ -148,6 +155,10 @@ const Hero = () => {
       setDownloading(false);
     }
   };
+
+  if (cmsPending) {
+    return <HeroCmsSkeleton />;
+  }
 
   return (
     <section

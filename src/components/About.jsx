@@ -6,6 +6,7 @@ import GithubStats from './GithubStats';
 import ImageWithFallback from './ImageWithFallback';
 import profilePhoto from '../assets/profilephoto.jpeg';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
+import { CmsSectionSkeleton } from './CmsShapeSkeleton';
 
 const profilePhotoVariants = import.meta.glob('../assets/profilephoto.{avif,webp,jpg,jpeg,png}', {
   eager: true,
@@ -64,7 +65,12 @@ const Counter = ({ value, suffix }) => {
 };
 
 const About = () => {
-  const { data: siteDoc, exists } = useCmsDoc(CMS_DOCS.site, null);
+  const { data: siteDoc, exists, loading } = useCmsDoc(CMS_DOCS.site, null);
+
+  if (loading || siteDoc === undefined) {
+    return <CmsSectionSkeleton id="about" />;
+  }
+
   const GITHUB_USERNAME = siteDoc?.githubUsername || 'SahanPramuditha-Dev';
   const profilePhotoUrl = siteDoc?.profilePhotoUrl || profilePhoto;
 

@@ -3,14 +3,38 @@ import { Download, FileText, Calendar, Briefcase, Printer } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
+import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
 
 const DEFAULT_RESUME_URL = '/resume.pdf';
 
 const ResumePage = () => {
+  const { data: siteDoc, loading: siteLoading } = useCmsDoc(CMS_DOCS.site, null);
+  const { data: experienceDoc, loading: expLoading } = useCmsDoc(CMS_DOCS.experience, { items: [] });
+  const { data: projectsDoc, loading: projLoading } = useCmsDoc(CMS_DOCS.projects, { items: [] });
+
+  if (
+    siteLoading ||
+    expLoading ||
+    projLoading ||
+    siteDoc === undefined ||
+    experienceDoc === undefined ||
+    projectsDoc === undefined
+  ) {
+    return (
+      <>
+        <SEO
+          title="Resume | Sahan Pramuditha"
+          description="Resume preview, summary, and download."
+          canonicalPath="/resume"
+        />
+        <PageShell eyebrow="Conversion Layer" title="Resume" description="Loading…">
+          <PageBodyCmsSkeleton />
+        </PageShell>
+      </>
+    );
+  }
+
   const resumeUrl = siteDoc?.resumeUrl || (import.meta.env.VITE_RESUME_URL || '').trim() || DEFAULT_RESUME_URL;
-  const { data: siteDoc } = useCmsDoc(CMS_DOCS.site, null);
-  const { data: experienceDoc } = useCmsDoc(CMS_DOCS.experience, { items: [] });
-  const { data: projectsDoc } = useCmsDoc(CMS_DOCS.projects, { items: [] });
   const educationItems = Array.isArray(siteDoc?.educationJson) ? siteDoc.educationJson : [];
 
   const updatedAt = siteDoc?.cvUpdatedAt || 'Update in admin';

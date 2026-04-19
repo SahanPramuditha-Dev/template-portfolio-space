@@ -4,6 +4,7 @@ import { Calendar, Clock, Filter, Tag, Search, ChevronRight } from 'lucide-react
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
+import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
 
 const splitCsv = (value) =>
   String(value || '')
@@ -19,7 +20,7 @@ const slugify = (value) =>
     .replace(/^-+|-+$/g, '');
 
 const BlogPage = () => {
-  const { data } = useCmsDoc(CMS_DOCS.blog, { items: [] });
+  const { data, loading } = useCmsDoc(CMS_DOCS.blog, { items: [] });
   const posts = useMemo(() => (Array.isArray(data?.items) ? data.items : []), [data]);
   const [activeTag, setActiveTag] = useState('All');
   const [query, setQuery] = useState('');
@@ -35,6 +36,21 @@ const BlogPage = () => {
       return matchesTag && matchesSearch;
     });
   }, [posts, activeTag, query]);
+
+  if (loading || data === undefined) {
+    return (
+      <>
+        <SEO
+          title="Blog | Sahan Pramuditha"
+          description="Tutorials, deep dives, and case studies about building software, systems, and digital products."
+          canonicalPath="/blog"
+        />
+        <PageShell eyebrow="Dev Writing" title="Blog" description="Loading articles…">
+          <PageBodyCmsSkeleton />
+        </PageShell>
+      </>
+    );
+  }
 
   return (
     <>

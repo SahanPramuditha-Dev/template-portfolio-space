@@ -11,9 +11,10 @@ import { AnimatePresence, motion } from 'framer-motion';
 // CONFIG
 // ─────────────────────────────────────────────
 const DURATION = {
-  FULL: 5000,
-  REDUCED: 1800,
-  REPEAT: 1300,
+  /** Virtual timeline length for stage copy (maps to progress 0→1). */
+  FULL: 4200,
+  REDUCED: 1400,
+  REPEAT: 1000,
 };
 
 const STAGES = [
@@ -165,7 +166,12 @@ function usePreloadDriver({
 
       setDisplayProgress((p) => {
         const delta = cappedTarget - p;
-        const step = reducedMotion ? 0.25 : 0.12;
+        // Faster catch-up than legacy 0.12; rush to 100% once async tasks (e.g. CMS) report ready.
+        const step = reducedMotion
+          ? 0.38
+          : readyFraction >= 1
+            ? 0.42
+            : 0.24;
         const next = clamp(p + delta * step, 0, 1);
         // Never move backwards (prevents “front/back” feel in dev re-renders)
         return Math.max(p, next);
@@ -219,13 +225,14 @@ const StarField = () => (
   </div>
 );
 
-// Persistent orbital rings – CSS-only, no JS
+// Persistent orbital rings – CSS-only, scales down on narrow viewports
 const OrbitalRings = ({ visible }) => (
   <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
     <div
       className="absolute rounded-full"
       style={{
-        width: 360, height: 360,
+        width: 'clamp(200px, 72vw, 360px)',
+        height: 'clamp(200px, 72vw, 360px)',
         border: '0.5px solid transparent',
         borderTopColor:  'rgba(var(--color-accent-rgb, 99 179 237) / 0.34)',
         borderRightColor:'rgba(var(--color-accent-rgb, 99 179 237) / 0.12)',
@@ -238,7 +245,8 @@ const OrbitalRings = ({ visible }) => (
     <div
       className="absolute rounded-full"
       style={{
-        width: 530, height: 530,
+        width: 'clamp(260px, 92vw, 530px)',
+        height: 'clamp(260px, 92vw, 530px)',
         border: '0.5px solid transparent',
         borderBottomColor:'rgba(var(--color-accent-glow-rgb, 159 122 234) / 0.28)',
         borderLeftColor:  'rgba(var(--color-accent-glow-rgb, 159 122 234) / 0.10)',
@@ -253,7 +261,7 @@ const OrbitalRings = ({ visible }) => (
 
 // Status dot + label row
 const StatusRow = ({ label }) => (
-  <div className="flex items-center gap-2">
+  <div className="flex min-w-0 items-center gap-2">
     <span
       aria-hidden="true"
       className="h-1.5 w-1.5 rounded-full"
@@ -264,7 +272,7 @@ const StatusRow = ({ label }) => (
       }}
     />
     <span
-      className="text-[0.62rem] uppercase tracking-[0.4em]"
+      className="max-w-[min(100%,20rem)] break-words text-[0.55rem] uppercase tracking-[0.22em] sm:max-w-none sm:text-[0.62rem] sm:tracking-[0.4em]"
       style={{ color: 'rgba(var(--color-accent-rgb, 99 179 237) / 0.78)' }}
     >
       {label}
@@ -277,7 +285,7 @@ const StageTitle = ({ stage }) => (
   <AnimatePresence mode="wait">
     <motion.h1
       key={stage.title}
-      className="max-w-lg text-[2rem] font-bold leading-tight tracking-tight text-text font-display sm:text-[2.4rem]"
+      className="min-w-0 max-w-full text-pretty text-lg font-bold leading-[1.12] tracking-tight text-text font-display min-[380px]:text-xl sm:max-w-lg sm:text-[1.75rem] sm:leading-tight md:text-[2.1rem] lg:text-[2.4rem]"
       initial={{ opacity: 0, x: -16 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 12 }}
@@ -294,23 +302,23 @@ const BootPanel = ({ bootLineIndex, progress, visible }) => {
 
   return (
     <motion.div
-      className="rounded-xl border border-white/10 bg-secondary/20 px-4 py-3 backdrop-blur-md"
+      className="rounded-xl border border-white/10 bg-secondary/20 px-3 py-2.5 backdrop-blur-md sm:px-4 sm:py-3"
       initial={{ opacity: 0 }}
       animate={{ opacity: visible ? 1 : 0 }}
       transition={{ duration: 0.4 }}
     >
       {/* Header */}
-      <div className="mb-3 flex items-center justify-between font-mono text-[0.6rem] uppercase tracking-[0.34em] text-text-muted">
-        <span>Boot sequence</span>
-        <span>{pct}%</span>
+      <div className="mb-2 flex items-center justify-between gap-2 font-mono text-[0.55rem] uppercase tracking-[0.2em] text-text-muted sm:mb-3 sm:text-[0.6rem] sm:tracking-[0.34em]">
+        <span className="min-w-0 shrink">Boot sequence</span>
+        <span className="shrink-0 tabular-nums">{pct}%</span>
       </div>
 
       {/* Lines */}
-      <div className="mb-3 space-y-2">
+      <div className="mb-2 space-y-1.5 sm:mb-3 sm:space-y-2">
         {BOOT_LINES.map((line, i) => {
           const active = i <= bootLineIndex;
           return (
-            <div key={line} className="flex items-center gap-2 font-mono text-xs">
+            <div key={line} className="flex items-center gap-1.5 font-mono text-[0.65rem] leading-snug sm:gap-2 sm:text-xs">
               <span
                 className="h-1 w-1 rounded-full flex-shrink-0 transition-all duration-300"
                 style={{
@@ -323,7 +331,7 @@ const BootPanel = ({ bootLineIndex, progress, visible }) => {
                 }}
               />
               <span
-                className="transition-colors duration-300"
+                className="min-w-0 flex-1 break-words transition-colors duration-300"
                 style={{
                   color: active ? 'rgba(255,255,255,0.90)' : 'rgba(255,255,255,0.32)',
                 }}
@@ -347,13 +355,13 @@ const BootPanel = ({ bootLineIndex, progress, visible }) => {
       </div>
 
       {/* Tags */}
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="grid grid-cols-3 gap-1 sm:gap-1.5">
         {TAGS.map(({ label, threshold }) => {
           const active = progress >= threshold;
           return (
             <div
               key={label}
-              className="rounded-lg px-2.5 py-1.5 text-center text-[0.58rem] uppercase tracking-[0.25em] transition-all duration-400"
+              className="rounded-lg px-1 py-1.5 text-center text-[0.48rem] uppercase leading-tight tracking-[0.08em] transition-all duration-400 sm:px-2.5 sm:text-[0.58rem] sm:tracking-[0.25em]"
               style={{
                 border: active
                   ? '0.5px solid rgba(var(--color-accent-rgb, 56 189 248) / 0.32)'
@@ -373,7 +381,7 @@ const BootPanel = ({ bootLineIndex, progress, visible }) => {
         })}
       </div>
 
-      <div className="mt-3 rounded-md border border-white/10 bg-primary/30 px-2.5 py-2 font-mono text-[0.62rem] text-text-muted">
+      <div className="mt-2 rounded-md border border-white/10 bg-primary/30 px-2 py-1.5 font-mono text-[0.58rem] leading-snug text-text-muted sm:mt-3 sm:px-2.5 sm:py-2 sm:text-[0.62rem]">
         <span className="mr-1 text-accent">›</span>
         Boot integrity verified. Awaiting handoff.
       </div>
@@ -382,8 +390,8 @@ const BootPanel = ({ bootLineIndex, progress, visible }) => {
 };
 
 const BootPanelPlaceholder = () => (
-  <div className="rounded-xl border border-white/10 bg-secondary/15 px-4 py-3 backdrop-blur-md">
-    <div className="mb-3 flex items-center justify-between font-mono text-[0.6rem] uppercase tracking-[0.34em] text-text-muted">
+  <div className="rounded-xl border border-white/10 bg-secondary/15 px-3 py-2.5 backdrop-blur-md sm:px-4 sm:py-3">
+    <div className="mb-2 flex items-center justify-between font-mono text-[0.55rem] uppercase tracking-[0.2em] text-text-muted sm:mb-3 sm:text-[0.6rem] sm:tracking-[0.34em]">
       <span>Boot sequence</span>
       <span className="opacity-70">…</span>
     </div>
@@ -422,9 +430,9 @@ const ProgressBar = ({ progress, taglineVisible, showHeader = true }) => {
   return (
     <div className="space-y-2">
       {showHeader && (
-        <div className="flex justify-between font-mono text-[0.6rem] uppercase tracking-[0.34em] text-text-muted">
-          <span>Launch telemetry</span>
-          <span>{pct}%</span>
+        <div className="flex min-w-0 justify-between gap-2 font-mono text-[0.55rem] uppercase tracking-[0.14em] text-text-muted sm:text-[0.6rem] sm:tracking-[0.34em]">
+          <span className="min-w-0 truncate">Launch telemetry</span>
+          <span className="shrink-0 tabular-nums">{pct}%</span>
         </div>
       )}
       <div className="relative h-[4px] overflow-hidden rounded-full bg-white/[0.08]">
@@ -432,7 +440,7 @@ const ProgressBar = ({ progress, taglineVisible, showHeader = true }) => {
           className="relative h-full rounded-full"
           initial={false}
           animate={{ width: `${Math.max(3, pct)}%` }}
-          transition={{ duration: 0.2, ease: 'linear' }}
+          transition={{ duration: 0.12, ease: 'linear' }}
           style={{
             background: 'linear-gradient(90deg, rgb(var(--color-accent-rgb, 99 179 237)), rgba(var(--color-accent-glow-rgb, 159 122 234) / 0.95))',
             willChange: 'width',
@@ -447,7 +455,7 @@ const ProgressBar = ({ progress, taglineVisible, showHeader = true }) => {
         </motion.div>
       </div>
       <motion.p
-        className="text-[0.72rem] leading-5 text-text-muted"
+        className="text-[0.68rem] leading-snug text-text-muted sm:text-[0.72rem] sm:leading-5"
         animate={{ opacity: taglineVisible ? 1 : 0 }}
         transition={{ duration: 0.4 }}
       >
@@ -462,13 +470,13 @@ const CompletionPanel = ({ visible }) => (
   <AnimatePresence>
     {visible && (
       <motion.div
-        className="pointer-events-none absolute inset-0 flex items-center justify-center px-6"
+        className="pointer-events-none absolute inset-0 flex items-center justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(0.5rem,env(safe-area-inset-top))] sm:px-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
         <motion.div
-          className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-secondary/25 p-6 text-center backdrop-blur-md sm:p-8"
+          className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-secondary/25 p-5 text-center backdrop-blur-md sm:rounded-3xl sm:p-8"
           initial={{ y: 10, scale: 0.98, opacity: 0 }}
           animate={{ y: 0, scale: 1, opacity: 1 }}
           transition={{ duration: 0.45, ease: 'easeOut' }}
@@ -629,8 +637,9 @@ const Preloader = ({ onComplete, brand = 'Space Portfolio', tasks }) => {
   const [runMode] = useState(() => ({ reducedMotion, repeatVisit }));
 
   const stableOnComplete = useCallback(() => onComplete?.(), [onComplete]);
-  const minDurationMs = reducedMotion ? 80 : (repeatVisit ? 120 : 260);
-  const maxDurationMs = reducedMotion ? 360 : (repeatVisit ? 520 : 900);
+  const hasAsyncTasks = Array.isArray(tasks) && tasks.length > 0;
+  const minDurationMs = reducedMotion ? 60 : (repeatVisit ? 90 : 140);
+  const maxDurationMs = reducedMotion ? 280 : (repeatVisit ? 380 : 580);
 
   const stableTasks = tasks ?? EMPTY_TASKS;
 
@@ -640,7 +649,7 @@ const Preloader = ({ onComplete, brand = 'Space Portfolio', tasks }) => {
     tasks: stableTasks,
     minDurationMs,
     maxDurationMs,
-    graceWaitMs: reducedMotion ? 0 : 120,
+    graceWaitMs: reducedMotion ? 0 : hasAsyncTasks ? 70 : 100,
     onDone: () => setExitStarted(true),
   });
 
@@ -667,7 +676,7 @@ const Preloader = ({ onComplete, brand = 'Space Portfolio', tasks }) => {
   const canSkip = reducedMotion || progress >= 0.28;
 
   return (
-    <div className="fixed inset-0 z-[100] overflow-hidden bg-primary text-text">
+    <div className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-primary text-text supports-[padding:max(0px)]:pt-[max(0.25rem,env(safe-area-inset-top))] supports-[padding:max(0px)]:pb-[max(0.25rem,env(safe-area-inset-bottom))]">
       <style>{GLOBAL_STYLES}</style>
 
       {/* Theme-matched base backdrop (matches PageShell + site sections) */}
@@ -695,11 +704,10 @@ const Preloader = ({ onComplete, brand = 'Space Portfolio', tasks }) => {
       {/* Grid overlay */}
       <motion.div
         aria-hidden="true"
-        className="absolute inset-0"
+        className="absolute inset-0 [background-size:28px_28px] sm:[background-size:36px_36px]"
         style={{
           backgroundImage: 'radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px)',
-          backgroundSize: '36px 36px',
-          maskImage: 'radial-gradient(ellipse 80% 70% at 50% 40%, black 30%, transparent 100%)',
+          maskImage: 'radial-gradient(ellipse 90% 75% at 50% 38%, black 28%, transparent 100%)',
         }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -709,18 +717,17 @@ const Preloader = ({ onComplete, brand = 'Space Portfolio', tasks }) => {
       {/* Ambient glow */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2"
+        className="pointer-events-none absolute left-1/2 top-0 w-[min(100vw,480px)] max-w-full -translate-x-1/2"
         style={{
-          width: 480, height: 320,
+          height: 'min(42vh, 320px)',
           background: 'radial-gradient(ellipse at 50% 0%, rgba(var(--color-accent-rgb, 99 179 237) / 0.18) 0%, transparent 70%)',
         }}
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        className="pointer-events-none absolute left-1/2 top-1/2 w-[min(100vw,760px)] max-w-full -translate-x-1/2 -translate-y-1/2"
         style={{
-          width: 760,
-          height: 520,
+          height: 'min(56vh, 520px)',
           background:
             'radial-gradient(ellipse at 55% 45%, rgba(var(--color-accent-glow-rgb, 159 122 234) / 0.14) 0%, transparent 65%)',
           filter: 'blur(0px)',
@@ -738,12 +745,12 @@ const Preloader = ({ onComplete, brand = 'Space Portfolio', tasks }) => {
       <StarField />
       <OrbitalRings visible={orbitalsVisible} />
 
-      {/* Main frame (matches site container rhythm) */}
-      <div className="fixed inset-0 flex items-center justify-center px-4 py-10">
+      {/* Single flex column under fixed root — avoids nested fixed + broken mobile height/scroll */}
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col items-stretch justify-start px-2.5 py-2 sm:items-center sm:justify-center sm:px-4 sm:py-6 md:py-10">
         <AnimatePresence>
           {!cardExiting && (
             <motion.div
-              className="relative w-full max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md sm:p-8"
+              className="relative mx-auto box-border flex max-h-full min-h-0 min-w-0 w-full max-w-5xl flex-1 touch-pan-y flex-col overflow-y-auto overflow-x-hidden overscroll-y-contain rounded-2xl border border-white/10 bg-secondary/20 p-3 [-webkit-overflow-scrolling:touch] backdrop-blur-md sm:max-h-[min(100dvh-2rem,56rem)] sm:flex-none sm:overflow-hidden sm:rounded-3xl sm:p-5 md:p-8"
               style={{
                 boxShadow: '0 34px 96px rgba(0,0,0,0.62)',
               }}
@@ -755,7 +762,7 @@ const Preloader = ({ onComplete, brand = 'Space Portfolio', tasks }) => {
               {/* Premium border glow */}
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-[1.5rem]"
+                className="pointer-events-none absolute inset-0 rounded-2xl sm:rounded-[1.5rem]"
                 style={{
                   border: '1px solid rgba(255,255,255,0.06)',
                   background:
@@ -767,7 +774,7 @@ const Preloader = ({ onComplete, brand = 'Space Portfolio', tasks }) => {
               {/* Soft spotlight inside card */}
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-[1.5rem]"
+                className="pointer-events-none absolute inset-0 rounded-2xl sm:rounded-[1.5rem]"
                 style={{
                   background:
                     'radial-gradient(700px 420px at 30% 25%, rgba(var(--color-accent-rgb,56 189 248) / 0.16), transparent 55%)',
@@ -776,39 +783,39 @@ const Preloader = ({ onComplete, brand = 'Space Portfolio', tasks }) => {
               />
 
               {/* Top bar (mirrors Navbar brand + meta chips) */}
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-start justify-between gap-3 sm:items-center sm:gap-4">
+                <div className="min-w-0 flex-1 basis-[min(100%,14rem)] sm:basis-auto">
                   <a
                     href="#home"
-                    className="text-2xl font-bold text-accent"
+                    className="block min-w-0 text-base font-bold leading-snug text-accent sm:text-xl md:text-2xl"
                     onClick={(e) => e.preventDefault()}
                   >
-                    <span className="text-text">{brand}</span>
+                    <span className="text-text [overflow-wrap:anywhere] sm:line-clamp-2 sm:break-normal">{brand}</span>
                   </a>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full border border-accent/20 bg-accent/10 px-3 py-1.5 text-xs font-mono uppercase tracking-[0.14em] text-accent">
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+                  <span className="rounded-full border border-accent/20 bg-accent/10 px-2 py-1 text-[0.65rem] font-mono uppercase tracking-[0.1em] text-accent sm:px-3 sm:py-1.5 sm:text-xs sm:tracking-[0.14em]">
                     {repeatVisit ? 'Fast lane' : 'Cinematic'}
                   </span>
-                  <span className="rounded-full border border-white/10 bg-primary/40 px-3 py-1.5 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
+                  <span className="rounded-full border border-white/10 bg-primary/40 px-2 py-1 text-[0.65rem] font-mono uppercase tracking-[0.1em] text-text-muted sm:px-3 sm:py-1.5 sm:text-xs sm:tracking-[0.14em]">
                     {Math.round(progress * 100)}%
                   </span>
                 </div>
               </div>
 
-              <div className="mt-6 grid gap-6 lg:grid-cols-2 lg:gap-10">
+              <div className="mt-3 grid min-w-0 flex-1 grid-cols-1 gap-3 sm:mt-6 sm:gap-6 lg:grid-cols-2 lg:gap-10">
                 {/* Left: copy + status */}
-                <div className="space-y-5">
-                  <div className="space-y-2">
+                <div className="min-h-0 min-w-0 space-y-3 sm:space-y-5">
+                  <div className="min-w-0 space-y-1.5 sm:space-y-2">
                     <StatusRow label={stage.status} />
                     <StageTitle stage={stage} />
-                    <p className="text-base leading-relaxed text-text-muted">{stage.detail}</p>
+                    <p className="text-xs leading-relaxed text-text-muted [overflow-wrap:anywhere] sm:text-sm sm:text-base">{stage.detail}</p>
                   </div>
 
-                  <div className="rounded-2xl border border-white/10 bg-primary/40 p-4 backdrop-blur-md">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <p className="font-mono text-xs uppercase tracking-[0.18em] text-text-muted">Launch telemetry</p>
-                      <p className="font-mono text-xs uppercase tracking-[0.18em] text-text-muted">
+                  <div className="rounded-2xl border border-white/10 bg-primary/40 p-3 backdrop-blur-md sm:p-4">
+                    <div className="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3">
+                      <p className="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-text-muted sm:text-xs sm:tracking-[0.18em]">Launch telemetry</p>
+                      <p className="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-text-muted sm:text-xs sm:tracking-[0.18em]">
                         {canSkip ? 'Ready when you are' : 'Optimizing…'}
                       </p>
                     </div>
@@ -817,15 +824,15 @@ const Preloader = ({ onComplete, brand = 'Space Portfolio', tasks }) => {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-1">
-                    <p className="text-xs text-text-muted">
+                  <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <p className="text-[0.7rem] leading-snug text-text-muted sm:text-xs">
                       {canSkip ? 'You can skip anytime.' : 'This takes a moment on first load.'}
                     </p>
                     {canSkip && (
                       <button
                         type="button"
                         onClick={() => setExitStarted(true)}
-                        className="rounded-full border border-accent/30 bg-secondary/25 px-5 py-2.5 text-xs font-mono uppercase tracking-[0.18em] text-accent transition-colors hover:bg-accent/10"
+                        className="w-full shrink-0 rounded-full border border-accent/30 bg-secondary/25 px-4 py-2.5 text-[0.65rem] font-mono uppercase tracking-[0.14em] text-accent transition-colors hover:bg-accent/10 sm:w-auto sm:px-5 sm:text-xs sm:tracking-[0.18em]"
                         style={{
                           boxShadow:
                             '0 0 0 1px rgba(0,0,0,0.25), 0 0 18px rgba(var(--color-accent-rgb,56 189 248) / 0.16)',
@@ -838,8 +845,8 @@ const Preloader = ({ onComplete, brand = 'Space Portfolio', tasks }) => {
                 </div>
 
                 {/* Right: “hero-like” visual */}
-                <div className="space-y-5">
-                  <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-primary/40 p-6 backdrop-blur-md">
+                <div className="min-h-0 min-w-0 space-y-3 sm:space-y-5">
+                  <div className="relative min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-primary/40 p-3 backdrop-blur-md sm:p-6">
                     <div
                       aria-hidden="true"
                       className="pointer-events-none absolute inset-0"
@@ -849,17 +856,20 @@ const Preloader = ({ onComplete, brand = 'Space Portfolio', tasks }) => {
                       }}
                     />
 
-                    <div className="relative flex items-center justify-between gap-4">
-                      <p className="font-mono text-xs uppercase tracking-[0.18em] text-text-muted">
+                    <div className="relative flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                      <p className="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-text-muted sm:text-xs sm:tracking-[0.18em]">
                         Systems check
                       </p>
-                      <p className="text-xs text-text-muted">
+                      <p className="text-[0.65rem] text-text-muted sm:text-xs">
                         {progress < 0.6 ? 'Calibrating visuals…' : progress < 0.9 ? 'Warming engines…' : 'Finalizing…'}
                       </p>
                     </div>
 
-                    <div className="relative mt-6 flex items-center justify-center">
-                      <div className="relative h-44 w-44 sm:h-52 sm:w-52" style={{ animation: 'pl-floaty 3.8s ease-in-out infinite' }}>
+                    <div className="relative mt-3 flex max-w-full items-center justify-center sm:mt-6">
+                      <div
+                        className="relative aspect-square w-[min(72vw,11.5rem)] max-w-[184px] min-[400px]:w-44 min-[400px]:max-w-none sm:aspect-auto sm:h-52 sm:w-52 sm:max-w-none"
+                        style={{ animation: 'pl-floaty 3.8s ease-in-out infinite' }}
+                      >
                         <div
                           aria-hidden="true"
                           className="absolute inset-0 rounded-full"
@@ -894,8 +904,8 @@ const Preloader = ({ onComplete, brand = 'Space Portfolio', tasks }) => {
                           }}
                         />
                         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-                          <div className="text-4xl font-display font-bold text-text">S</div>
-                          <div className="mt-1 text-xs font-mono uppercase tracking-[0.22em] text-text-muted">Launch</div>
+                          <div className="text-3xl font-display font-bold text-text min-[400px]:text-4xl">S</div>
+                          <div className="mt-0.5 text-[0.65rem] font-mono uppercase tracking-[0.14em] text-text-muted sm:mt-1 sm:text-xs sm:tracking-[0.22em]">Launch</div>
                         </div>
                       </div>
                     </div>
@@ -904,7 +914,7 @@ const Preloader = ({ onComplete, brand = 'Space Portfolio', tasks }) => {
                 </div>
               </div>
 
-              <div className="mt-5">
+              <div className="mt-4 sm:mt-5">
                 <AnimatePresence mode="wait">
                   {bootVisible ? (
                     <motion.div

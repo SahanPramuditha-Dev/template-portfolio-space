@@ -5,6 +5,7 @@ import confetti from 'canvas-confetti';
 import SectionWrapper from './SectionWrapper';
 import { trackContactSubmit, trackDownload } from '../utils/analytics';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
+import { CmsSectionSkeleton } from './CmsShapeSkeleton';
 const Contact3D = React.lazy(() => import('./Contact3D'));
 
 const Contact = () => {
@@ -12,7 +13,12 @@ const Contact = () => {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [errorMessage, setErrorMessage] = useState('');
   const prefersReducedMotion = useReducedMotion();
-  const { data: siteDoc } = useCmsDoc(CMS_DOCS.site, null);
+  const { data: siteDoc, loading } = useCmsDoc(CMS_DOCS.site, null);
+
+  if (loading || siteDoc === undefined) {
+    return <CmsSectionSkeleton id="contact" />;
+  }
+
   const availability = siteDoc?.availability || 'Open to new work.';
   const preferredContact = siteDoc?.preferredContact || 'Email works best for detailed inquiries.';
   const responseSla = siteDoc?.responseSla || 'Usually replies within 1-2 business days.';

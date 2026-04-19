@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { doc, onSnapshot, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth, db, storage } from './firebase';
@@ -15,6 +15,33 @@ export const CMS_DOCS = {
   services: 'services',
   openSource: 'openSource',
   resources: 'resources',
+};
+
+/** Firestore documents required for the home page (single-flight warm-up + listener hydration). */
+export const HOMEPAGE_CMS_DOC_IDS = [
+  CMS_DOCS.site,
+  CMS_DOCS.projects,
+  CMS_DOCS.experience,
+  CMS_DOCS.skills,
+  CMS_DOCS.certifications,
+  CMS_DOCS.testimonials,
+  CMS_DOCS.blog,
+];
+
+/**
+ * Resolves after each homepage document has been read at least once from the server or local cache.
+ * Used by the boot preloader so the first paint is never fed from placeholder CMS shapes.
+ */
+export const waitForHomepageCms = (timeoutMs = 20000) => {
+  const reads = HOMEPAGE_CMS_DOC_IDS.map((id) => getDoc(doc(db, 'content', id)));
+  const pending = Promise.all(reads).then(() => undefined);
+  if (!timeoutMs) return pending;
+  return Promise.race([
+    pending,
+    new Promise((resolve) => {
+      setTimeout(resolve, timeoutMs);
+    }),
+  ]);
 };
 
 export const subscribeCmsDoc = (docId, onChange, onError) => {
@@ -69,19 +96,27 @@ export const useAuthState = () => {
   return { user, loading };
 };
 
-export const useCmsDoc = (docId, fallbackValue) => {
-  const [data, setData] = useState(fallbackValue);
+/**
+ * Subscribes to a single `content/{docId}` document.
+ * `whenMissingDoc` is applied only after the first snapshot if the document does not exist (never used as initial render data).
+ * Until then, `data` is `undefined` and `loading` is true.
+ */
+export const useCmsDoc = (docId, whenMissingDoc = null) => {
+  const [data, setData] = useState(undefined);
   const [loading, setLoading] = useState(() => Boolean(docId));
   const [error, setError] = useState(() => (docId ? null : new Error('Missing Firestore document id.')));
   const [exists, setExists] = useState(false);
-  const fallbackRef = useRef(fallbackValue);
+  const whenMissingRef = useRef(whenMissingDoc);
 
   useEffect(() => {
-    fallbackRef.current = fallbackValue;
-  }, [fallbackValue]);
+    whenMissingRef.current = whenMissingDoc;
+  }, [whenMissingDoc]);
 
   useEffect(() => {
     if (!docId) {
+      queueMicrotask(() => {
+        setLoading(false);
+      });
       return undefined;
     }
 
@@ -89,12 +124,14 @@ export const useCmsDoc = (docId, fallbackValue) => {
       docId,
       (value) => {
         setExists(!!value);
-        setData(value || fallbackRef.current);
+        setError(null);
+        setData(value ?? whenMissingRef.current);
         setLoading(false);
       },
       (err) => {
         setError(err);
-        setData(fallbackRef.current);
+        setExists(false);
+        setData(whenMissingRef.current ?? null);
         setLoading(false);
       }
     );

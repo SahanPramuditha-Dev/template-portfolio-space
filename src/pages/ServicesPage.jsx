@@ -4,10 +4,26 @@ import { Briefcase, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
+import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
 
 const ServicesPage = () => {
-  const { data } = useCmsDoc(CMS_DOCS.services, { items: [] });
+  const { data, loading } = useCmsDoc(CMS_DOCS.services, { items: [] });
   const services = Array.isArray(data?.items) ? data.items : [];
+
+  if (loading || data === undefined) {
+    return (
+      <>
+        <SEO
+          title="Services | Sahan Pramuditha"
+          description="Freelance web, API, and product services with clear scope and delivery timelines."
+          canonicalPath="/services"
+        />
+        <PageShell eyebrow="Freelance Offering" title="Services" description="Loading…">
+          <PageBodyCmsSkeleton />
+        </PageShell>
+      </>
+    );
+  }
 
   return (
     <>

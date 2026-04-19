@@ -24,16 +24,12 @@ import { getImpactMetrics, getMediaSlides } from '../utils/projectNormalize';
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-const ProjectModal = ({ project, isOpen, onClose }) => {
+const ProjectModalInner = ({ project, isOpen, onClose }) => {
   const [activeMedia, setActiveMedia] = useState(0);
   const dialogRef = useRef(null);
   const previousFocusRef = useRef(null);
 
   const slides = useMemo(() => (project ? getMediaSlides(project) : []), [project]);
-
-  useEffect(() => {
-    setActiveMedia(0);
-  }, [project?.id, project?.title]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -502,6 +498,13 @@ const ProjectModal = ({ project, isOpen, onClose }) => {
       )}
     </AnimatePresence>
   );
+};
+
+const ProjectModal = (props) => {
+  const key = props.project
+    ? `p-${String(props.project.id ?? '')}-${String(props.project.title ?? '')}`
+    : 'closed';
+  return <ProjectModalInner key={key} {...props} />;
 };
 
 export default ProjectModal;

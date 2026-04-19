@@ -4,10 +4,26 @@ import { Link as LinkIcon, Tag, ExternalLink } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
+import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
 
 const ResourcesPage = () => {
-  const { data } = useCmsDoc(CMS_DOCS.resources, { items: [] });
+  const { data, loading } = useCmsDoc(CMS_DOCS.resources, { items: [] });
   const items = Array.isArray(data?.items) ? data.items : [];
+
+  if (loading || data === undefined) {
+    return (
+      <>
+        <SEO
+          title="Resources | Sahan Pramuditha"
+          description="Curated tools, APIs, cheat sheets, and annotated links."
+          canonicalPath="/resources"
+        />
+        <PageShell eyebrow="Curated Tools" title="Resources" description="Loading…">
+          <PageBodyCmsSkeleton />
+        </PageShell>
+      </>
+    );
+  }
 
   return (
     <>

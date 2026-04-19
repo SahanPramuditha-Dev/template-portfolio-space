@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Gamepad2 } from 'lucide-react';
@@ -33,53 +34,50 @@ const Navbar = () => {
 
   useEffect(() => {
     const sections = ['home', 'about', 'skills', 'experience', 'projects', 'certifications', 'testimonials', 'blog', 'contact'];
-    let metrics = [];
+    const sectionElements = sections.map(id => document.getElementById(id)).filter(Boolean);
     let ticking = false;
+    let activeRatios = new Map();
 
-    const measureSections = () => {
-      metrics = sections.map((id) => {
-        const el = document.getElementById(id);
-        if (!el) return null;
-        const rect = el.getBoundingClientRect();
-        const top = window.scrollY + rect.top;
-        return { id, top, height: el.offsetHeight };
-      }).filter(Boolean);
-    };
-
-    const updateOnScroll = () => {
-      setScrolled(window.scrollY > 50);
-      const scrollPosition = window.scrollY + 100;
-      for (const m of metrics) {
-        if (scrollPosition >= m.top && scrollPosition < m.top + m.height) {
-          setActiveSection(m.id);
-          break;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const ratios = new Map();
+        entries.forEach(entry => {
+          ratios.set(entry.target.id, entry.intersectionRatio);
+        });
+        activeRatios = ratios;
+        // Find section with highest visibility (>25%)
+        let maxRatio = 0;
+        let mostVisible = 'home';
+        for (const [id, ratio] of activeRatios) {
+          if (ratio > 0.25 && ratio > maxRatio) {
+            maxRatio = ratio;
+            mostVisible = id;
+          }
         }
+        setActiveSection(mostVisible);
+      },
+      {
+        rootMargin: '-20% 0px -40% 0px',
+        threshold: [0, 0.1, 0.25, 0.5, 0.75, 1]
       }
-    };
+    );
+
+    sectionElements.forEach(el => observer.observe(el));
 
     const onScroll = () => {
       if (!ticking) {
         ticking = true;
         requestAnimationFrame(() => {
-          updateOnScroll();
           ticking = false;
         });
       }
     };
 
-    const onResize = () => {
-      measureSections();
-      updateOnScroll();
-    };
-
-    measureSections();
-    updateOnScroll();
-
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onResize, { passive: true });
+
     return () => {
+      observer.disconnect();
       window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onResize);
     };
   }, []);
 

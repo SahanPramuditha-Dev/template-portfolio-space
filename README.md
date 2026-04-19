@@ -1,5 +1,9 @@
 ﻿# Sahan Pramuditha Portfolio
 
+[![React](https://img.shields.io/badge/React-19.2-blue?logo=react&logoColor=%23EA4228)](https://reactjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-7-green?logo=vite&logoColor=%23FFE043)](https://vitejs.dev/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-indigo?logo=tailwind&logoColor=white)](https://tailwindcss.com/)
+
 Interactive personal portfolio built with React, Vite, Tailwind CSS, Framer Motion, and Three.js.
 
 ## Live
@@ -18,10 +22,14 @@ Interactive personal portfolio built with React, Vite, Tailwind CSS, Framer Moti
 - Optional analytics hooks for custom endpoint, GA4, and Plausible.
 - Konami-code easter egg that opens a mini snake game.
 
+## 🚀 Recent Updates
+
+- **Preloader Redesign** (v2): Nebula canvas background with stars, orbiting rocket/planet loader, holographic SVG progress ring, glitch text reveals, particle bursts, enhanced neon glows and space theme (preserves ~2s duration).
+
 ## Tech Stack
 
-- React 19
-- Vite 7
+- React ^19.2.0
+- Vite ^7.2.4
 - Tailwind CSS 3
 - Framer Motion
 - GSAP

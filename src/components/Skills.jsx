@@ -7,6 +7,7 @@ import SectionWrapper from './SectionWrapper';
 import TiltCard from './TiltCard';
 import { shouldDisableHeavyVisuals } from '../utils/runtimeGuards';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
+import { CmsSectionSkeleton } from './CmsShapeSkeleton';
 
 gsap.registerPlugin(ScrollTrigger);
 const ISS3D = lazy(() => import('./ISS3D'));
@@ -52,22 +53,6 @@ const SKILL_CATEGORIES = [
 ];
 */
 
-const Skills = () => {
-  const sectionRef = useRef(null);
-  const containerRef = useRef(null);
-  const controlsRef = useRef(null);
-  const [zoomEnabled, setZoomEnabled] = useState(false);
-  const [threeEnabled, setThreeEnabled] = useState(() => !shouldDisableHeavyVisuals());
-  const [highlightCategory, setHighlightCategory] = useState(null);
-  const [issInfo, setIssInfo] = useState(null);
-  const [issError, setIssError] = useState(false);
-  const { data: skillsDoc } = useCmsDoc(CMS_DOCS.skills, { items: [] });
-  const { data: siteDoc } = useCmsDoc(CMS_DOCS.site, null);
-  const skillGroups = Array.isArray(skillsDoc?.items) ? skillsDoc.items : [];
-  const hasSkills = skillGroups.length > 0;
-  const currentLearning = Array.isArray(siteDoc?.currentLearningJson) ? siteDoc.currentLearningJson : [];
-  const devEnvironment = Array.isArray(siteDoc?.devEnvironmentJson) ? siteDoc.devEnvironmentJson : [];
-
 const normalizeSkill = (skill) => {
   if (typeof skill === 'string') {
     return {
@@ -87,6 +72,18 @@ const normalizeSkill = (skill) => {
     iconUrl: skill?.iconUrl || skill?.imageUrl || skill?.icon || '',
   };
 };
+
+const Skills = () => {
+  const sectionRef = useRef(null);
+  const containerRef = useRef(null);
+  const controlsRef = useRef(null);
+  const [zoomEnabled, setZoomEnabled] = useState(false);
+  const [threeEnabled, setThreeEnabled] = useState(() => !shouldDisableHeavyVisuals());
+  const [highlightCategory, setHighlightCategory] = useState(null);
+  const [issInfo, setIssInfo] = useState(null);
+  const [issError, setIssError] = useState(false);
+  const { data: skillsDoc, loading: skillsLoading } = useCmsDoc(CMS_DOCS.skills, { items: [] });
+  const { data: siteDoc, loading: siteLoading } = useCmsDoc(CMS_DOCS.site, null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -166,6 +163,21 @@ const normalizeSkill = (skill) => {
 
     return () => ctx.revert();
   }, []);
+
+  const skillGroups = Array.isArray(skillsDoc?.items) ? skillsDoc.items : [];
+  const hasSkills = skillGroups.length > 0;
+  const currentLearning = Array.isArray(siteDoc?.currentLearningJson) ? siteDoc.currentLearningJson : [];
+  const devEnvironment = Array.isArray(siteDoc?.devEnvironmentJson) ? siteDoc.devEnvironmentJson : [];
+
+  const cmsPending =
+    skillsLoading ||
+    siteLoading ||
+    skillsDoc === undefined ||
+    siteDoc === undefined;
+
+  if (cmsPending) {
+    return <CmsSectionSkeleton id="skills" />;
+  }
 
   return (
     <SectionWrapper id="skills" className="bg-secondary/30 transition-colors duration-300">

@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { Calendar, MapPin, Briefcase } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
+import { CmsSectionSkeleton } from './CmsShapeSkeleton';
 
 /*
 const EXPERIENCE_DATA = [
@@ -131,16 +132,14 @@ const ExperienceCard = ({ item, index }) => {
   );
 };
 
-const Experience = () => {
+/** Mount only when CMS data is ready so `useScroll`’s target ref is always on a real DOM node. */
+const ExperienceTimeline = ({ experienceItems }) => {
   const ref = useRef(null);
-  const { data } = useCmsDoc(CMS_DOCS.experience, { items: [] });
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ["start end", "end start"]
+    offset: ['start end', 'end start'],
   });
-
-  const lineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
-  const experienceItems = Array.isArray(data?.items) ? data.items : [];
+  const lineHeight = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
 
   return (
     <SectionWrapper id="experience">
@@ -158,11 +157,9 @@ const Experience = () => {
             </div>
           ) : (
             <div className="relative space-y-12">
-              {/* Center Line Background */}
               <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-1 bg-secondary -translate-x-1/2 rounded-full" />
-              
-              {/* Animated Progress Line */}
-              <motion.div 
+
+              <motion.div
                 style={{ height: lineHeight }}
                 className="absolute left-8 md:left-1/2 top-0 w-1 bg-accent -translate-x-1/2 rounded-full z-0 shadow-[0_0_15px_rgb(var(--color-accent-rgb)_/_0.8)]"
               />
@@ -176,6 +173,17 @@ const Experience = () => {
       </div>
     </SectionWrapper>
   );
+};
+
+const Experience = () => {
+  const { data, loading } = useCmsDoc(CMS_DOCS.experience, { items: [] });
+  const experienceItems = Array.isArray(data?.items) ? data.items : [];
+
+  if (loading || data === undefined) {
+    return <CmsSectionSkeleton id="experience" />;
+  }
+
+  return <ExperienceTimeline experienceItems={experienceItems} />;
 };
 
 export default Experience;

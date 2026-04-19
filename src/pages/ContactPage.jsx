@@ -4,9 +4,26 @@ import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import Contact from '../components/Contact';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
+import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
 
 const ContactPage = () => {
-  const { data: siteDoc } = useCmsDoc(CMS_DOCS.site, null);
+  const { data: siteDoc, loading } = useCmsDoc(CMS_DOCS.site, null);
+
+  if (loading || siteDoc === undefined) {
+    return (
+      <>
+        <SEO
+          title="Contact | Sahan Pramuditha"
+          description="Get in touch for freelance work, product builds, or collaborations."
+          canonicalPath="/contact"
+        />
+        <PageShell eyebrow="Lead Capture" title="Contact" description="Loading…">
+          <PageBodyCmsSkeleton />
+        </PageShell>
+      </>
+    );
+  }
+
   const email = siteDoc?.contactEmail || siteDoc?.footerEmail || 'contact@sahanpramuditha.com';
   const socialLinks = Array.isArray(siteDoc?.socialLinksJson) ? siteDoc.socialLinksJson : [];
 

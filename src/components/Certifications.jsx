@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Award, ExternalLink, Calendar } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
+import { CmsSectionSkeleton } from './CmsShapeSkeleton';
 
 const CertificationCard = ({ cert, index }) => {
   return (
@@ -67,8 +68,12 @@ const CertificationCard = ({ cert, index }) => {
 };
 
 const Certifications = () => {
-  const { data } = useCmsDoc(CMS_DOCS.certifications, { items: [] });
+  const { data, loading } = useCmsDoc(CMS_DOCS.certifications, { items: [] });
   const certificationsList = Array.isArray(data?.items) ? data.items : [];
+
+  if (loading || data === undefined) {
+    return <CmsSectionSkeleton id="certifications" />;
+  }
 
   return (
     <SectionWrapper id="certifications">

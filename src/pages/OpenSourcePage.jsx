@@ -4,10 +4,27 @@ import { Github, Star, GitFork, Eye } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
+import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
 
 const OpenSourcePage = () => {
-  const { data } = useCmsDoc(CMS_DOCS.openSource, { items: [] });
-  const { data: siteDoc } = useCmsDoc(CMS_DOCS.site, null);
+  const { data, loading: osLoading } = useCmsDoc(CMS_DOCS.openSource, { items: [] });
+  const { data: siteDoc, loading: siteLoading } = useCmsDoc(CMS_DOCS.site, null);
+
+  if (osLoading || siteLoading || data === undefined || siteDoc === undefined) {
+    return (
+      <>
+        <SEO
+          title="Open Source | Sahan Pramuditha"
+          description="Open source libraries, packages, and contributions."
+          canonicalPath="/opensource"
+        />
+        <PageShell eyebrow="Contributions" title="Open source" description="Loading…">
+          <PageBodyCmsSkeleton />
+        </PageShell>
+      </>
+    );
+  }
+
   const items = Array.isArray(data?.items) ? data.items : [];
   const githubUsername = siteDoc?.githubUsername || 'SahanPramuditha-Dev';
 

@@ -917,6 +917,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
   const [listQuery, setListQuery] = useState('');
 
   useEffect(() => {
+    if (data === undefined) return;
     const nextItems = Array.isArray(data?.[collectionKey]) ? data[collectionKey] : [];
     setItems(nextItems);
     if (selectedIndex === -1) {
@@ -1682,6 +1683,7 @@ const SiteEditor = () => {
   const [aboutSubTab, setAboutSubTab] = useState('bio');
 
   useEffect(() => {
+    if (data === undefined) return;
     setDraft(normalizeSiteDraft(data ?? initialSiteContent));
   }, [data]);
 
