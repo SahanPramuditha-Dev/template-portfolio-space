@@ -32,10 +32,20 @@ const Navbar = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Navbar scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Set initial state on load
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Active section highlighting on scroll
   useEffect(() => {
     const sections = ['home', 'about', 'skills', 'experience', 'projects', 'certifications', 'testimonials', 'blog', 'contact'];
     const sectionElements = sections.map(id => document.getElementById(id)).filter(Boolean);
-    let ticking = false;
     let activeRatios = new Map();
 
     const observer = new IntersectionObserver(
@@ -64,20 +74,8 @@ const Navbar = () => {
 
     sectionElements.forEach(el => observer.observe(el));
 
-    const onScroll = () => {
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(() => {
-          ticking = false;
-        });
-      }
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-
     return () => {
       observer.disconnect();
-      window.removeEventListener('scroll', onScroll);
     };
   }, []);
 
