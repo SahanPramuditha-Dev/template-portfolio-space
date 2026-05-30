@@ -93,8 +93,12 @@ const Skills = () => {
     };
     update();
     reduceMotionQuery.addEventListener('change', update);
+    window.addEventListener('visual-mode-change', update);
+    window.addEventListener('storage', update);
     return () => {
       reduceMotionQuery.removeEventListener('change', update);
+      window.removeEventListener('visual-mode-change', update);
+      window.removeEventListener('storage', update);
     };
   }, []);
 
@@ -183,7 +187,7 @@ const Skills = () => {
     <SectionWrapper id="skills" className="bg-secondary/30 transition-colors duration-300">
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl" ref={sectionRef}>
         <h2 className="flex flex-wrap items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold text-text mb-8 sm:mb-12 md:mb-16 gradient-text">
-          <span className="text-accent font-mono text-lg sm:text-xl mr-0 sm:mr-2">02.</span>
+          <span className="text-accent font-mono text-lg sm:text-xl mr-0 sm:mr-2">03.</span>
           <span className="flex-grow min-w-0">Skills & Technologies</span>
           <span className="h-px bg-secondary flex-grow min-w-[60px] ml-0 sm:ml-4 opacity-50 w-full sm:w-auto order-3 sm:order-none"></span>
         </h2>

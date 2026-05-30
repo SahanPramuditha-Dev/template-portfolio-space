@@ -19,10 +19,10 @@ Use this checklist before making the repository public.
 
 ## Assets and SEO
 
-- [ ] Add `public/og-image.png` (currently referenced by SEO metadata).
+- [x] Add `public/og-image.svg` for SEO/social metadata.
 - [ ] Add `public/resume.pdf` or set `VITE_RESUME_URL`.
 - [ ] Add local preloaded font file `public/fonts/SpaceGrotesk-Regular.woff2` or remove the preload link in `index.html`.
-- [ ] Update `public/sitemap.xml` `lastmod` dates from `2024-01-01` to current values.
+- [x] Update `public/sitemap.xml` `lastmod` dates to current values.
 - [ ] Validate `public/robots.txt` and sitemap URL.
 
 ## Integrations
@@ -37,6 +37,7 @@ Use this checklist before making the repository public.
 - [ ] Run `npm run lint` and fix any issues.
 - [ ] Run `npm run build` and verify successful production build.
 - [ ] Run `npm run preview` and test major flows.
+- [ ] Review the GitHub Actions quality workflow after the first CI run.
 - [ ] Test on mobile and desktop breakpoints.
 - [ ] Test keyboard shortcuts and reduced-motion behavior.
 

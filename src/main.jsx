@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+import { StrictMode, Suspense, lazy } from 'react'
 import { createRoot } from 'react-dom/client'
 import '@fontsource/calistoga'
 import '@fontsource/space-grotesk/300.css'
@@ -14,19 +14,22 @@ import App from './App.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import AdminPage from './pages/AdminPage.jsx'
-import BlogPage from './pages/BlogPage.jsx'
-import BlogPostPage from './pages/BlogPostPage.jsx'
-import ResumePage from './pages/ResumePage.jsx'
-import ResourcesPage from './pages/ResourcesPage.jsx'
-import TestimonialsPage from './pages/TestimonialsPage.jsx'
-import ServicesPage from './pages/ServicesPage.jsx'
-import OpenSourcePage from './pages/OpenSourcePage.jsx'
-import PrivacyPage from './pages/PrivacyPage.jsx'
-import CookiePolicyPage from './pages/CookiePolicyPage.jsx'
-import ContactPage from './pages/ContactPage.jsx'
-import NotFoundPage from './pages/NotFoundPage.jsx'
 import RouteAnalytics from './components/RouteAnalytics.jsx'
+import RouteFallback from './components/RouteFallback.jsx'
+
+const AdminPage = lazy(() => import('./pages/AdminPage.jsx'))
+const BlogPage = lazy(() => import('./pages/BlogPage.jsx'))
+const BlogPostPage = lazy(() => import('./pages/BlogPostPage.jsx'))
+const ProjectPage = lazy(() => import('./pages/ProjectPage.jsx'))
+const ResumePage = lazy(() => import('./pages/ResumePage.jsx'))
+const ResourcesPage = lazy(() => import('./pages/ResourcesPage.jsx'))
+const TestimonialsPage = lazy(() => import('./pages/TestimonialsPage.jsx'))
+const ServicesPage = lazy(() => import('./pages/ServicesPage.jsx'))
+const OpenSourcePage = lazy(() => import('./pages/OpenSourcePage.jsx'))
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage.jsx'))
+const CookiePolicyPage = lazy(() => import('./pages/CookiePolicyPage.jsx'))
+const ContactPage = lazy(() => import('./pages/ContactPage.jsx'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 
 // Smooth Scroll Polyfill for browsers without native scroll-behavior support
 (() => {
@@ -62,21 +65,24 @@ createRoot(document.getElementById('root')).render(
       <ThemeProvider>
         <BrowserRouter>
           <RouteAnalytics />
-          <Routes>
-            <Route path="/" element={<App />} />
-            <Route path="/admin" element={<AdminPage />} />
-            <Route path="/blog" element={<BlogPage />} />
-            <Route path="/blog/:slug" element={<BlogPostPage />} />
-            <Route path="/resume" element={<ResumePage />} />
-            <Route path="/resources" element={<ResourcesPage />} />
-            <Route path="/testimonials" element={<TestimonialsPage />} />
-            <Route path="/services" element={<ServicesPage />} />
-            <Route path="/opensource" element={<OpenSourcePage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/cookies" element={<CookiePolicyPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
+              <Route path="/" element={<App />} />
+              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/blog" element={<BlogPage />} />
+              <Route path="/blog/:slug" element={<BlogPostPage />} />
+              <Route path="/projects/:slug" element={<ProjectPage />} />
+              <Route path="/resume" element={<ResumePage />} />
+              <Route path="/resources" element={<ResourcesPage />} />
+              <Route path="/testimonials" element={<TestimonialsPage />} />
+              <Route path="/services" element={<ServicesPage />} />
+              <Route path="/opensource" element={<OpenSourcePage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/cookies" element={<CookiePolicyPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </ThemeProvider>
     </ErrorBoundary>

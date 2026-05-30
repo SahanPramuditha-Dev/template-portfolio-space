@@ -16,7 +16,9 @@ Interactive personal portfolio built with React, Vite, Tailwind CSS, Framer Moti
 - Interactive 3D experiences (Three.js and React Three Fiber).
 - ISS preview with Sketchfab primary embed and local GLB fallback.
 - Theme accent color picker with persistent selection.
-- Keyboard shortcuts (`?`, `G H`, `G A`, `G P`, `G C`) and skip-to-content support.
+- Keyboard shortcuts, command palette (`Ctrl/Cmd + K`), and skip-to-content support.
+- Project case-study pages with shareable `/projects/:slug` URLs.
+- Now/availability section powered by CMS content.
 - SEO metadata, Open Graph tags, and JSON-LD structured data.
 - Contact form with endpoint support, Formspree support, and mailto fallback.
 - Optional analytics hooks for custom endpoint, GA4, and Plausible.
@@ -61,10 +63,13 @@ Open the local URL printed by Vite (usually `http://localhost:5173`).
 
 ```bash
 npm run dev      # start local dev server
+npm run generate:sitemap # rebuild public/sitemap.xml
 npm run build    # production build to dist/
 npm run preview  # preview production build locally
 npm run lint     # run eslint
 ```
+
+`npm run build` runs the sitemap generator first. To include CMS project/blog URLs, add `public/cms-sitemap.json` or `sitemap.dynamic.json` with `projects` and `blog` arrays containing `slug`, `title`, `id`, or `missionCode` fields.
 
 ## Environment Variables
 
@@ -75,8 +80,11 @@ Create a `.env` file from `.env.example`.
 | `VITE_RESUME_URL` | No | External resume URL. If empty, app uses `/resume.pdf`. |
 | `VITE_CONTACT_ENDPOINT` | No | Full POST endpoint for contact form submissions. |
 | `VITE_FORMSPREE_ID` | No | Formspree form ID (used if `VITE_CONTACT_ENDPOINT` is not set). |
+| `VITE_BOOKING_URL` | No | Optional booking/calendar link shown in contact and services CTAs. |
 | `VITE_GITHUB_TOKEN` | No | GitHub token to reduce API rate-limit issues for GitHub stats. |
 | `VITE_ANALYTICS_ENDPOINT` | No | Custom analytics ingestion endpoint. |
+| `VITE_SITE_URL` | No | Canonical production site URL used by SEO metadata. |
+| `VITE_FIREBASE_*` | No | Firebase CMS config. Defaults are included for this portfolio instance. |
 
 ## Project Structure
 

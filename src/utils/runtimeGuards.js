@@ -23,6 +23,10 @@ export const supportsWebGL = () => {
 export const shouldDisableHeavyVisuals = () => {
   if (typeof window === 'undefined') return false;
 
+  const visualMode = window.localStorage.getItem('visualMode');
+  if (visualMode === 'lite') return true;
+  if (visualMode === 'full') return false;
+
   const prefersReducedMotion =
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -33,5 +37,20 @@ export const shouldDisableHeavyVisuals = () => {
     navigator.deviceMemory <= 4;
 
   return isBotUserAgent() || prefersReducedMotion || saveData || lowMemory || !supportsWebGL();
+};
+
+export const getVisualModePreference = () => {
+  if (typeof window === 'undefined') return 'auto';
+  return window.localStorage.getItem('visualMode') || 'auto';
+};
+
+export const setVisualModePreference = (mode) => {
+  if (typeof window === 'undefined') return;
+  if (mode === 'auto') {
+    window.localStorage.removeItem('visualMode');
+  } else {
+    window.localStorage.setItem('visualMode', mode);
+  }
+  window.dispatchEvent(new CustomEvent('visual-mode-change', { detail: { mode } }));
 };
 

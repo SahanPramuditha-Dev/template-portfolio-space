@@ -40,7 +40,9 @@ const SEO = ({
     const canonicalUrl = canonicalPath.startsWith('http')
       ? canonicalPath
       : `${siteUrl}${canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`}`;
-    const resolvedOgImage = ogImage || `${siteUrl}/favicon.svg`;
+    const resolvedOgImage = ogImage
+      ? (String(ogImage).startsWith('http') ? ogImage : `${siteUrl}${String(ogImage).startsWith('/') ? ogImage : `/${ogImage}`}`)
+      : `${siteUrl}/og-image.svg`;
     const twitterHandle = '@sahanpramuditha';
     const keywords =
       'Sahan Pramuditha, software engineer, creative developer, web developer, React developer, portfolio, Three.js';
@@ -63,9 +65,11 @@ const SEO = ({
     upsertMetaTag('meta[property="og:title"]', { property: 'og:title', content: title });
     upsertMetaTag('meta[property="og:description"]', { property: 'og:description', content: description });
     upsertMetaTag('meta[property="og:image"]', { property: 'og:image', content: resolvedOgImage });
+    upsertMetaTag('meta[property="og:image:width"]', { property: 'og:image:width', content: '1200' });
+    upsertMetaTag('meta[property="og:image:height"]', { property: 'og:image:height', content: '630' });
     upsertMetaTag('meta[property="og:site_name"]', { property: 'og:site_name', content: 'Sahan Pramuditha' });
 
-    upsertMetaTag('meta[name="twitter:card"]', { name: 'twitter:card', content: 'summary' });
+    upsertMetaTag('meta[name="twitter:card"]', { name: 'twitter:card', content: 'summary_large_image' });
     upsertMetaTag('meta[name="twitter:url"]', { name: 'twitter:url', content: canonicalUrl });
     upsertMetaTag('meta[name="twitter:title"]', { name: 'twitter:title', content: title });
     upsertMetaTag('meta[name="twitter:description"]', { name: 'twitter:description', content: description });

@@ -14,12 +14,14 @@ import {
   Play,
   Filter,
   Layers,
+  Target,
 } from 'lucide-react';
 import ProjectModal from './ProjectModal';
 import SectionWrapper from './SectionWrapper';
 import { trackProjectView } from '../utils/analytics';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { isUsableHttpUrl } from '../utils/projectUrls';
+import { slugify } from '../utils/slugify';
 import {
   getCardSubtitle,
   getImpactMetrics,
@@ -43,6 +45,7 @@ const ProjectCard = ({ project, index, onOpenModal, compact = false }) => {
   const outcome = getOutcomeBadge(project);
   const subtitle = getCardSubtitle(project);
   const statusLabel = getProjectStatusLabel(project);
+  const projectSlug = slugify(project.slug || project.id || project.title || project.missionCode);
 
   const openModal = () => {
     trackProjectView(project.title);
@@ -253,10 +256,13 @@ const ProjectCard = ({ project, index, onOpenModal, compact = false }) => {
 
           <div className="mt-5 flex items-center justify-between gap-3 text-sm">
             <span className="text-text-muted">Open case study</span>
-            <span className="inline-flex items-center gap-1 font-mono text-accent">
-              Details
+            <a
+              href={`/projects/${projectSlug}`}
+              className="relative z-10 inline-flex items-center gap-1 font-mono text-accent hover:text-text"
+            >
+              Full page
               <ChevronRight size={14} className="transition-transform group-hover:translate-x-1" />
-            </span>
+            </a>
           </div>
         </div>
       </div>
@@ -282,6 +288,14 @@ const ChipToggle = ({ active, label, onClick }) => (
   </button>
 );
 
+const QUICK_GOALS = [
+  { id: 'ecommerce', label: 'E-commerce', terms: ['e-commerce', 'ecommerce', 'commerce', 'shop', 'store'] },
+  { id: 'dashboard', label: 'Dashboards', terms: ['dashboard', 'admin', 'analytics', 'cms'] },
+  { id: 'landing', label: 'Landing pages', terms: ['landing', 'marketing', 'website'] },
+  { id: 'api', label: 'APIs', terms: ['api', 'backend', 'server', 'firebase', 'node'] },
+  { id: 'creative', label: '3D / creative', terms: ['3d', 'three', 'animation', 'creative', 'interactive'] },
+];
+
 const ProjectsSkeleton = () => (
   <div className="space-y-8 animate-pulse" aria-hidden>
     <div className="grid gap-6 lg:grid-cols-2">
@@ -306,6 +320,7 @@ const Projects = () => {
   const [onlyLive, setOnlyLive] = useState(false);
   const [onlySource, setOnlySource] = useState(false);
   const [onlyFeatured, setOnlyFeatured] = useState(false);
+  const [activeGoal, setActiveGoal] = useState('all');
   const [query, setQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('desc');
 
@@ -347,6 +362,23 @@ const Projects = () => {
       const techMatch =
         selectedTech.length === 0 || selectedTech.some((t) => tech.includes(t));
       const search = query.trim().toLowerCase();
+      const goal = QUICK_GOALS.find((item) => item.id === activeGoal);
+      const goalHaystack = [
+        project.title,
+        project.shortDescription,
+        project.description,
+        project.category,
+        project.role,
+        project.industry,
+        ...(Array.isArray(project.tags) ? project.tags : []),
+        ...(Array.isArray(project.tech) ? project.tech : []),
+      ]
+        .join(' ')
+        .toLowerCase();
+      const goalMatch =
+        activeGoal === 'all' ||
+        !goal ||
+        goal.terms.some((term) => goalHaystack.includes(term));
       const searchMatch =
         !search ||
         String(project.title || '').toLowerCase().includes(search) ||
@@ -366,6 +398,7 @@ const Projects = () => {
 
       return (
         categoryMatch &&
+        goalMatch &&
         tagMatch &&
         techMatch &&
         searchMatch &&
@@ -379,6 +412,7 @@ const Projects = () => {
     activeCategory,
     selectedTags,
     selectedTech,
+    activeGoal,
     onlyLive,
     onlySource,
     onlyFeatured,
@@ -417,6 +451,7 @@ const Projects = () => {
     if (onlyLive) n += 1;
     if (onlySource) n += 1;
     if (onlyFeatured) n += 1;
+    if (activeGoal !== 'all') n += 1;
     if (query.trim().length > 0) n += 1;
     if (sortOrder !== 'desc') n += 1;
     return n;
@@ -424,6 +459,7 @@ const Projects = () => {
     activeCategory,
     selectedTags.length,
     selectedTech.length,
+    activeGoal,
     onlyLive,
     onlySource,
     onlyFeatured,
@@ -442,6 +478,7 @@ const Projects = () => {
     setOnlyLive(false);
     setOnlySource(false);
     setOnlyFeatured(false);
+    setActiveGoal('all');
     setQuery('');
     setSortOrder('desc');
   };
@@ -450,7 +487,7 @@ const Projects = () => {
     <SectionWrapper id="projects">
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative">
         <div className="mb-6 flex flex-wrap items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold text-text font-display gradient-text">
-          <span className="text-accent font-mono text-lg sm:text-xl mr-0 sm:mr-2">03.</span>
+          <span className="text-accent font-mono text-lg sm:text-xl mr-0 sm:mr-2">05.</span>
           <span className="flex-grow min-w-0">Some Things I’ve Built</span>
           <span className="h-px bg-secondary flex-grow min-w-[60px] ml-0 sm:ml-4 opacity-50 w-full sm:w-auto order-3 sm:order-none"></span>
         </div>
@@ -515,6 +552,24 @@ const Projects = () => {
                 Oldest first
               </button>
             </div>
+          </div>
+        </div>
+
+        <div className="mb-5">
+          <div className="mb-2 flex items-center gap-2 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
+            <Target size={14} className="text-accent" />
+            Goal
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <ChipToggle active={activeGoal === 'all'} label="All goals" onClick={() => setActiveGoal('all')} />
+            {QUICK_GOALS.map((goal) => (
+              <ChipToggle
+                key={goal.id}
+                active={activeGoal === goal.id}
+                label={goal.label}
+                onClick={() => setActiveGoal((current) => (current === goal.id ? 'all' : goal.id))}
+              />
+            ))}
           </div>
         </div>
 

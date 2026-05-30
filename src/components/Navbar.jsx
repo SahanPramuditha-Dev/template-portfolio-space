@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Gamepad2 } from 'lucide-react';
+import { ChevronDown, Menu, X, Gamepad2 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import SnakeGame from './SnakeGame';
 
@@ -10,6 +10,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [isGameOpen, setIsGameOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   // Konami Code Logic
   useEffect(() => {
@@ -44,7 +45,7 @@ const Navbar = () => {
 
   // Active section highlighting on scroll
   useEffect(() => {
-    const sections = ['home', 'about', 'skills', 'experience', 'projects', 'certifications', 'testimonials', 'blog', 'contact'];
+    const sections = ['home', 'about', 'now', 'skills', 'experience', 'projects', 'certifications', 'testimonials', 'blog', 'contact'];
     const sectionElements = sections.map(id => document.getElementById(id)).filter(Boolean);
     let activeRatios = new Map();
 
@@ -82,13 +83,20 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Home', href: '#home', id: 'home' },
     { name: 'About', href: '#about', id: 'about' },
+    { name: 'Projects', href: '#projects', id: 'projects' },
+    { name: 'Contact', href: '#contact', id: 'contact' },
+  ];
+
+  const moreLinks = [
+    { name: 'Now', href: '#now', id: 'now' },
     { name: 'Skills', href: '#skills', id: 'skills' },
     { name: 'Experience', href: '#experience', id: 'experience' },
-    { name: 'Projects', href: '#projects', id: 'projects' },
     { name: 'Certifications', href: '#certifications', id: 'certifications' },
     { name: 'Testimonials', href: '#testimonials', id: 'testimonials' },
     { name: 'Blog', href: '#blog', id: 'blog' },
-    { name: 'Contact', href: '#contact', id: 'contact' },
+    { name: 'Services', href: '/services', id: 'services' },
+    { name: 'Resources', href: '/resources', id: 'resources' },
+    { name: 'Resume', href: '/resume', id: 'resume' },
   ];
 
   const handleClick = (e, href) => {
@@ -101,8 +109,13 @@ const Navbar = () => {
         behavior: 'smooth'
       });
       setIsOpen(false);
+      setMoreOpen(false);
+    } else if (href.startsWith('/')) {
+      window.location.href = href;
     }
   };
+
+  const moreActive = moreLinks.some((link) => link.id === activeSection);
 
   return (
     <>
@@ -117,7 +130,7 @@ const Navbar = () => {
           </a>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8">
             {navLinks.map((link) => (
               <motion.a
                 key={link.name}
@@ -137,6 +150,52 @@ const Navbar = () => {
                 ></span>
               </motion.a>
             ))}
+
+            <div className="relative">
+              <motion.button
+                type="button"
+                onClick={() => setMoreOpen((open) => !open)}
+                onBlur={() => window.setTimeout(() => setMoreOpen(false), 120)}
+                className={`inline-flex items-center gap-1 transition-colors duration-300 font-medium nav-link ${
+                  moreActive || moreOpen ? 'text-accent' : 'text-text-muted hover:text-accent'
+                }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                aria-expanded={moreOpen}
+                aria-haspopup="menu"
+              >
+                More
+                <ChevronDown size={16} className={`transition-transform ${moreOpen ? 'rotate-180' : ''}`} />
+              </motion.button>
+              <AnimatePresence>
+                {moreOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                    className="absolute right-0 top-9 w-56 rounded-2xl border border-white/10 bg-primary/95 p-2 shadow-2xl backdrop-blur-md"
+                    role="menu"
+                  >
+                    {moreLinks.map((link) => (
+                      <a
+                        key={link.name}
+                        href={link.href}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={(e) => handleClick(e, link.href)}
+                        className={`block rounded-xl px-4 py-2.5 text-sm transition-colors ${
+                          activeSection === link.id
+                            ? 'bg-accent/10 text-accent'
+                            : 'text-text-muted hover:bg-secondary/50 hover:text-text'
+                        }`}
+                        role="menuitem"
+                      >
+                        {link.name}
+                      </a>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             
             <motion.button
               whileHover={{ scale: 1.1 }}
@@ -144,6 +203,7 @@ const Navbar = () => {
               onClick={() => setIsGameOpen(true)}
               className="p-2 rounded-full bg-secondary text-accent border border-accent/20 hover:border-accent hover:shadow-[0_0_15px_rgb(var(--color-accent-rgb)_/_0.3)] transition-all duration-300"
               aria-label="Play Game"
+              title="Play mini game"
             >
               <Gamepad2 size={20} />
             </motion.button>
@@ -158,6 +218,7 @@ const Navbar = () => {
               onClick={() => setIsGameOpen(true)}
               className="p-2 rounded-full bg-secondary text-accent border border-accent/20"
               aria-label="Play Game"
+              title="Play mini game"
             >
               <Gamepad2 size={20} />
             </motion.button>
@@ -189,6 +250,20 @@ const Navbar = () => {
                       href={link.href}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0, transition: { delay: i * 0.1 } }}
+                      className={`text-lg transition-colors font-medium ${
+                        activeSection === link.id ? 'text-accent' : 'text-text-muted hover:text-accent'
+                      }`}
+                      onClick={(e) => handleClick(e, link.href)}
+                    >
+                      {link.name}
+                    </motion.a>
+                  ))}
+                  {moreLinks.map((link, i) => (
+                    <motion.a
+                      key={link.name}
+                      href={link.href}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0, transition: { delay: (i + navLinks.length) * 0.06 } }}
                       className={`text-lg transition-colors font-medium ${
                         activeSection === link.id ? 'text-accent' : 'text-text-muted hover:text-accent'
                       }`}

@@ -1,16 +1,9 @@
-import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import About from './components/About';
-import Experience from './components/Experience';
-import Skills from './components/Skills';
-import Projects from './components/Projects';
-import Certifications from './components/Certifications';
-import Testimonials from './components/Testimonials';
-import Blog from './components/Blog';
-import Contact from './components/Contact';
-import Footer from './components/Footer';
+import NowAvailability from './components/NowAvailability';
 import Preloader from './components/Preloader';
 import SEO from './components/SEO';
 import StructuredData from './components/StructuredData';
@@ -19,31 +12,27 @@ import KeyboardShortcuts from './components/KeyboardShortcuts';
 import ScrollProgress from './components/ScrollProgress';
 import ScrollToTop from './components/ScrollToTop';
 import SmoothScroll from './components/SmoothScroll';
+import MobileQuickActions from './components/MobileQuickActions';
 import { Analytics } from '@vercel/analytics/react';
 import { isBotUserAgent, shouldDisableHeavyVisuals } from './utils/runtimeGuards';
-import { waitForHomepageCms } from './lib/cms';
+import { CmsSectionSkeleton, FooterCmsSkeleton } from './components/CmsShapeSkeleton';
 
 const ThreeBackground = lazy(() => import('./components/ThreeBackground'));
 const CustomCursor = lazy(() => import('./components/CustomCursor'));
+const Skills = lazy(() => import('./components/Skills'));
+const Experience = lazy(() => import('./components/Experience'));
+const Projects = lazy(() => import('./components/Projects'));
+const Certifications = lazy(() => import('./components/Certifications'));
+const Testimonials = lazy(() => import('./components/Testimonials'));
+const Blog = lazy(() => import('./components/Blog'));
+const Contact = lazy(() => import('./components/Contact'));
+const Footer = lazy(() => import('./components/Footer'));
 
 function App() {
   const isBot = isBotUserAgent();
-  const cmsBootstrapTask = useMemo(() => waitForHomepageCms(), []);
 
   const [visualIntroDone, setVisualIntroDone] = useState(isBot);
-  const [appReady, setAppReady] = useState(false);
   const [heavyVisualsEnabled, setHeavyVisualsEnabled] = useState(() => !shouldDisableHeavyVisuals());
-
-  useEffect(() => {
-    if (!visualIntroDone) return undefined;
-    let cancelled = false;
-    cmsBootstrapTask.finally(() => {
-      if (!cancelled) setAppReady(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [visualIntroDone, cmsBootstrapTask]);
 
   useEffect(() => {
     let animationFrameId;
@@ -73,22 +62,26 @@ function App() {
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
-    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const update = () => {
       setHeavyVisualsEnabled(!shouldDisableHeavyVisuals());
     };
+    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     update();
     reduceMotionQuery.addEventListener('change', update);
+    window.addEventListener('visual-mode-change', update);
+    window.addEventListener('storage', update);
     return () => {
       reduceMotionQuery.removeEventListener('change', update);
+      window.removeEventListener('visual-mode-change', update);
+      window.removeEventListener('storage', update);
     };
   }, []);
 
   return (
     <>
       <SEO />
-      {appReady ? <StructuredData /> : null}
+      <StructuredData />
       <SkipToContent />
       <KeyboardShortcuts />
       <ScrollProgress />
@@ -98,27 +91,12 @@ function App() {
         {!isBot && !visualIntroDone && (
           <Preloader
             brand="Sahan - Space Portfolio"
-            tasks={[cmsBootstrapTask]}
             onComplete={() => setVisualIntroDone(true)}
           />
         )}
       </AnimatePresence>
 
-      {!appReady && (isBot || visualIntroDone) && (
-        <div
-          className="fixed inset-0 z-[95] flex flex-col items-center justify-center gap-4 bg-primary text-text-muted"
-          aria-busy="true"
-          aria-live="polite"
-        >
-          <div
-            className="h-10 w-10 rounded-full border-2 border-accent/35 border-t-accent animate-spin"
-            role="status"
-          />
-          <span className="text-xs font-mono uppercase tracking-[0.2em]">Syncing content</span>
-        </div>
-      )}
-
-      {appReady && (
+      {(isBot || visualIntroDone) && (
         <motion.div
           className="bg-primary min-h-screen text-text-muted selection:bg-accent selection:text-primary transition-colors duration-300"
           initial={{ opacity: 0 }}
@@ -141,16 +119,34 @@ function App() {
             <main id="main-content">
               <Hero />
               <About />
-              <Skills />
-              <Experience />
-              <Projects />
-              <Certifications />
-              <Testimonials />
-              <Blog />
-              <Contact />
+              <NowAvailability />
+              <Suspense fallback={<CmsSectionSkeleton id="skills" />}>
+                <Skills />
+              </Suspense>
+              <Suspense fallback={<CmsSectionSkeleton id="experience" />}>
+                <Experience />
+              </Suspense>
+              <Suspense fallback={<CmsSectionSkeleton id="projects" />}>
+                <Projects />
+              </Suspense>
+              <Suspense fallback={<CmsSectionSkeleton id="certifications" />}>
+                <Certifications />
+              </Suspense>
+              <Suspense fallback={<CmsSectionSkeleton id="testimonials" />}>
+                <Testimonials />
+              </Suspense>
+              <Suspense fallback={<CmsSectionSkeleton id="blog" />}>
+                <Blog />
+              </Suspense>
+              <Suspense fallback={<CmsSectionSkeleton id="contact" />}>
+                <Contact />
+              </Suspense>
             </main>
-            <Footer />
+            <Suspense fallback={<FooterCmsSkeleton />}>
+              <Footer />
+            </Suspense>
           </div>
+          <MobileQuickActions />
           <Analytics />
         </motion.div>
       )}

@@ -1,16 +1,24 @@
 import React, { useState, Suspense } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Send, CheckCircle, Loader2, FileText, Download } from 'lucide-react';
+import { Send, CheckCircle, Loader2, Download, CalendarDays, ExternalLink } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import SectionWrapper from './SectionWrapper';
 import { trackContactSubmit, trackDownload } from '../utils/analytics';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { CmsSectionSkeleton } from './CmsShapeSkeleton';
+import CopyEmailButton from './CopyEmailButton';
 const Contact3D = React.lazy(() => import('./Contact3D'));
 
 const Contact = () => {
   const [formState, setFormState] = useState('idle'); // idle, submitting, success
-  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    projectType: '',
+    budget: '',
+    timeline: '',
+    message: '',
+  });
   const [errorMessage, setErrorMessage] = useState('');
   const prefersReducedMotion = useReducedMotion();
   const { data: siteDoc, loading } = useCmsDoc(CMS_DOCS.site, null);
@@ -24,6 +32,7 @@ const Contact = () => {
   const responseSla = siteDoc?.responseSla || 'Usually replies within 1-2 business days.';
   const contactEmail = siteDoc?.contactEmail || siteDoc?.footerEmail || 'contact@sahanpramuditha.com';
   const resumeUrl = siteDoc?.resumeUrl || '/resume.pdf';
+  const bookingUrl = siteDoc?.bookingUrl || import.meta.env.VITE_BOOKING_URL || '';
 
   const triggerConfetti = () => {
     if (prefersReducedMotion) return;
@@ -89,6 +98,9 @@ const Contact = () => {
           body: JSON.stringify({
             name: formData.name,
             email: formData.email,
+            projectType: formData.projectType,
+            budget: formData.budget,
+            timeline: formData.timeline,
             message: formData.message,
             _subject: 'New message from portfolio contact form'
           })
@@ -99,11 +111,14 @@ const Contact = () => {
           'Portfolio Contact'
         )}&body=${encodeURIComponent(
           `Name: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`
+          + `\n\nProject type: ${formData.projectType || 'Not specified'}`
+          + `\nBudget: ${formData.budget || 'Not specified'}`
+          + `\nTimeline: ${formData.timeline || 'Not specified'}`
         )}`;
         window.location.href = mailto;
       }
       setFormState('success');
-      setFormData({ name: '', email: '', message: '' });
+      setFormData({ name: '', email: '', projectType: '', budget: '', timeline: '', message: '' });
       triggerConfetti();
       trackContactSubmit(true);
     } catch {
@@ -126,10 +141,10 @@ const Contact = () => {
     <SectionWrapper id="contact" className="min-h-[80vh] flex items-center">
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative">
         <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-accent font-mono text-lg mb-4">05. What's Next?</h2>
+          <h2 className="text-accent font-mono text-lg mb-4">09. What's Next?</h2>
           <h2 className="text-4xl md:text-5xl font-bold text-text mb-6 gradient-text">Get In Touch</h2>
           <p className="text-text-muted text-lg max-w-2xl mx-auto mb-6">
-            Although I'm not currently looking for any new opportunities, my inbox is always open. Whether you have a question or just want to say hi, I'll try my best to get back to you!
+            Tell me what you are building, what timeline you have in mind, and where I can help. I keep the first reply practical so we can decide the next step quickly.
           </p>
           <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
             <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm font-mono text-emerald-300">
@@ -142,6 +157,21 @@ const Contact = () => {
           <p className="mx-auto mb-6 max-w-2xl text-sm text-text-muted">
             Preferred contact method: {preferredContact}
           </p>
+          <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
+            <CopyEmailButton email={contactEmail} compact />
+            {bookingUrl ? (
+              <a
+                href={bookingUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl border border-accent/20 bg-accent/10 px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent hover:text-primary"
+              >
+                <CalendarDays size={16} />
+                Book a call
+                <ExternalLink size={14} />
+              </a>
+            ) : null}
+          </div>
           {/* Resume Download Link */}
           <motion.a
             href={resumeUrl}
@@ -220,12 +250,13 @@ const Contact = () => {
                       autoComplete="name"
                       value={formData.name}
                       onChange={handleChange}
+                      id="contact-name"
                       className="w-full bg-primary/50 border border-secondary rounded-lg px-4 py-3 text-text outline-none focus:border-accent transition-colors peer placeholder:text-white invalid:border-red-500/50"
                       placeholder=" "
                       aria-describedby="name-error"
-                      aria-invalid={formData.name && formData.name.length < 2}
+                      aria-invalid={Boolean(formData.name && formData.name.length < 2)}
                     />
-                    <label className="absolute left-4 top-3 text-white transition-all duration-300 pointer-events-none peer-focus:-top-6 peer-focus:text-xs peer-focus:text-accent peer-[:not(:placeholder-shown)]:-top-6 peer-[:not(:placeholder-shown)]:text-xs">
+                    <label htmlFor="contact-name" className="absolute left-4 top-3 text-text-muted transition-all duration-300 pointer-events-none peer-focus:-top-6 peer-focus:text-xs peer-focus:text-accent peer-[:not(:placeholder-shown)]:-top-6 peer-[:not(:placeholder-shown)]:text-xs">
                       Your Name <span className="text-red-400">*</span>
                     </label>
                     {formData.name && formData.name.length < 2 && (
@@ -233,6 +264,57 @@ const Contact = () => {
                         Name must be at least 2 characters
                       </p>
                     )}
+                  </div>
+
+                  <div className="grid gap-5 md:grid-cols-3">
+                    <div className="relative group">
+                      <select
+                        name="projectType"
+                        value={formData.projectType}
+                        onChange={handleChange}
+                        id="contact-project-type"
+                        className="w-full bg-primary/50 border border-secondary rounded-lg px-4 py-3 text-text outline-none focus:border-accent transition-colors"
+                      >
+                        <option value="">Project type</option>
+                        <option value="Website">Website</option>
+                        <option value="Web app">Web app</option>
+                        <option value="E-commerce">E-commerce</option>
+                        <option value="API / backend">API / backend</option>
+                        <option value="UI polish">UI polish</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div className="relative group">
+                      <select
+                        name="budget"
+                        value={formData.budget}
+                        onChange={handleChange}
+                        id="contact-budget"
+                        className="w-full bg-primary/50 border border-secondary rounded-lg px-4 py-3 text-text outline-none focus:border-accent transition-colors"
+                      >
+                        <option value="">Budget range</option>
+                        <option value="Under $500">Under $500</option>
+                        <option value="$500 - $1,500">$500 - $1,500</option>
+                        <option value="$1,500 - $5,000">$1,500 - $5,000</option>
+                        <option value="$5,000+">$5,000+</option>
+                        <option value="Not sure yet">Not sure yet</option>
+                      </select>
+                    </div>
+                    <div className="relative group">
+                      <select
+                        name="timeline"
+                        value={formData.timeline}
+                        onChange={handleChange}
+                        id="contact-timeline"
+                        className="w-full bg-primary/50 border border-secondary rounded-lg px-4 py-3 text-text outline-none focus:border-accent transition-colors"
+                      >
+                        <option value="">Timeline</option>
+                        <option value="ASAP">ASAP</option>
+                        <option value="2-4 weeks">2-4 weeks</option>
+                        <option value="1-3 months">1-3 months</option>
+                        <option value="Flexible">Flexible</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div className="relative group">
@@ -245,12 +327,13 @@ const Contact = () => {
                       autoComplete="email"
                       value={formData.email}
                       onChange={handleChange}
+                      id="contact-email"
                       className="w-full bg-primary/50 border border-secondary rounded-lg px-4 py-3 text-text outline-none focus:border-accent transition-colors peer placeholder:text-white invalid:border-red-500/50"
                       placeholder=" "
                       aria-describedby="email-error"
-                      aria-invalid={formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)}
+                      aria-invalid={Boolean(formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))}
                     />
-                    <label className="absolute left-4 top-3 text-white transition-all duration-300 pointer-events-none peer-focus:-top-6 peer-focus:text-xs peer-focus:text-accent peer-[:not(:placeholder-shown)]:-top-6 peer-[:not(:placeholder-shown)]:text-xs">
+                    <label htmlFor="contact-email" className="absolute left-4 top-3 text-text-muted transition-all duration-300 pointer-events-none peer-focus:-top-6 peer-focus:text-xs peer-focus:text-accent peer-[:not(:placeholder-shown)]:-top-6 peer-[:not(:placeholder-shown)]:text-xs">
                       Your Email <span className="text-red-400">*</span>
                     </label>
                     {formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
@@ -272,12 +355,13 @@ const Contact = () => {
                       autoComplete="off"
                       value={formData.message}
                       onChange={handleChange}
+                      id="contact-message"
                       className="w-full bg-primary/50 border border-secondary rounded-lg px-4 py-3 text-text outline-none focus:border-accent transition-colors peer resize-none placeholder:text-white invalid:border-red-500/50"
                       placeholder=" "
                       aria-describedby="message-error"
-                      aria-invalid={formData.message && formData.message.length < 10}
+                      aria-invalid={Boolean(formData.message && formData.message.length < 10)}
                     ></motion.textarea>
-                    <label className="absolute left-4 top-3 text-white transition-all duration-300 pointer-events-none peer-focus:-top-6 peer-focus:text-xs peer-focus:text-accent peer-[:not(:placeholder-shown)]:-top-6 peer-[:not(:placeholder-shown)]:text-xs">
+                    <label htmlFor="contact-message" className="absolute left-4 top-3 text-text-muted transition-all duration-300 pointer-events-none peer-focus:-top-6 peer-focus:text-xs peer-focus:text-accent peer-[:not(:placeholder-shown)]:-top-6 peer-[:not(:placeholder-shown)]:text-xs">
                       Message <span className="text-red-400">*</span>
                     </label>
                     {formData.message && formData.message.length < 10 && (

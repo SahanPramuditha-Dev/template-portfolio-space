@@ -1,9 +1,11 @@
 import React from 'react';
-import { Download, FileText, Calendar, Briefcase, Printer } from 'lucide-react';
+import { Download, FileText, Calendar, Briefcase, Mail, Printer } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
+import { trackDownload } from '../utils/analytics';
+import CopyEmailButton from '../components/CopyEmailButton';
 
 const DEFAULT_RESUME_URL = '/resume.pdf';
 
@@ -11,14 +13,17 @@ const ResumePage = () => {
   const { data: siteDoc, loading: siteLoading } = useCmsDoc(CMS_DOCS.site, null);
   const { data: experienceDoc, loading: expLoading } = useCmsDoc(CMS_DOCS.experience, { items: [] });
   const { data: projectsDoc, loading: projLoading } = useCmsDoc(CMS_DOCS.projects, { items: [] });
+  const { data: skillsDoc, loading: skillsLoading } = useCmsDoc(CMS_DOCS.skills, { items: [] });
 
   if (
     siteLoading ||
     expLoading ||
     projLoading ||
+    skillsLoading ||
     siteDoc === undefined ||
     experienceDoc === undefined ||
-    projectsDoc === undefined
+    projectsDoc === undefined ||
+    skillsDoc === undefined
   ) {
     return (
       <>
@@ -39,8 +44,14 @@ const ResumePage = () => {
 
   const updatedAt = siteDoc?.cvUpdatedAt || 'Update in admin';
   const version = siteDoc?.cvVersion || 'v1.0';
+  const email = siteDoc?.contactEmail || siteDoc?.footerEmail || 'contact@sahanpramuditha.com';
   const experienceItems = Array.isArray(experienceDoc?.items) ? experienceDoc.items : [];
   const projectItems = Array.isArray(projectsDoc?.items) ? projectsDoc.items : [];
+  const skillTags = (Array.isArray(skillsDoc?.items) ? skillsDoc.items : [])
+    .flatMap((group) => (Array.isArray(group.skillsJson) ? group.skillsJson : Array.isArray(group.skills) ? group.skills : []))
+    .map((skill) => (typeof skill === 'string' ? skill : skill?.name || skill?.title))
+    .filter(Boolean)
+    .slice(0, 18);
 
   return (
     <>
@@ -63,9 +74,11 @@ const ResumePage = () => {
               <Printer size={16} />
               Print
             </button>
+            <CopyEmailButton email={email} compact className="rounded-full" />
             <a
               href={resumeUrl}
               download
+              onClick={() => trackDownload('resume')}
               className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-4 py-2 text-sm font-medium text-accent"
             >
               <Download size={16} />
@@ -96,6 +109,26 @@ const ResumePage = () => {
           <div className="space-y-6">
             <div className="rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md">
               <div className="mb-4 flex items-center gap-3">
+                <Mail className="text-accent" size={22} />
+                <h2 className="text-2xl font-bold text-text">Contact snapshot</h2>
+              </div>
+              <p className="text-sm leading-relaxed text-text-muted">
+                {siteDoc?.heroIntro || siteDoc?.availability || 'A concise professional summary can be managed in the admin panel.'}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <a href={`mailto:${email}`} className="rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-mono text-accent">
+                  {email}
+                </a>
+                {siteDoc?.availability ? (
+                  <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-xs font-mono text-emerald-300">
+                    {siteDoc.availability}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md">
+              <div className="mb-4 flex items-center gap-3">
                 <Briefcase className="text-accent" size={24} />
                 <h2 className="text-2xl font-bold text-text">Experience summary</h2>
               </div>
@@ -109,6 +142,19 @@ const ResumePage = () => {
                 ))}
               </div>
             </div>
+
+            {skillTags.length > 0 ? (
+              <div className="rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md">
+                <h2 className="mb-4 text-2xl font-bold text-text">Skill tags</h2>
+                <div className="flex flex-wrap gap-2">
+                  {skillTags.map((skill) => (
+                    <span key={skill} className="rounded-full border border-accent/20 bg-primary/50 px-3 py-1 text-xs font-mono text-accent">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             <div className="rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md">
               <h2 className="mb-4 text-2xl font-bold text-text">Project highlights</h2>

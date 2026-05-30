@@ -79,6 +79,7 @@ const initialSiteContent = {
   contactEmail: 'contact@sahanpramuditha.com',
   preferredContact: 'Email is best for detailed project discussions.',
   responseSla: 'Usually replies within 1-2 business days.',
+  bookingUrl: '',
   cvVersion: 'v1.0',
   cvUpdatedAt: new Date().toISOString().slice(0, 10),
   resumeUrl: '/resume.pdf',
@@ -169,6 +170,45 @@ const getCmsErrorMessage = (error) => {
   }
 
   return error.message || 'Failed to save content.';
+};
+
+const isLikelyAssetUrl = (value) => {
+  const raw = String(value || '').trim();
+  if (!raw) return true;
+  if (raw.startsWith('/')) return true;
+  try {
+    const url = new URL(raw);
+    return ['http:', 'https:'].includes(url.protocol);
+  } catch {
+    return false;
+  }
+};
+
+const collectMediaValidationErrors = (item, fields) => {
+  const errors = [];
+
+  fields.forEach((field) => {
+    if ((field.type === 'image' || field.type === 'file') && item[field.key] && !isLikelyAssetUrl(item[field.key])) {
+      errors.push(`${field.label} must be a valid URL or root-relative path.`);
+    }
+
+    if (field.type !== 'object-list' || !Array.isArray(item[field.key])) return;
+
+    item[field.key].forEach((entry, index) => {
+      field.fields?.forEach((nestedField) => {
+        const value = entry?.[nestedField.key];
+        if ((nestedField.type === 'image' || nestedField.type === 'file') && value && !isLikelyAssetUrl(value)) {
+          errors.push(`${field.label} #${index + 1} ${nestedField.label} must be a valid URL or root-relative path.`);
+        }
+      });
+
+      if (field.key === 'screenshots' && entry?.url && !String(entry.alt || '').trim()) {
+        errors.push(`${field.label} #${index + 1} needs alt text before publishing.`);
+      }
+    });
+  });
+
+  return errors;
 };
 
 const initialProject = {
@@ -907,6 +947,57 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId }) => {
   );
 };
 
+const DraftPreview = ({ draft, fields, title }) => {
+  if (!draft) return null;
+
+  const primary = draft.title || draft.name || draft.program || draft.url || 'Untitled draft';
+  const meta = [draft.category, draft.type, draft.issuer, draft.organization, draft.status]
+    .filter(Boolean)
+    .slice(0, 2)
+    .join(' / ');
+  const body = draft.shortDescription || draft.summary || draft.description || draft.excerpt || draft.content || '';
+  const tags = ['tech', 'tags', 'skills']
+    .flatMap((key) => (Array.isArray(draft[key]) ? draft[key] : []))
+    .slice(0, 8);
+  const imageField = fields.find((field) => field.type === 'image' && draft[field.key]);
+  const imageUrl = imageField ? draft[imageField.key] : '';
+
+  return (
+    <div className="rounded-2xl border border-accent/20 bg-accent/5 p-5">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-mono uppercase tracking-[0.14em] text-accent">Live card preview</p>
+          <h3 className="mt-1 text-lg font-bold text-text">{title}</h3>
+        </div>
+        <Eye size={18} className="text-accent" aria-hidden />
+      </div>
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-primary/40">
+        {imageUrl ? (
+          <img src={imageUrl} alt="" className="h-36 w-full object-cover" />
+        ) : (
+          <div className="flex h-28 items-center justify-center bg-secondary/30 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
+            No media selected
+          </div>
+        )}
+        <div className="p-4">
+          {meta ? <p className="mb-2 text-xs font-mono uppercase tracking-[0.14em] text-accent">{meta}</p> : null}
+          <h4 className="text-xl font-bold text-text">{primary}</h4>
+          {body ? <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-text-muted">{body}</p> : null}
+          {tags.length > 0 ? (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {tags.map((tag) => (
+                <span key={tag} className="rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-[11px] font-mono text-accent">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) => {
   const { data, loading } = useCmsDoc(docId, { [collectionKey]: [] });
   const [items, setItems] = useState([]);
@@ -985,6 +1076,11 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
     setBusy(true);
     try {
       const normalized = itemFromForm(draft, fields);
+      const validationErrors = collectMediaValidationErrors(normalized, fields);
+      if (validationErrors.length > 0) {
+        setStatus(`Please fix media before publishing: ${validationErrors.slice(0, 3).join(' ')}`);
+        return;
+      }
       const nextItems =
         selectedIndex === -1
           ? [normalized, ...items]
@@ -1145,6 +1241,8 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
             />
           </div>
 
+          <DraftPreview draft={draft} fields={fields} title={section.title} />
+
           <div className="sticky bottom-2 z-10 rounded-2xl border border-white/10 bg-primary/90 px-4 py-3 backdrop-blur-md sm:bottom-4">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-[11px] text-text-muted">Save applies the full item, including collapsed groups.</p>
@@ -1214,6 +1312,7 @@ const normalizeSiteDraft = (source = initialSiteContent) => ({
   contactEmail: source.contactEmail ?? initialSiteContent.contactEmail,
   preferredContact: source.preferredContact ?? initialSiteContent.preferredContact,
   responseSla: source.responseSla ?? initialSiteContent.responseSla,
+  bookingUrl: source.bookingUrl ?? initialSiteContent.bookingUrl,
   cvVersion: source.cvVersion ?? initialSiteContent.cvVersion,
   cvUpdatedAt: source.cvUpdatedAt ?? initialSiteContent.cvUpdatedAt,
   resumeUrl: source.resumeUrl ?? initialSiteContent.resumeUrl,
@@ -1713,6 +1812,19 @@ const SiteEditor = () => {
   const save = async () => {
     setBusy(true);
     try {
+      const mediaErrors = [
+        ['Profile Photo URL', draft.profilePhotoUrl],
+        ['Hero Artwork URL', draft.heroArtworkUrl],
+        ['Resume URL', draft.resumeUrl],
+      ]
+        .filter(([, value]) => value && !isLikelyAssetUrl(value))
+        .map(([label]) => `${label} must be a valid URL or root-relative path.`);
+
+      if (mediaErrors.length > 0) {
+        setStatus(`Please fix media before publishing: ${mediaErrors.join(' ')}`);
+        return;
+      }
+
       await saveCmsDoc(CMS_DOCS.site, {
         heroTitle: draft.heroTitle,
         heroSubtitle: draft.heroSubtitle,
@@ -1727,6 +1839,7 @@ const SiteEditor = () => {
         contactEmail: draft.contactEmail,
         preferredContact: draft.preferredContact,
         responseSla: draft.responseSla,
+        bookingUrl: draft.bookingUrl,
         cvVersion: draft.cvVersion,
         cvUpdatedAt: draft.cvUpdatedAt,
         resumeUrl: draft.resumeUrl,
@@ -1846,7 +1959,7 @@ const SiteEditor = () => {
             description="How visitors reach you, response expectations, and résumé / CV links."
           >
             <div className="grid gap-4 md:grid-cols-2">
-              {['availability', 'contactEmail', 'preferredContact', 'responseSla', 'cvVersion', 'cvUpdatedAt', 'githubUsername'].map(
+              {['availability', 'contactEmail', 'preferredContact', 'responseSla', 'bookingUrl', 'cvVersion', 'cvUpdatedAt', 'githubUsername'].map(
                 (key) => (
                   <FieldEditor
                     key={key}

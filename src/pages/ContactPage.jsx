@@ -5,6 +5,7 @@ import PageShell from '../components/PageShell';
 import Contact from '../components/Contact';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
+import CopyEmailButton from '../components/CopyEmailButton';
 
 const ContactPage = () => {
   const { data: siteDoc, loading } = useCmsDoc(CMS_DOCS.site, null);
@@ -39,13 +40,16 @@ const ContactPage = () => {
         title="Let’s build something useful."
         description="Use the form below, or reach out directly through the channels that work best for you."
         actions={(
-          <a
-            href={`mailto:${email}`}
-            className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-4 py-2 text-sm font-medium text-accent"
-          >
-            <Mail size={16} />
-            {email}
-          </a>
+          <>
+            <a
+              href={`mailto:${email}`}
+              className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-4 py-2 text-sm font-medium text-accent"
+            >
+              <Mail size={16} />
+              {email}
+            </a>
+            <CopyEmailButton email={email} compact className="rounded-full" />
+          </>
         )}
       >
         <div className="grid gap-4 md:grid-cols-3">

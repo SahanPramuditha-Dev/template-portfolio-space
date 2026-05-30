@@ -18,7 +18,7 @@ const Testimonials = () => {
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
         <div className="text-center mb-12 md:mb-16">
           <h2 className="flex items-center justify-center text-2xl md:text-3xl font-bold text-text mb-4 font-display gradient-text">
-            <span className="text-accent font-mono text-xl mr-2">04.</span> Social Proof
+            <span className="text-accent font-mono text-xl mr-2">07.</span> Social Proof
           </h2>
           <p className="text-text-muted max-w-lg mx-auto">
             Feedback from clients, peers, and collaborators can live here once added in the admin panel.

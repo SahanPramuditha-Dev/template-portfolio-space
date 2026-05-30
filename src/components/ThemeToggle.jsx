@@ -1,11 +1,29 @@
-import React, { useState } from 'react';
-import { Palette, Check, Moon, SunMedium } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Palette, Check, Gauge, Moon, SunMedium } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getVisualModePreference, setVisualModePreference } from '../utils/runtimeGuards';
 
 const ThemeToggle = () => {
   const { theme, toggleTheme, accentColor, changeAccentColor, colors } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const [visualMode, setVisualMode] = useState(() => getVisualModePreference());
+
+  useEffect(() => {
+    const update = () => setVisualMode(getVisualModePreference());
+    window.addEventListener('visual-mode-change', update);
+    window.addEventListener('storage', update);
+    return () => {
+      window.removeEventListener('visual-mode-change', update);
+      window.removeEventListener('storage', update);
+    };
+  }, []);
+
+  const cycleVisualMode = () => {
+    const next = visualMode === 'auto' ? 'lite' : visualMode === 'lite' ? 'full' : 'auto';
+    setVisualModePreference(next);
+    setVisualMode(next);
+  };
 
   return (
     <div className="flex items-center gap-2 relative">
@@ -15,8 +33,20 @@ const ThemeToggle = () => {
         onClick={toggleTheme}
         className="p-2 rounded-full bg-secondary text-accent border border-accent/20 hover:border-accent hover:shadow-[0_0_15px_rgb(var(--color-accent-rgb)_/_0.3)] transition-all duration-300"
         aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
       >
         {theme === 'dark' ? <SunMedium size={20} /> : <Moon size={20} />}
+      </motion.button>
+
+      <motion.button
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
+        onClick={cycleVisualMode}
+        className="p-2 rounded-full bg-secondary text-accent border border-accent/20 hover:border-accent hover:shadow-[0_0_15px_rgb(var(--color-accent-rgb)_/_0.3)] transition-all duration-300"
+        aria-label={`Visual mode: ${visualMode}`}
+        title={`Visual mode: ${visualMode === 'lite' ? 'Lite/performance' : visualMode === 'full' ? '3D/full' : 'Auto'}. Click to change.`}
+      >
+        <Gauge size={20} />
       </motion.button>
 
       {/* Color Picker Button */}
@@ -26,6 +56,7 @@ const ThemeToggle = () => {
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 rounded-full bg-secondary text-accent border border-accent/20 hover:border-accent hover:shadow-[0_0_15px_rgb(var(--color-accent-rgb)_/_0.3)] transition-all duration-300"
         aria-label="Change accent color"
+        title="Change accent color"
       >
         <Palette size={20} />
       </motion.button>

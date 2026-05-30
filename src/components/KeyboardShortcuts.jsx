@@ -1,15 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Keyboard, X } from 'lucide-react';
+import { ArrowRight, Keyboard, Search, X } from 'lucide-react';
 
 const KeyboardShortcuts = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
+  const [query, setQuery] = useState('');
+
+  const commands = [
+    { key: 'home', label: 'Home', target: '#home' },
+    { key: 'about', label: 'About', target: '#about' },
+    { key: 'now', label: 'Now & Availability', target: '#now' },
+    { key: 'skills', label: 'Skills', target: '#skills' },
+    { key: 'experience', label: 'Experience', target: '#experience' },
+    { key: 'projects', label: 'Projects', target: '#projects' },
+    { key: 'testimonials', label: 'Testimonials', target: '#testimonials' },
+    { key: 'blog', label: 'Blog', target: '#blog' },
+    { key: 'contact', label: 'Contact', target: '#contact' },
+    { key: 'resume', label: 'Resume Page', target: '/resume' },
+    { key: 'services', label: 'Services Page', target: '/services' },
+    { key: 'resources', label: 'Resources Page', target: '/resources' },
+    { key: 'opensource', label: 'Open Source Page', target: '/opensource' },
+  ];
 
   const shortcuts = [
+    { key: 'CTRL K', description: 'Open command palette' },
     { key: '?', description: 'Show/hide keyboard shortcuts' },
     { key: 'G H', description: 'Go to Home' },
     { key: 'G A', description: 'Go to About' },
+    { key: 'G N', description: 'Go to Now' },
     { key: 'G E', description: 'Go to Experience' },
     { key: 'G P', description: 'Go to Projects' },
     { key: 'G T', description: 'Go to Testimonials' },
@@ -18,13 +38,43 @@ const KeyboardShortcuts = () => {
     { key: 'ESC', description: 'Close modals/dialogs' },
   ];
 
+  const visibleCommands = commands.filter((command) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return command.label.toLowerCase().includes(q) || command.key.includes(q);
+  });
+
+  const navigateTo = (target) => {
+    if (target.startsWith('#')) {
+      document.querySelector(target)?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      window.location.href = target;
+    }
+    setCommandOpen(false);
+    setQuery('');
+  };
+
   useEffect(() => {
     const handleKeyPress = (e) => {
+      const target = e.target;
+      const isTyping = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCommandOpen((open) => !open);
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        setCommandOpen(false);
+        setShowHelp(false);
+        setIsOpen(false);
+      }
+
       // Press '?' to toggle help
       if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        const target = e.target;
         // Don't trigger if typing in input/textarea
-        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+        if (!isTyping) {
           e.preventDefault();
           setShowHelp(!showHelp);
         }
@@ -32,16 +82,14 @@ const KeyboardShortcuts = () => {
 
       // Press 'G' then another key for navigation (vim-style)
       if (e.key === 'g' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        const target = e.target;
-        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+        if (!isTyping) {
           setIsOpen(true);
           setTimeout(() => setIsOpen(false), 2000);
         }
       }
 
       if (isOpen) {
-        const target = e.target;
-        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+        if (!isTyping) {
           switch (e.key.toLowerCase()) {
             case 'h':
               document.querySelector('#home')?.scrollIntoView({ behavior: 'smooth' });
@@ -49,6 +97,10 @@ const KeyboardShortcuts = () => {
               break;
             case 'a':
               document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' });
+              setIsOpen(false);
+              break;
+            case 'n':
+              document.querySelector('#now')?.scrollIntoView({ behavior: 'smooth' });
               setIsOpen(false);
               break;
             case 'e':
@@ -96,6 +148,7 @@ const KeyboardShortcuts = () => {
             <p className="text-text font-mono text-sm">
               Press <kbd className="px-2 py-1 bg-primary rounded border border-accent/30">H</kbd> for Home,{' '}
               <kbd className="px-2 py-1 bg-primary rounded border border-accent/30">A</kbd> for About,{' '}
+              <kbd className="px-2 py-1 bg-primary rounded border border-accent/30">N</kbd> for Now,{' '}
               <kbd className="px-2 py-1 bg-primary rounded border border-accent/30">E</kbd> for Experience,{' '}
               <kbd className="px-2 py-1 bg-primary rounded border border-accent/30">P</kbd> for Projects,{' '}
               <kbd className="px-2 py-1 bg-primary rounded border border-accent/30">T</kbd> for Testimonials,{' '}
@@ -103,6 +156,69 @@ const KeyboardShortcuts = () => {
               <kbd className="px-2 py-1 bg-primary rounded border border-accent/30">C</kbd> for Contact
             </p>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {commandOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setCommandOpen(false)}
+              className="fixed inset-0 z-[100] bg-black/55 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: -12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: -12 }}
+              className="fixed left-1/2 top-24 z-[101] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 overflow-hidden rounded-2xl border border-white/10 bg-primary shadow-2xl"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Command palette"
+            >
+              <div className="flex items-center gap-3 border-b border-secondary/50 px-4 py-3">
+                <Search size={18} className="text-accent" />
+                <input
+                  autoFocus
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && visibleCommands[0]) {
+                      navigateTo(visibleCommands[0].target);
+                    }
+                  }}
+                  placeholder="Jump to a section or page"
+                  className="min-w-0 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-text-muted"
+                />
+                <button
+                  type="button"
+                  onClick={() => setCommandOpen(false)}
+                  className="rounded-lg p-2 text-text-muted transition-colors hover:bg-secondary/60 hover:text-text"
+                  aria-label="Close command palette"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="max-h-[60vh] overflow-y-auto p-2">
+                {visibleCommands.map((command) => (
+                  <button
+                    key={command.key}
+                    type="button"
+                    onClick={() => navigateTo(command.target)}
+                    className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm text-text-muted transition-colors hover:bg-secondary/50 hover:text-text"
+                  >
+                    <span>{command.label}</span>
+                    <ArrowRight size={15} className="text-accent" />
+                  </button>
+                ))}
+                {visibleCommands.length === 0 && (
+                  <p className="px-4 py-8 text-center text-sm text-text-muted">No matching commands.</p>
+                )}
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 

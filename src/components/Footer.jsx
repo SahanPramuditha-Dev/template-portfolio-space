@@ -3,6 +3,7 @@ import { Github, Linkedin, Mail, Facebook, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { FooterCmsSkeleton } from './CmsShapeSkeleton';
+import CopyEmailButton from './CopyEmailButton';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -82,9 +83,7 @@ const Footer = () => {
             </p>
             <div className="flex items-center gap-4">
               {email ? (
-                <a href={`mailto:${email}`} className="text-accent hover:underline">
-                  {email}
-                </a>
+                <CopyEmailButton email={email} compact className="rounded-full px-3 py-1.5 text-xs" />
               ) : null}
               <a
                 href="/admin"

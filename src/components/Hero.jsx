@@ -119,9 +119,13 @@ const Hero = () => {
 
     const frame = requestAnimationFrame(update);
     reduceMotionQuery.addEventListener('change', update);
+    window.addEventListener('visual-mode-change', update);
+    window.addEventListener('storage', update);
     return () => {
       cancelAnimationFrame(frame);
       reduceMotionQuery.removeEventListener('change', update);
+      window.removeEventListener('visual-mode-change', update);
+      window.removeEventListener('storage', update);
     };
   }, []);
 
@@ -276,7 +280,16 @@ const Hero = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Check out my work!
+              View Case Studies
+            </motion.a>
+            <motion.a
+              href="#contact"
+              className="px-8 py-4 border border-secondary/50 bg-secondary/30 text-text rounded hover:border-accent/50 hover:text-accent transition-colors inline-flex items-center gap-2 font-mono"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Mail size={20} />
+              Start a Project
             </motion.a>
             {resumeAvailable && (
               <motion.a

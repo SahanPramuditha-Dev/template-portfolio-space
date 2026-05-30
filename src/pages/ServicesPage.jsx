@@ -8,9 +8,10 @@ import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
 
 const ServicesPage = () => {
   const { data, loading } = useCmsDoc(CMS_DOCS.services, { items: [] });
+  const { data: siteDoc, loading: siteLoading } = useCmsDoc(CMS_DOCS.site, null);
   const services = Array.isArray(data?.items) ? data.items : [];
 
-  if (loading || data === undefined) {
+  if (loading || siteLoading || data === undefined || siteDoc === undefined) {
     return (
       <>
         <SEO
@@ -24,6 +25,8 @@ const ServicesPage = () => {
       </>
     );
   }
+
+  const bookingUrl = siteDoc?.bookingUrl || import.meta.env.VITE_BOOKING_URL || '';
 
   return (
     <>
@@ -80,7 +83,7 @@ const ServicesPage = () => {
                   </div>
                 ) : null}
                 <div className="mt-5">
-                <a href="/#contact" className="inline-flex items-center gap-2 text-accent">
+                <a href={bookingUrl || '/#contact'} target={bookingUrl ? '_blank' : '_self'} rel={bookingUrl ? 'noreferrer' : undefined} className="inline-flex items-center gap-2 text-accent">
                   Start an inquiry
                   <ArrowRight size={14} />
                 </a>
