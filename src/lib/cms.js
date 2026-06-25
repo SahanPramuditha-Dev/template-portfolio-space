@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { doc, getDoc, onSnapshot, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { doc, getDoc, onSnapshot, setDoc, serverTimestamp, deleteDoc, collection } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth, db, storage } from './firebase';
 
@@ -15,6 +15,7 @@ export const CMS_DOCS = {
   services: 'services',
   openSource: 'openSource',
   resources: 'resources',
+  messages: 'messages',
 };
 
 /** Firestore documents required for the home page (single-flight warm-up + listener hydration). */
@@ -75,11 +76,62 @@ export const removeCmsDoc = async (docId) => {
   await deleteDoc(doc(db, 'content', docId));
 };
 
+export const saveContactMessage = async (payload) => {
+  const newDocRef = doc(collection(db, CMS_DOCS.messages));
+  await setDoc(newDocRef, {
+    ...payload,
+    createdAt: serverTimestamp(),
+    read: false,
+  });
+  return newDocRef.id;
+};
+
 export const uploadCmsAsset = async (file, folder = 'uploads') => {
+  const allowedTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+    'image/svg+xml',
+    'video/mp4',
+    'video/webm',
+    'application/pdf',
+  ];
+  const maxBytes = file.type === 'application/pdf' ? 10 * 1024 * 1024 : 8 * 1024 * 1024;
+
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error('Unsupported file type.');
+  }
+
+  if (file.size > maxBytes) {
+    throw new Error('File is too large.');
+  }
+
   const fileName = `${Date.now()}-${file.name}`.replace(/\s+/g, '_');
   const assetRef = ref(storage, `${folder}/${fileName}`);
   await uploadBytes(assetRef, file);
   return getDownloadURL(assetRef);
+};
+
+export const listCmsAssets = async (folder = 'uploads') => {
+  const folderRef = ref(storage, folder);
+  const res = await listAll(folderRef);
+  const items = await Promise.all(
+    res.items.map(async (itemRef) => {
+      const url = await getDownloadURL(itemRef);
+      return {
+        name: itemRef.name,
+        fullPath: itemRef.fullPath,
+        url,
+      };
+    })
+  );
+  return items;
+};
+
+export const deleteCmsAsset = async (fullPath) => {
+  const assetRef = ref(storage, fullPath);
+  await deleteObject(assetRef);
 };
 
 export const useAuthState = () => {

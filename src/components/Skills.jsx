@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Sparkles } from '@react-three/drei';
 import gsap from 'gsap';
@@ -6,11 +6,14 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SectionWrapper from './SectionWrapper';
 import TiltCard from './TiltCard';
 import { shouldDisableHeavyVisuals } from '../utils/runtimeGuards';
+import { useCanvasLifecycle, useIsMobileCanvas } from '../hooks/useCanvasLifecycle';
+import PerformanceMonitor from './PerformanceMonitor';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { CmsSectionSkeleton } from './CmsShapeSkeleton';
 
 gsap.registerPlugin(ScrollTrigger);
 const ISS3D = lazy(() => import('./ISS3D'));
+import NasaApod from './NasaApod';
 
 /*
 const SKILL_CATEGORIES = [
@@ -77,29 +80,24 @@ const Skills = () => {
   const sectionRef = useRef(null);
   const containerRef = useRef(null);
   const controlsRef = useRef(null);
+  const isMobile = useIsMobileCanvas();
+  const { enabled: threeEnabled, shouldAnimate } = useCanvasLifecycle(containerRef);
   const [zoomEnabled, setZoomEnabled] = useState(false);
-  const [threeEnabled, setThreeEnabled] = useState(() => !shouldDisableHeavyVisuals());
   const [highlightCategory, setHighlightCategory] = useState(null);
   const [issInfo, setIssInfo] = useState(null);
   const [issError, setIssError] = useState(false);
   const { data: skillsDoc, loading: skillsLoading } = useCmsDoc(CMS_DOCS.skills, { items: [] });
   const { data: siteDoc, loading: siteLoading } = useCmsDoc(CMS_DOCS.site, null);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => {
-      setThreeEnabled(!shouldDisableHeavyVisuals());
-    };
-    update();
-    reduceMotionQuery.addEventListener('change', update);
-    window.addEventListener('visual-mode-change', update);
-    window.addEventListener('storage', update);
-    return () => {
-      reduceMotionQuery.removeEventListener('change', update);
-      window.removeEventListener('visual-mode-change', update);
-      window.removeEventListener('storage', update);
-    };
+  // Performance Downscaling
+  const [dpr, setDpr] = useState(() => (isMobile ? 1.0 : [1, 1.25]));
+  const [antialias, setAntialias] = useState(() => !isMobile);
+  const [sparkCount, setSparkCount] = useState(50);
+
+  const handleLowPerformance = useCallback(() => {
+    setDpr(1.0);
+    setAntialias(false);
+    setSparkCount(15);
   }, []);
 
   useEffect(() => {
@@ -128,17 +126,24 @@ const Skills = () => {
       fetch('https://api.wheretheiss.at/v1/satellites/25544')
         .then((res) => (res.ok ? res.json() : Promise.reject()))
         .then((data) => {
-          if (cancelled) return;
-          setIssInfo({
-            latitude: data.latitude,
-            longitude: data.longitude,
-            altitude: data.altitude, // km
-            velocity: data.velocity, // km/h
-          });
-          setIssError(false);
+          if (cancelled) return Promise.reject('cancelled');
+          return fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${data.latitude}&longitude=${data.longitude}&localityLanguage=en`)
+            .then((geoRes) => (geoRes.ok ? geoRes.json() : {}))
+            .then((geoData) => {
+              if (cancelled) return;
+              const country = geoData.countryName || geoData.locality || geoData.description || 'International Waters';
+              setIssInfo({
+                latitude: data.latitude,
+                longitude: data.longitude,
+                altitude: data.altitude, // km
+                velocity: data.velocity, // km/h
+                country: country,
+              });
+              setIssError(false);
+            });
         })
-        .catch(() => {
-          if (cancelled) return;
+        .catch((err) => {
+          if (cancelled || err === 'cancelled') return;
           setIssError(true);
         });
     };
@@ -151,7 +156,19 @@ const Skills = () => {
     };
   }, []);
 
+  const skillGroups = Array.isArray(skillsDoc?.items) ? skillsDoc.items : [];
+  const hasSkills = skillGroups.length > 0;
+  const currentLearning = Array.isArray(siteDoc?.currentLearningJson) ? siteDoc.currentLearningJson : [];
+  const devEnvironment = Array.isArray(siteDoc?.devEnvironmentJson) ? siteDoc.devEnvironmentJson : [];
+
+  const cmsPending =
+    skillsLoading ||
+    siteLoading ||
+    skillsDoc === undefined ||
+    siteDoc === undefined;
+
   useEffect(() => {
+    if (cmsPending) return undefined;
     const ctx = gsap.context(() => {
       gsap.from(".skill-category", {
         y: 30,
@@ -166,18 +183,7 @@ const Skills = () => {
     }, sectionRef);
 
     return () => ctx.revert();
-  }, []);
-
-  const skillGroups = Array.isArray(skillsDoc?.items) ? skillsDoc.items : [];
-  const hasSkills = skillGroups.length > 0;
-  const currentLearning = Array.isArray(siteDoc?.currentLearningJson) ? siteDoc.currentLearningJson : [];
-  const devEnvironment = Array.isArray(siteDoc?.devEnvironmentJson) ? siteDoc.devEnvironmentJson : [];
-
-  const cmsPending =
-    skillsLoading ||
-    siteLoading ||
-    skillsDoc === undefined ||
-    siteDoc === undefined;
+  }, [cmsPending]);
 
   if (cmsPending) {
     return <CmsSectionSkeleton id="skills" />;
@@ -335,13 +341,11 @@ const Skills = () => {
                 ))}
               </div>
             )}
-          </div>
-
-          {/* Right Column: ISS (Local GLB) */}
-          <div className="w-full lg:w-2/5 h-[260px] sm:h-[300px] lg:h-[600px] sticky top-20 lg:top-24 min-h-0">
+          </div>          {/* Right Column: ISS (Local GLB) + NASA APOD */}
+          <div className="w-full lg:w-2/5 flex flex-col gap-4 sticky top-20 lg:top-24">
              <div 
                 ref={containerRef}
-                className="relative w-full h-full cursor-move bg-secondary/20 rounded-2xl border border-secondary/50 backdrop-blur-sm overflow-hidden"
+                className="relative w-full h-[260px] sm:h-[300px] lg:h-[380px] cursor-move bg-secondary/20 rounded-2xl border border-secondary/50 backdrop-blur-sm overflow-hidden flex-shrink-0"
                 onMouseEnter={() => setZoomEnabled(true)}
                 onMouseLeave={() => setZoomEnabled(false)}
              >
@@ -354,9 +358,11 @@ const Skills = () => {
                    <Canvas
                      shadows
                      camera={{ position: [0, 0, 8], fov: 45 }}
-                     dpr={[1, 1.5]}
-                     gl={{ antialias: false, powerPreference: 'low-power' }}
+                     dpr={dpr}
+                     gl={{ antialias: antialias, powerPreference: 'low-power' }}
+                     frameloop={shouldAnimate ? "always" : "never"}
                    >
+                     <PerformanceMonitor onLowPerformance={handleLowPerformance} />
                      <ambientLight intensity={0.8} />
                      <directionalLight
                        position={[6, 8, 5]}
@@ -373,7 +379,7 @@ const Skills = () => {
                        <ISS3D highlightCategory={highlightCategory} />
                      </Suspense>
                      <Sparkles
-                       count={50}
+                       count={sparkCount}
                        scale={10}
                        size={2}
                        speed={0.3}
@@ -404,26 +410,35 @@ const Skills = () => {
                <div className="absolute inset-0 z-10 pointer-events-none">
                  {/* Live ISS telemetry HUD */}
                  {issInfo && (
-                   <div className="absolute top-2 left-2 sm:top-4 sm:left-4 bg-slate-950/90 border border-accent/30 rounded-lg px-2 py-1.5 sm:px-3 sm:py-2 text-slate-200/90 font-mono backdrop-blur-md shadow-lg max-w-[calc(100%-1rem)] sm:max-w-none">
-                     <div className="flex items-center justify-between gap-2 sm:gap-4 mb-0.5 sm:mb-1">
-                       <span className="tracking-[0.15em] sm:tracking-[0.18em] uppercase text-slate-400 text-[0.5rem] sm:text-[0.55rem] md:text-[0.6rem] leading-tight">
-                         Live ISS Telemetry
-                       </span>
-                       {issError && (
-                         <span className="text-red-400 text-[0.5rem] sm:text-[0.55rem] uppercase whitespace-nowrap">
-                           Offline
-                         </span>
-                       )}
-                     </div>
-                     <div className="flex flex-col gap-0.5 text-[0.6rem] sm:text-[0.65rem] md:text-[0.75rem] leading-tight">
-                       <span className="whitespace-nowrap">
-                         Lat {issInfo.latitude.toFixed(1)}° · Lon {issInfo.longitude.toFixed(1)}°
-                       </span>
-                       <span className="whitespace-nowrap">
-                         Alt {issInfo.altitude.toFixed(0)} km · Vel {Math.round(issInfo.velocity)} km/h
-                       </span>
-                     </div>
-                   </div>
+                    <div className="absolute top-2 left-2 sm:top-4 sm:left-4 bg-slate-950/90 border border-accent/30 rounded-lg px-2 py-1.5 sm:px-3 sm:py-2 text-slate-200/90 font-mono backdrop-blur-md shadow-lg max-w-[calc(100%-1rem)] sm:max-w-none">
+                      <div className="flex items-center justify-between gap-2 sm:gap-4 mb-0.5 sm:mb-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${issError ? 'bg-red-400' : 'bg-green-400'}`}></span>
+                            <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${issError ? 'bg-red-500' : 'bg-green-500'}`}></span>
+                          </span>
+                          <span className="tracking-[0.15em] sm:tracking-[0.18em] uppercase text-slate-400 text-[0.5rem] sm:text-[0.55rem] md:text-[0.6rem] leading-tight">
+                            Live ISS Telemetry
+                          </span>
+                        </div>
+                        {issError && (
+                          <span className="text-red-400 text-[0.5rem] sm:text-[0.55rem] uppercase whitespace-nowrap">
+                            Offline
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-0.5 text-[0.6rem] sm:text-[0.65rem] md:text-[0.75rem] leading-tight">
+                        <span className="text-accent font-semibold whitespace-nowrap">
+                          Over: {issInfo.country || 'Establishing Uplink...'}
+                        </span>
+                        <span className="whitespace-nowrap text-slate-400">
+                          Lat {issInfo.latitude.toFixed(4)}° · Lon {issInfo.longitude.toFixed(4)}°
+                        </span>
+                        <span className="whitespace-nowrap text-slate-400">
+                          Alt {issInfo.altitude.toFixed(1)} km · Vel {Math.round(issInfo.velocity)} km/h
+                        </span>
+                      </div>
+                    </div>
                  )}
 
                  {/* Bottom labels - stacked on mobile, side-by-side on larger screens */}
@@ -439,6 +454,9 @@ const Skills = () => {
                  </div>
                </div>
              </div>
+
+             {/* NASA APOD Widget */}
+             <NasaApod />
           </div>
         </div>
       </div>

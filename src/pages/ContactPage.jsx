@@ -5,7 +5,6 @@ import PageShell from '../components/PageShell';
 import Contact from '../components/Contact';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
-import CopyEmailButton from '../components/CopyEmailButton';
 
 const ContactPage = () => {
   const { data: siteDoc, loading } = useCmsDoc(CMS_DOCS.site, null);
@@ -48,7 +47,6 @@ const ContactPage = () => {
               <Mail size={16} />
               {email}
             </a>
-            <CopyEmailButton email={email} compact className="rounded-full" />
           </>
         )}
       >

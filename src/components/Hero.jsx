@@ -1,14 +1,14 @@
-import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
-import { ArrowDown, Github, Linkedin, Facebook, Mail, FileText } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Github, Linkedin, Facebook, Mail, FileText } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
-import gsap from 'gsap';
 import { trackSocialClick, trackDownload } from '../utils/analytics';
 import { shouldDisableHeavyVisuals } from '../utils/runtimeGuards';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { HeroCmsSkeleton } from './CmsShapeSkeleton';
+import Earth3D from './Earth3D';
+
 
 const DEFAULT_RESUME_URL = '/resume.pdf';
-const TechAnimation3D = lazy(() => import('./TechAnimation3D'));
 
 const TypewriterText = ({ words }) => {
   const [index, setIndex] = useState(0);
@@ -78,7 +78,6 @@ const isVideoAsset = (src) => /\.(mp4|webm)(\?|#|$)/i.test(src || '');
 
 const Hero = () => {
   const compRef = useRef(null);
-  const prefersReducedMotion = useReducedMotion();
   const { data: siteDoc, loading: siteLoading } = useCmsDoc(CMS_DOCS.site, null);
   const { data: projectsDoc, loading: projectsLoading } = useCmsDoc(CMS_DOCS.projects, { items: [] });
   const resumeUrl = siteDoc?.resumeUrl || (import.meta.env.VITE_RESUME_URL || '').trim() || DEFAULT_RESUME_URL;
@@ -90,25 +89,6 @@ const Hero = () => {
   const heroArtworkUrl = siteDoc?.heroArtworkUrl || '';
   const projectCount = Array.isArray(projectsDoc?.items) ? projectsDoc.items.length : 0;
   const featuredProjects = Array.isArray(projectsDoc?.items) ? projectsDoc.items.filter((project) => project.featured).slice(0, 3) : [];
-
-  useEffect(() => {
-    if (prefersReducedMotion) return undefined;
-    const ctx = gsap.context(() => {
-      // Only animate scroll indicator - text animations are handled by Framer Motion
-      const scrollIndicator = compRef.current?.querySelector('.scroll-indicator');
-      if (scrollIndicator) {
-        gsap.to(scrollIndicator, {
-          y: 10,
-          repeat: -1,
-          yoyo: true,
-          duration: 1.5,
-          ease: "power1.inOut"
-        });
-      }
-    }, compRef);
-
-    return () => ctx.revert();
-  }, [prefersReducedMotion]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
@@ -172,7 +152,7 @@ const Hero = () => {
       style={{ position: 'relative' }}
     >
       <div className="container mx-auto max-w-7xl px-4 sm:px-6">
-        {/* Two columns only: copy + Earth (stats sit below, outside this grid) */}
+        {/* Two columns only: copy + hero visual (stats sit below) */}
         <div className="grid h-full gap-10 lg:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)] lg:items-start lg:gap-14">
         
         {/* Text Content */}
@@ -256,12 +236,15 @@ const Hero = () => {
                     target={link.label === 'Email' ? '_self' : '_blank'}
                     rel={link.label === 'Email' ? undefined : 'noreferrer'}
                     onClick={() => trackSocialClick(link.label.toLowerCase())}
-                    className="p-3 bg-secondary rounded-full text-text-muted hover:text-primary hover:bg-accent transition-all duration-300 transform shadow-md hover:shadow-lg"
-                    whileHover={{ y: -5, scale: 1.1 }}
+                    className="flex flex-col items-center gap-1.5 group"
+                    whileHover={{ y: -4 }}
                     whileTap={{ scale: 0.9 }}
                     aria-label={`${link.label} profile`}
                   >
-                    <Icon size={24} />
+                    <span className="p-3 bg-secondary rounded-full text-text-muted group-hover:text-primary group-hover:bg-accent transition-all duration-300 shadow-md group-hover:shadow-lg">
+                      <Icon size={22} />
+                    </span>
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted group-hover:text-accent transition-colors duration-300">{link.label}</span>
                   </motion.a>
                 );
               })
@@ -276,7 +259,7 @@ const Hero = () => {
           >
             <motion.a
               href="#projects"
-              className="px-8 py-4 border border-accent text-accent rounded hover:bg-accent/10 transition-colors inline-block font-mono"
+              className="px-8 py-4 border border-accent text-accent rounded-lg hover:bg-accent/10 transition-colors inline-block font-mono"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -284,7 +267,7 @@ const Hero = () => {
             </motion.a>
             <motion.a
               href="#contact"
-              className="px-8 py-4 border border-secondary/50 bg-secondary/30 text-text rounded hover:border-accent/50 hover:text-accent transition-colors inline-flex items-center gap-2 font-mono"
+              className="px-8 py-4 border border-secondary/50 bg-secondary/30 text-text rounded-lg hover:border-accent/50 hover:text-accent transition-colors inline-flex items-center gap-2 font-mono"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -298,7 +281,7 @@ const Hero = () => {
                   trackDownload('resume');
                   handleResumeDownload(e);
                 }}
-                className="px-8 py-4 bg-accent text-primary font-bold rounded hover:bg-accent/90 transition-colors inline-flex items-center gap-2 font-mono"
+                className="px-8 py-4 bg-accent text-primary font-bold rounded-lg hover:bg-accent/90 transition-colors inline-flex items-center gap-2 font-mono"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -312,7 +295,7 @@ const Hero = () => {
 
         {/* 3D Element */}
         <motion.div 
-          className="hero-3d-container h-[280px] sm:h-[360px] md:h-[500px] w-full relative flex items-center justify-center order-first md:order-last mb-6 md:mb-0 min-h-0 md:pt-6 lg:pt-10 lg:justify-self-end"
+          className="hero-3d-container h-[280px] sm:h-[360px] md:h-[500px] w-full relative flex items-center justify-center order-first md:order-last mb-6 md:mb-0 min-h-0 overflow-hidden bg-transparent md:pt-6 lg:pt-10 lg:justify-self-end"
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
@@ -339,16 +322,7 @@ const Hero = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent" />
             </div>
           ) : heavyVisualsEnabled ? (
-            <Suspense
-              fallback={
-                <div
-                  className="w-full h-full rounded-2xl bg-gradient-to-br from-accent/20 via-secondary/20 to-primary/20"
-                  aria-hidden="true"
-                />
-              }
-            >
-              <TechAnimation3D />
-            </Suspense>
+            <Earth3D className="h-full w-full" />
           ) : (
             <div
               className="w-full h-full rounded-2xl bg-gradient-to-br from-accent/20 via-secondary/20 to-primary/20"
@@ -411,9 +385,7 @@ const Hero = () => {
         </motion.div>
       </div>
 
-      <div className="scroll-indicator absolute bottom-10 left-1/2 -translate-x-1/2 text-text-muted">
-        <ArrowDown size={24} />
-      </div>
+
     </section>
   );
 };

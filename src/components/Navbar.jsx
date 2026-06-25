@@ -1,15 +1,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Menu, X, Gamepad2 } from 'lucide-react';
+import { ChevronDown, Menu, X, Gamepad2, Trophy } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import SnakeGame from './SnakeGame';
+import AchievementsModal from './AchievementsModal';
+import { useAchievements } from '../context/AchievementsContext';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [isGameOpen, setIsGameOpen] = useState(false);
+  const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
+  const { unlockedCount } = useAchievements();
   const [moreOpen, setMoreOpen] = useState(false);
 
   // Konami Code Logic
@@ -130,7 +134,8 @@ const Navbar = () => {
           </a>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8">
+          <div className="hidden md:flex items-center gap-6">
+            {/* Nav Links */}
             {navLinks.map((link) => (
               <motion.a
                 key={link.name}
@@ -196,23 +201,61 @@ const Navbar = () => {
                 )}
               </AnimatePresence>
             </div>
-            
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setIsGameOpen(true)}
-              className="p-2 rounded-full bg-secondary text-accent border border-accent/20 hover:border-accent hover:shadow-[0_0_15px_rgb(var(--color-accent-rgb)_/_0.3)] transition-all duration-300"
-              aria-label="Play Game"
-              title="Play mini game"
-            >
-              <Gamepad2 size={20} />
-            </motion.button>
-            
-            <ThemeToggle />
+
+            {/* Divider */}
+            <span className="h-5 w-px bg-white/10" aria-hidden="true" />
+
+            {/* Icon Button Group */}
+            <div className="flex items-center gap-2">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsAchievementsOpen(true)}
+                className="relative flex items-center justify-center w-9 h-9 rounded-full bg-secondary text-accent border border-accent/20 hover:border-accent hover:shadow-[0_0_15px_rgb(var(--color-accent-rgb)_/_0.3)] transition-all duration-300"
+                aria-label="View Achievements"
+                title="Space Mission Achievements"
+              >
+                <Trophy size={17} />
+                {unlockedCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-primary font-mono leading-none">
+                    {unlockedCount}
+                  </span>
+                )}
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsGameOpen(true)}
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-secondary text-accent border border-accent/20 hover:border-accent hover:shadow-[0_0_15px_rgb(var(--color-accent-rgb)_/_0.3)] transition-all duration-300"
+                aria-label="Play Game"
+                title="Play mini game"
+              >
+                <Gamepad2 size={17} />
+              </motion.button>
+
+
+              <ThemeToggle />
+            </div>
           </div>
 
           {/* Mobile Menu Button & Toggle */}
           <div className="md:hidden flex items-center gap-4">
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setIsAchievementsOpen(true)}
+              className="relative p-2 rounded-full bg-secondary text-accent border border-accent/20"
+              aria-label="View Achievements"
+              title="Space Mission Achievements"
+            >
+              <Trophy size={20} />
+              {unlockedCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-primary font-mono leading-none">
+                  {unlockedCount}
+                </span>
+              )}
+            </motion.button>
+
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => setIsGameOpen(true)}
@@ -272,6 +315,61 @@ const Navbar = () => {
                       {link.name}
                     </motion.a>
                   ))}
+                  
+                  {/* Mobile a11y Panel */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="w-4/5 pt-6 border-t border-white/10 font-mono text-[11px] text-text flex flex-col gap-4"
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="text-text-muted font-bold">REDUCE MOTION:</span>
+                      <button
+                        type="button"
+                        onClick={toggleReduceMotion}
+                        className={`px-3 py-1 rounded-lg border uppercase font-bold transition-colors ${
+                          reduceMotion
+                            ? 'bg-accent/25 border-accent text-accent'
+                            : 'bg-secondary/40 border-white/5 text-text-muted'
+                        }`}
+                      >
+                        {reduceMotion ? 'Enabled' : 'Disabled'}
+                      </button>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-text-muted font-bold">HIGH CONTRAST:</span>
+                      <button
+                        type="button"
+                        onClick={toggleHighContrast}
+                        className={`px-3 py-1 rounded-lg border uppercase font-bold transition-colors ${
+                          highContrast
+                            ? 'bg-accent/25 border-accent text-accent'
+                            : 'bg-secondary/40 border-white/5 text-text-muted'
+                        }`}
+                      >
+                        {highContrast ? 'Enabled' : 'Disabled'}
+                      </button>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-text-muted font-bold">TEXT SIZE:</span>
+                      <div className="flex gap-1.5">
+                        {[1.0, 1.15, 1.3].map((size) => (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => changeTextSize(size)}
+                            className={`px-2.5 py-1 rounded-lg border font-bold transition-colors ${
+                              textSize === size
+                                ? 'bg-accent/25 border-accent text-accent'
+                                : 'bg-secondary/40 border-white/5 text-text-muted'
+                            }`}
+                          >
+                            {size * 100}%
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
                 </div>
               </motion.div>
             )}
@@ -280,6 +378,9 @@ const Navbar = () => {
 
       {/* Game Modal */}
       <SnakeGame isOpen={isGameOpen} onClose={() => setIsGameOpen(false)} />
+
+      {/* Achievements Modal */}
+      <AchievementsModal isOpen={isAchievementsOpen} onClose={() => setIsAchievementsOpen(false)} />
     </>
   );
 };

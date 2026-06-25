@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Github,
@@ -29,6 +29,8 @@ import {
   getOutcomeBadge,
   getProjectStatusLabel,
 } from '../utils/projectNormalize';
+import { shouldDisableHeavyVisuals } from '../utils/runtimeGuards';
+
 
 const isAnimatedAsset = (src) => /\.(gif|mp4|webm)(\?|#|$)/i.test(src);
 
@@ -323,6 +325,22 @@ const Projects = () => {
   const [activeGoal, setActiveGoal] = useState('all');
   const [query, setQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [heavyVisualsEnabled, setHeavyVisualsEnabled] = useState(() => !shouldDisableHeavyVisuals());
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
+    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setHeavyVisualsEnabled(!shouldDisableHeavyVisuals());
+    update();
+    reduceMotionQuery.addEventListener('change', update);
+    window.addEventListener('visual-mode-change', update);
+    window.addEventListener('storage', update);
+    return () => {
+      reduceMotionQuery.removeEventListener('change', update);
+      window.removeEventListener('visual-mode-change', update);
+      window.removeEventListener('storage', update);
+    };
+  }, []);
 
   const projectsList = useMemo(
     () => (Array.isArray(projectsDoc?.items) ? projectsDoc.items : []),
@@ -395,6 +413,7 @@ const Projects = () => {
       const liveOk = !onlyLive || isUsableHttpUrl(project.external);
       const sourceOk = !onlySource || isUsableHttpUrl(project.github);
       const featuredOk = !onlyFeatured || project.featured;
+      const statusOk = project.status !== 'Draft';
 
       return (
         categoryMatch &&
@@ -404,7 +423,8 @@ const Projects = () => {
         searchMatch &&
         liveOk &&
         sourceOk &&
-        featuredOk
+        featuredOk &&
+        statusOk
       );
     });
   }, [
@@ -553,6 +573,8 @@ const Projects = () => {
               </button>
             </div>
           </div>
+
+
         </div>
 
         <div className="mb-5">

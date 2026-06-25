@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Keyboard, Search, X } from 'lucide-react';
+import { useAchievements } from '../context/AchievementsContext';
 
 const KeyboardShortcuts = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const { unlockAchievement } = useAchievements();
+
+  useEffect(() => {
+    if (showHelp || commandOpen) {
+      unlockAchievement('curious-astronaut');
+    }
+  }, [showHelp, commandOpen, unlockAchievement]);
 
   const commands = [
     { key: 'home', label: 'Home', target: '#home' },

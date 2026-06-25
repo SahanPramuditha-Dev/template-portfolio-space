@@ -1,12 +1,11 @@
 import React, { useState, Suspense } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Send, CheckCircle, Loader2, Download, CalendarDays, ExternalLink } from 'lucide-react';
+import { Send, CheckCircle, Loader2, Download, CalendarDays, ExternalLink, Mail } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import SectionWrapper from './SectionWrapper';
 import { trackContactSubmit, trackDownload } from '../utils/analytics';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { CmsSectionSkeleton } from './CmsShapeSkeleton';
-import CopyEmailButton from './CopyEmailButton';
 const Contact3D = React.lazy(() => import('./Contact3D'));
 
 const Contact = () => {
@@ -18,6 +17,7 @@ const Contact = () => {
     budget: '',
     timeline: '',
     message: '',
+    website: '',
   });
   const [errorMessage, setErrorMessage] = useState('');
   const prefersReducedMotion = useReducedMotion();
@@ -78,15 +78,39 @@ const Contact = () => {
       setErrorMessage('Your message should be at least 10 characters long.');
       return;
     }
+    if (formData.website) {
+      setFormState('success');
+      return;
+    }
     
     setErrorMessage('');
     setFormState('submitting');
     try {
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        projectType: formData.projectType,
+        budget: formData.budget,
+        timeline: formData.timeline,
+        message: formData.message,
+        website: formData.website,
+        _subject: 'New message from portfolio contact form'
+      };
+
+      // 1. Save directly to Firestore Admin Inbox
+      try {
+        const { saveContactMessage } = await import('../lib/cms');
+        await saveContactMessage(payload);
+      } catch (dbErr) {
+        console.error('Failed to save to Firestore inbox:', dbErr);
+      }
+
+      // 2. Send via Formspree / API endpoint for email notification
       const endpoint =
         import.meta.env.VITE_CONTACT_ENDPOINT ||
         (import.meta.env.VITE_FORMSPREE_ID
           ? `https://formspree.io/f/${import.meta.env.VITE_FORMSPREE_ID}`
-          : null);
+          : import.meta.env.PROD ? '/api/contact' : null);
       
       if (endpoint) {
         const res = await fetch(endpoint, {
@@ -95,17 +119,9 @@ const Contact = () => {
             'Content-Type': 'application/json',
             Accept: 'application/json'
           },
-          body: JSON.stringify({
-            name: formData.name,
-            email: formData.email,
-            projectType: formData.projectType,
-            budget: formData.budget,
-            timeline: formData.timeline,
-            message: formData.message,
-            _subject: 'New message from portfolio contact form'
-          })
+          body: JSON.stringify(payload)
         });
-        if (!res.ok) throw new Error('Failed to submit');
+        if (!res.ok) throw new Error('Failed to submit to endpoint');
       } else {
         const mailto = `mailto:${contactEmail}?subject=${encodeURIComponent(
           'Portfolio Contact'
@@ -118,10 +134,11 @@ const Contact = () => {
         window.location.href = mailto;
       }
       setFormState('success');
-      setFormData({ name: '', email: '', projectType: '', budget: '', timeline: '', message: '' });
+      setFormData({ name: '', email: '', projectType: '', budget: '', timeline: '', message: '', website: '' });
       triggerConfetti();
       trackContactSubmit(true);
-    } catch {
+    } catch (err) {
+      console.error('Contact submission error:', err);
       setFormState('idle');
       setErrorMessage(`Something went wrong while sending your message. Please try again in a moment or email me directly at ${contactEmail}.`);
       trackContactSubmit(false);
@@ -158,13 +175,19 @@ const Contact = () => {
             Preferred contact method: {preferredContact}
           </p>
           <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
-            <CopyEmailButton email={contactEmail} compact />
+            <a
+              href={`mailto:${contactEmail}`}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-accent px-5 text-sm font-semibold text-primary transition-transform hover:scale-[1.02]"
+            >
+              <Mail size={16} />
+              {contactEmail}
+            </a>
             {bookingUrl ? (
               <a
                 href={bookingUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl border border-accent/20 bg-accent/10 px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent hover:text-primary"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-accent/20 bg-accent/10 px-5 text-sm font-medium text-accent transition-colors hover:bg-accent hover:text-primary"
               >
                 <CalendarDays size={16} />
                 Book a call
@@ -227,6 +250,16 @@ const Contact = () => {
                   aria-busy={formState === 'submitting'}
                   className="space-y-6"
                 >
+                  <input
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={formData.website}
+                    onChange={handleChange}
+                    className="hidden"
+                    aria-hidden="true"
+                  />
                   {errorMessage && (
                     <motion.div
                       initial={{ opacity: 0, y: -6 }}
@@ -273,16 +306,19 @@ const Contact = () => {
                         value={formData.projectType}
                         onChange={handleChange}
                         id="contact-project-type"
-                        className="w-full bg-primary/50 border border-secondary rounded-lg px-4 py-3 text-text outline-none focus:border-accent transition-colors"
+                        className="w-full appearance-none bg-primary/50 border border-secondary rounded-lg px-4 py-3 pr-10 text-text outline-none focus:border-accent transition-colors cursor-pointer"
                       >
-                        <option value="">Project type</option>
-                        <option value="Website">Website</option>
-                        <option value="Web app">Web app</option>
-                        <option value="E-commerce">E-commerce</option>
-                        <option value="API / backend">API / backend</option>
-                        <option value="UI polish">UI polish</option>
-                        <option value="Other">Other</option>
+                        <option value="" className="bg-primary text-text">Project type</option>
+                        <option value="Website" className="bg-primary text-text">Website</option>
+                        <option value="Web app" className="bg-primary text-text">Web app</option>
+                        <option value="E-commerce" className="bg-primary text-text">E-commerce</option>
+                        <option value="API / backend" className="bg-primary text-text">API / backend</option>
+                        <option value="UI polish" className="bg-primary text-text">UI polish</option>
+                        <option value="Other" className="bg-primary text-text">Other</option>
                       </select>
+                      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                      </span>
                     </div>
                     <div className="relative group">
                       <select
@@ -290,15 +326,18 @@ const Contact = () => {
                         value={formData.budget}
                         onChange={handleChange}
                         id="contact-budget"
-                        className="w-full bg-primary/50 border border-secondary rounded-lg px-4 py-3 text-text outline-none focus:border-accent transition-colors"
+                        className="w-full appearance-none bg-primary/50 border border-secondary rounded-lg px-4 py-3 pr-10 text-text outline-none focus:border-accent transition-colors cursor-pointer"
                       >
-                        <option value="">Budget range</option>
-                        <option value="Under $500">Under $500</option>
-                        <option value="$500 - $1,500">$500 - $1,500</option>
-                        <option value="$1,500 - $5,000">$1,500 - $5,000</option>
-                        <option value="$5,000+">$5,000+</option>
-                        <option value="Not sure yet">Not sure yet</option>
+                        <option value="" className="bg-primary text-text">Budget range</option>
+                        <option value="Under $500" className="bg-primary text-text">Under $500</option>
+                        <option value="$500 - $1,500" className="bg-primary text-text">$500 - $1,500</option>
+                        <option value="$1,500 - $5,000" className="bg-primary text-text">$1,500 - $5,000</option>
+                        <option value="$5,000+" className="bg-primary text-text">$5,000+</option>
+                        <option value="Not sure yet" className="bg-primary text-text">Not sure yet</option>
                       </select>
+                      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                      </span>
                     </div>
                     <div className="relative group">
                       <select
@@ -306,14 +345,17 @@ const Contact = () => {
                         value={formData.timeline}
                         onChange={handleChange}
                         id="contact-timeline"
-                        className="w-full bg-primary/50 border border-secondary rounded-lg px-4 py-3 text-text outline-none focus:border-accent transition-colors"
+                        className="w-full appearance-none bg-primary/50 border border-secondary rounded-lg px-4 py-3 pr-10 text-text outline-none focus:border-accent transition-colors cursor-pointer"
                       >
-                        <option value="">Timeline</option>
-                        <option value="ASAP">ASAP</option>
-                        <option value="2-4 weeks">2-4 weeks</option>
-                        <option value="1-3 months">1-3 months</option>
-                        <option value="Flexible">Flexible</option>
+                        <option value="" className="bg-primary text-text">Timeline</option>
+                        <option value="ASAP" className="bg-primary text-text">ASAP</option>
+                        <option value="2-4 weeks" className="bg-primary text-text">2-4 weeks</option>
+                        <option value="1-3 months" className="bg-primary text-text">1-3 months</option>
+                        <option value="Flexible" className="bg-primary text-text">Flexible</option>
                       </select>
+                      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                      </span>
                     </div>
                   </div>
 
@@ -369,11 +411,11 @@ const Contact = () => {
                         Message must be at least 10 characters ({formData.message.length}/10)
                       </p>
                     )}
-                    {formData.message && formData.message.length >= 10 && (
-                      <p className="text-xs text-text-muted mt-1 ml-4">
-                        {formData.message.length}/1000 characters
-                      </p>
-                    )}
+                    <p className={`text-xs mt-1 ml-4 text-right transition-colors ${
+                      formData.message.length > 900 ? 'text-red-400' : formData.message.length > 700 ? 'text-amber-400' : 'text-text-muted'
+                    }`}>
+                      {formData.message.length}/1000
+                    </p>
                   </div>
 
                   <motion.button

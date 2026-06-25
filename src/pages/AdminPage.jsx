@@ -28,7 +28,16 @@ import {
   CheckCircle2,
   XCircle,
   LayoutDashboard,
+  LineChart,
+  BarChart2,
+  RefreshCw,
+  Mail,
+  GripVertical,
+  Menu,
+  X,
 } from 'lucide-react';
+import { db } from '../lib/firebase';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import {
   CMS_DOCS,
   loginWithEmail,
@@ -38,6 +47,69 @@ import {
   useAuthState,
   useCmsDoc,
 } from '../lib/cms';
+import MessagesInbox from '../components/MessagesInbox';
+import MediaLibrary from '../components/MediaLibrary';
+import SimpleMdeReact from 'react-simplemde-editor';
+import 'easymde/dist/easymde.min.css';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import ImageCropperModal from '../components/ImageCropperModal';
+
+let resolveCropPromise = null;
+let rejectCropPromise = null;
+export const requestImageCrop = (file, aspect = null) => {
+  return new Promise((resolve, reject) => {
+    resolveCropPromise = resolve;
+    rejectCropPromise = reject;
+    const event = new CustomEvent('show-crop-modal', { detail: { file, aspect } });
+    window.dispatchEvent(event);
+  });
+};
+
+const CropModalRoot = () => {
+  const [cropFile, setCropFile] = useState(null);
+  const [cropAspect, setCropAspect] = useState(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      setCropFile(e.detail.file);
+      setCropAspect(e.detail.aspect);
+    };
+    window.addEventListener('show-crop-modal', handler);
+    return () => window.removeEventListener('show-crop-modal', handler);
+  }, []);
+
+  if (!cropFile) return null;
+
+  return (
+    <ImageCropperModal
+      imageFile={cropFile}
+      aspect={cropAspect}
+      onCropComplete={(blob) => {
+        setCropFile(null);
+        if (resolveCropPromise) resolveCropPromise(blob);
+      }}
+      onCancel={() => {
+        setCropFile(null);
+        if (rejectCropPromise) rejectCropPromise(new Error('Cancelled'));
+      }}
+    />
+  );
+};
 
 const initialSiteContent = {
   heroTitle: 'Sahan Pramuditha',
@@ -131,6 +203,9 @@ const initialSiteContent = {
     null,
     2
   ),
+  seoTitle: 'Sahan Pramuditha | Software Engineer and Creative Developer',
+  seoDescription: 'Sahan Pramuditha is a software engineer and creative developer building accessible, high-performance digital experiences.',
+  seoImage: '',
 };
 
 const initialExperienceItem = {
@@ -528,7 +603,7 @@ const projectFields = [
     key: 'status',
     label: 'Status',
     type: 'select',
-    options: ['In progress', 'Live', 'Archived'],
+    options: ['Draft', 'In progress', 'Live', 'Archived'],
     group: 'summary',
   },
   { key: 'client', label: 'Client / company', type: 'text', group: 'summary' },
@@ -537,8 +612,8 @@ const projectFields = [
   { key: 'projectTimeline', label: 'Timeline / duration', type: 'text', group: 'summary', placeholder: 'e.g. 6 months · Q1–Q3 2024' },
   { key: 'outcomeBadge', label: 'Outcome badge (short)', type: 'text', group: 'summary', placeholder: 'e.g. Reduced load by 40%' },
   { key: 'featured', label: 'Featured Project', type: 'checkbox', group: 'summary' },
-  { key: 'description', label: 'Description', type: 'textarea', group: 'story' },
-  { key: 'architecture', label: 'Architecture', type: 'textarea', group: 'story' },
+  { key: 'description', label: 'Description', type: 'markdown', group: 'story' },
+  { key: 'architecture', label: 'Architecture', type: 'markdown', group: 'story' },
   { key: 'features', label: 'Features', type: 'list', placeholder: 'Enter a feature', group: 'story' },
   { key: 'learned', label: 'What I Learned', type: 'textarea', group: 'story' },
   { key: 'problem', label: 'Problem Statement', type: 'textarea', group: 'story' },
@@ -562,6 +637,7 @@ const projectFields = [
   },
   { key: 'github', label: 'GitHub URL', type: 'text', group: 'links' },
   { key: 'external', label: 'Live Demo URL', type: 'text', group: 'links' },
+  { key: 'sandboxUrl', label: 'Live Code Sandbox URL (CodeSandbox/StackBlitz/etc.)', type: 'text', group: 'links' },
   { key: 'videoUrl', label: 'Video preview URL (mp4/webm)', type: 'text', group: 'media' },
   { key: 'videoCaption', label: 'Video caption', type: 'text', group: 'media' },
   { key: 'thumbnail', label: 'Thumbnail URL', type: 'image', group: 'media' },
@@ -628,11 +704,12 @@ const blogFields = [
   { key: 'excerpt', label: 'Excerpt', type: 'textarea', group: 'meta' },
   { key: 'tags', label: 'Tags', type: 'list', placeholder: 'Enter a tag', group: 'meta' },
   { key: 'category', label: 'Category', type: 'text', group: 'meta' },
+  { key: 'status', label: 'Status', type: 'select', options: ['Draft', 'Published'], group: 'meta' },
   { key: 'date', label: 'Publish Date', type: 'text', group: 'meta' },
   { key: 'readTime', label: 'Read Time', type: 'text', group: 'meta' },
   { key: 'featured', label: 'Featured Post', type: 'checkbox', group: 'meta' },
-  { key: 'body', label: 'Body', type: 'textarea', group: 'content' },
-  { key: 'codeSnippet', label: 'Code Snippet', type: 'textarea', group: 'content' },
+  { key: 'body', label: 'Body', type: 'markdown', group: 'content' },
+  { key: 'codeSnippet', label: 'Code Snippet', type: 'markdown', group: 'content' },
   { key: 'language', label: 'Language', type: 'text', group: 'content' },
   { key: 'link', label: 'Canonical/External Link', type: 'text', group: 'links' },
 ];
@@ -649,6 +726,7 @@ const testimonialFields = [
 
 const serviceFields = [
   { key: 'title', label: 'Title', type: 'text', group: 'serviceOffer' },
+  { key: 'status', label: 'Status', type: 'select', options: ['Draft', 'Published'], group: 'serviceOffer' },
   { key: 'summary', label: 'Summary', type: 'textarea', group: 'serviceOffer' },
   { key: 'featured', label: 'Featured', type: 'checkbox', group: 'serviceOffer' },
   { key: 'scope', label: 'Scope', type: 'textarea', group: 'serviceDelivery' },
@@ -858,10 +936,18 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId }) => {
               input.type = 'file';
               input.accept = accept;
               input.onchange = async () => {
-                const file = input.files?.[0];
+                let file = input.files?.[0];
                 if (!file) {
                   resolve(null);
                   return;
+                }
+                if (file.type.startsWith('image/') && file.type !== 'image/gif') {
+                  try {
+                    file = await requestImageCrop(file, null); // Free aspect ratio for general objects
+                  } catch (err) {
+                    resolve(null);
+                    return;
+                  }
                 }
                 try {
                   const url = await uploadCmsAsset(file, `${section.uploadFolder || 'uploads'}/${docId}`);
@@ -912,6 +998,19 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId }) => {
             </option>
           ))}
         </select>
+      ) : field.type === 'markdown' ? (
+        <div className="prose-editor-wrapper bg-primary/40 rounded-xl overflow-hidden border border-white/10 [&_.editor-toolbar]:border-none [&_.editor-toolbar]:bg-secondary/50 [&_.editor-toolbar>button]:text-text [&_.editor-toolbar>button.active]:bg-accent/20 [&_.CodeMirror]:border-none [&_.CodeMirror]:bg-transparent [&_.CodeMirror]:text-text">
+          <SimpleMdeReact
+            id={fieldId}
+            value={value || ''}
+            onChange={(val) => onChange(val)}
+            options={{
+              spellChecker: false,
+              status: false,
+              minHeight: '200px',
+            }}
+          />
+        </div>
       ) : field.type === 'textarea' || field.type === 'json' ? (
         <textarea
           id={fieldId}
@@ -998,6 +1097,76 @@ const DraftPreview = ({ draft, fields, title }) => {
   );
 };
 
+const SortableCollectionItem = ({ id, index, item, selectedIndex, editItem, removeItem, sectionTitle, isSelected, toggleSelection }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <li ref={setNodeRef} style={style} className="relative group">
+      <div
+        className={clsx(
+          'flex w-full items-center justify-between gap-3 rounded-2xl border p-4 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent/50',
+          selectedIndex === index
+            ? 'border-accent/50 bg-accent/10 shadow-[0_0_0_1px_rgb(var(--color-accent-rgb)/0.2)]'
+            : 'border-white/10 bg-primary/30 hover:border-accent/25 hover:bg-primary/45'
+        )}
+      >
+        <div 
+          {...attributes} 
+          {...listeners} 
+          className="cursor-grab p-1 -ml-2 text-text-muted hover:text-text touch-none"
+        >
+          <GripVertical size={16} />
+        </div>
+        
+        {toggleSelection && (
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={(e) => { e.stopPropagation(); toggleSelection(index); }}
+            className="h-4 w-4 rounded border-white/10 bg-primary/50 text-accent focus:ring-accent accent-accent shrink-0 mr-1"
+          />
+        )}
+
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => editItem(index)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              editItem(index);
+            }
+          }}
+          className="flex-1 min-w-0 cursor-pointer outline-none"
+        >
+          <p className="truncate font-semibold text-text">
+            {item.title || item.name || item.url || `Item ${index + 1}`}
+          </p>
+          <p className="truncate text-xs text-text-muted">
+            {item.category || item.issuer || item.type || item.organization || sectionTitle}
+          </p>
+        </div>
+        
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            removeItem(index);
+          }}
+          className="shrink-0 rounded-xl border border-red-400/25 p-2 text-red-300 transition-colors hover:bg-red-400/15 relative z-10"
+          aria-label={`Delete ${item.title || `item ${index + 1}`}`}
+        >
+          <Trash2 size={14} />
+        </button>
+      </div>
+    </li>
+  );
+};
+
 const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) => {
   const { data, loading } = useCmsDoc(docId, { [collectionKey]: [] });
   const [items, setItems] = useState([]);
@@ -1006,6 +1175,9 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
   const [listQuery, setListQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [selectedIndices, setSelectedIndices] = useState(new Set());
 
   useEffect(() => {
     if (data === undefined) return;
@@ -1057,8 +1229,16 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
     input.type = 'file';
     input.accept = accept;
     input.onchange = async () => {
-      const file = input.files?.[0];
+      let file = input.files?.[0];
       if (!file) return;
+      if (file.type.startsWith('image/') && file.type !== 'image/gif') {
+        try {
+          const aspect = key === 'thumbnail' || key === 'image' ? 16/9 : null;
+          file = await requestImageCrop(file, aspect);
+        } catch (err) {
+          return;
+        }
+      }
       setBusy(true);
       try {
         const url = await uploadCmsAsset(file, `${section.uploadFolder || 'uploads'}/${docId}`);
@@ -1114,6 +1294,77 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
       });
   }, [items, listQuery]);
 
+  const totalPages = Math.ceil(listEntries.length / itemsPerPage);
+  const paginatedEntries = useMemo(() => {
+    return listEntries.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  }, [listEntries, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [listQuery]);
+
+  const toggleSelection = (index) => {
+    const newSet = new Set(selectedIndices);
+    if (newSet.has(index)) newSet.delete(index);
+    else newSet.add(index);
+    setSelectedIndices(newSet);
+  };
+
+  const removeMultipleItems = async () => {
+    if (selectedIndices.size === 0) return;
+    if (!window.confirm(`Delete ${selectedIndices.size} selected items?`)) return;
+    setBusy(true);
+    try {
+      const indicesToRemove = Array.from(selectedIndices);
+      const nextItems = items.filter((_, i) => !indicesToRemove.includes(i));
+      setItems(nextItems);
+      setSelectedIndices(new Set());
+      setSelectedIndex(-1);
+      setDraft(formFromItem(section.initialItem, fields, section.initialItem));
+      await saveCmsDoc(docId, { [collectionKey]: nextItems });
+      setStatus(`${indicesToRemove.length} items deleted.`);
+    } catch (error) {
+      setStatus(getCmsErrorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = parseInt(active.id, 10);
+      const newIndex = parseInt(over.id, 10);
+      
+      const newItems = arrayMove(items, oldIndex, newIndex);
+      setItems(newItems);
+      
+      // Keep selection logically attached to the same item if possible
+      if (selectedIndex === oldIndex) {
+        setSelectedIndex(newIndex);
+      } else if (selectedIndex === newIndex) {
+        setSelectedIndex(oldIndex);
+      }
+      
+      setBusy(true);
+      try {
+        await saveCmsDoc(docId, { [collectionKey]: newItems });
+        setStatus('Order saved.');
+      } catch (error) {
+        setStatus('Failed to save order.');
+      } finally {
+        setBusy(false);
+      }
+    }
+  };
+
   if (loading || !draft) {
     return (
       <div className="rounded-3xl border border-white/10 bg-secondary/20 p-6 text-text-muted">
@@ -1166,52 +1417,69 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
               No items match your filter. Clear the search box to see all entries.
             </div>
           ) : (
-            <ul className="space-y-2">
-              {listEntries.map(({ item, index }) => {
-                const key = `${item.title || item.name || item.url || index}-${index}`;
-                return (
-                  <li key={key}>
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => editItem(index)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          editItem(index);
-                        }
-                      }}
-                      className={clsx(
-                        'flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border p-4 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent/50',
-                        selectedIndex === index
-                          ? 'border-accent/50 bg-accent/10 shadow-[0_0_0_1px_rgb(var(--color-accent-rgb)/0.2)]'
-                          : 'border-white/10 bg-primary/30 hover:border-accent/25 hover:bg-primary/45'
-                      )}
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate font-semibold text-text">
-                          {item.title || item.name || item.url || `Item ${index + 1}`}
-                        </p>
-                        <p className="truncate text-xs text-text-muted">
-                          {item.category || item.issuer || item.type || item.organization || section.title}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeItem(index);
-                        }}
-                        className="shrink-0 rounded-xl border border-red-400/25 p-2 text-red-300 transition-colors hover:bg-red-400/15"
-                        aria-label={`Delete ${item.title || `item ${index + 1}`}`}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+            <>
+              {selectedIndices.size > 0 && (
+                <div className="flex items-center justify-between mb-4 p-3 rounded-xl bg-red-400/10 border border-red-400/20">
+                  <span className="text-sm font-medium text-red-300">{selectedIndices.size} selected</span>
+                  <button
+                    onClick={removeMultipleItems}
+                    disabled={busy}
+                    className="px-3 py-1.5 text-xs font-bold bg-red-500/20 text-red-200 hover:bg-red-500/30 rounded-lg transition-colors"
+                  >
+                    Delete Selected
+                  </button>
+                </div>
+              )}
+              <DndContext 
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext 
+                  items={paginatedEntries.map(e => e.index.toString())}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <ul className="space-y-2">
+                    {paginatedEntries.map(({ item, index }) => (
+                      <SortableCollectionItem
+                        key={index.toString()}
+                        id={index.toString()}
+                        index={index}
+                        item={item}
+                        selectedIndex={selectedIndex}
+                        editItem={editItem}
+                        removeItem={removeItem}
+                        sectionTitle={section.title}
+                        isSelected={selectedIndices.has(index)}
+                        toggleSelection={toggleSelection}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+              
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 border-t border-white/10 pt-4">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 rounded-lg border border-white/10 text-xs font-medium text-text disabled:opacity-50 hover:bg-white/5 transition-colors"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-xs text-text-muted">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 rounded-lg border border-white/10 text-xs font-medium text-text disabled:opacity-50 hover:bg-white/5 transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -1325,6 +1593,9 @@ const normalizeSiteDraft = (source = initialSiteContent) => ({
   footerTagline: source.footerTagline ?? initialSiteContent.footerTagline,
   footerEmail: source.footerEmail ?? initialSiteContent.footerEmail,
   socialLinksJson: parseArrayValue(source.socialLinksJson ?? initialSiteContent.socialLinksJson, JSON.parse(initialSiteContent.socialLinksJson)),
+  seoTitle: source.seoTitle ?? initialSiteContent.seoTitle,
+  seoDescription: source.seoDescription ?? initialSiteContent.seoDescription,
+  seoImage: source.seoImage ?? initialSiteContent.seoImage,
 });
 
 const stringListConfig = {
@@ -1765,6 +2036,7 @@ const SITE_CONTENT_TABS = [
   { id: 'contact', label: 'Contact', hint: 'Email, availability, résumé' },
   { id: 'about', label: 'About', hint: 'Bio, lists, education, stats' },
   { id: 'footer', label: 'Footer', hint: 'Footer copy & social links' },
+  { id: 'seo', label: 'SEO', hint: 'Global site metadata' },
 ];
 
 const ABOUT_SUB_TABS = [
@@ -1795,8 +2067,16 @@ const SiteEditor = () => {
     input.type = 'file';
     input.accept = 'image/*,.gif,.mp4,.webm';
     input.onchange = async () => {
-      const file = input.files?.[0];
+      let file = input.files?.[0];
       if (!file) return;
+      if (file.type.startsWith('image/') && file.type !== 'image/gif') {
+        try {
+          const aspect = key === 'profilePhotoUrl' || key === 'ogImage' ? 1 : 16/9;
+          file = await requestImageCrop(file, aspect);
+        } catch (err) {
+          return;
+        }
+      }
       setBusy(true);
       try {
         const url = await uploadCmsAsset(file, `site/${key}`);
@@ -1852,6 +2132,9 @@ const SiteEditor = () => {
         footerTagline: draft.footerTagline,
         footerEmail: draft.footerEmail,
         socialLinksJson: draft.socialLinksJson,
+        seoTitle: draft.seoTitle,
+        seoDescription: draft.seoDescription,
+        seoImage: draft.seoImage,
       });
       setStatus('Site content saved.');
     } catch (error) {
@@ -2086,6 +2369,27 @@ const SiteEditor = () => {
             )}
           </SiteSection>
         )}
+
+        {siteTab === 'seo' && (
+          <SiteSection title="SEO & Metadata" description="Manage global title tags, descriptions, and social sharing imagery.">
+            <FieldEditor
+              field={{ key: 'seoTitle', label: 'Global Title Tag', type: 'text' }}
+              value={draft.seoTitle}
+              onChange={(value) => updateField('seoTitle', value)}
+            />
+            <FieldEditor
+              field={{ key: 'seoDescription', label: 'Global Meta Description', type: 'textarea' }}
+              value={draft.seoDescription}
+              onChange={(value) => updateField('seoDescription', value)}
+            />
+            <FieldEditor
+              field={{ key: 'seoImage', label: 'Global OG Image URL', type: 'image' }}
+              value={draft.seoImage}
+              onChange={(value) => updateField('seoImage', value)}
+              onUpload={() => uploadAsset('seoImage')}
+            />
+          </SiteSection>
+        )}
       </div>
 
       <div className="sticky bottom-0 z-10 border-t border-white/10 bg-primary/85 px-4 py-4 backdrop-blur-md sm:px-8">
@@ -2106,6 +2410,289 @@ const SiteEditor = () => {
   );
 };
 
+const AnalyticsDashboard = () => {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        setLoading(true);
+        // Query up to 2000 events sorted by timestamp
+        const q = query(
+          collection(db, 'analyticsEvents'),
+          orderBy('timestamp', 'desc'),
+          limit(2000)
+        );
+        const snapshot = await getDocs(q);
+        const docs = [];
+        snapshot.forEach((doc) => {
+          docs.push({ id: doc.id, ...doc.data() });
+        });
+        setEvents(docs);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to query telemetry database:', err);
+        setError(`Uplink failed. Could not read telemetry events database. (${err.message || err.code})`);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAnalytics();
+  }, []);
+
+  // Aggregations
+  const stats = useMemo(() => {
+    if (events.length === 0) return null;
+
+    // Helper: Format timestamp to YYYY-MM-DD
+    const formatDate = (ts) => {
+      if (!ts) return '';
+      const date = ts.toDate ? ts.toDate() : new Date(ts);
+      return date.toISOString().split('T')[0];
+    };
+
+    const totalViews = events.filter(e => e.eventName === 'page_view').length;
+    const totalSessions = new Set(events.map(e => e.sessionId).filter(Boolean)).size;
+    const totalContacts = events.filter(e => e.eventName === 'contact_submit').length;
+
+    // 1. Page views over time (last 7 active days)
+    const dailyViews = {};
+    events.forEach(e => {
+      if (e.eventName === 'page_view') {
+        const dateStr = formatDate(e.timestamp);
+        if (dateStr) dailyViews[dateStr] = (dailyViews[dateStr] || 0) + 1;
+      }
+    });
+
+    // Sort dates
+    const sortedDates = Object.keys(dailyViews).sort().slice(-7);
+    const dateLabels = sortedDates.map(d => d.slice(5)); // MM-DD
+    const dateData = sortedDates.map(d => dailyViews[d]);
+    const maxDailyView = Math.max(...dateData, 1);
+
+    // 2. Top pages
+    const pageCounts = {};
+    events.forEach(e => {
+      if (e.eventName === 'page_view' && e.eventData?.path) {
+        const p = e.eventData.path;
+        pageCounts[p] = (pageCounts[p] || 0) + 1;
+      }
+    });
+    const topPages = Object.entries(pageCounts)
+      .map(([path, count]) => ({ path, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    // 3. Scroll depth (funnel for '/')
+    const scrollCounts = { '25%': 0, '50%': 0, '75%': 0, '100%': 0 };
+    events.forEach(e => {
+      if (e.eventName === 'scroll_depth' && e.eventData?.depth) {
+        const depthKey = `${e.eventData.depth}%`;
+        if (scrollCounts[depthKey] !== undefined) {
+          scrollCounts[depthKey]++;
+        }
+      }
+    });
+    const maxScrollCount = Math.max(...Object.values(scrollCounts), 1);
+
+    // 4. Click events (clicks on social networks + resume)
+    const clickCounts = {};
+    events.forEach(e => {
+      if (e.eventName === 'social_click' && e.eventData?.platform) {
+        const p = e.eventData.platform;
+        clickCounts[p] = (clickCounts[p] || 0) + 1;
+      }
+      if (e.eventName === 'download' && e.eventData?.file_type) {
+        const d = `resume_${e.eventData.file_type}`;
+        clickCounts[d] = (clickCounts[d] || 0) + 1;
+      }
+    });
+    const topClicks = Object.entries(clickCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6);
+
+    // 5. Top Projects Viewed
+    const projectCounts = {};
+    events.forEach(e => {
+      if (e.eventName === 'project_view' && e.eventData?.project_title) {
+        const title = e.eventData.project_title;
+        projectCounts[title] = (projectCounts[title] || 0) + 1;
+      }
+    });
+    const topProjects = Object.entries(projectCounts)
+      .map(([title, count]) => ({ title, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    return {
+      totalViews,
+      totalSessions,
+      totalContacts,
+      dateLabels,
+      dateData,
+      maxDailyView,
+      topPages,
+      scrollCounts,
+      maxScrollCount,
+      topClicks,
+      topProjects,
+    };
+  }, [events]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 font-mono text-text-muted gap-3">
+        <RefreshCw className="animate-spin text-accent" size={32} />
+        <span className="text-xs uppercase tracking-widest">Downlinking telemetry logs...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-3xl border border-red-500/20 bg-red-500/5 p-8 text-center font-mono">
+        <AlertTriangle className="mx-auto mb-4 text-red-400" size={32} />
+        <h3 className="text-lg font-bold text-red-200 uppercase tracking-widest">{error}</h3>
+        <p className="text-xs text-text-muted mt-2">Check your internet connection or Firestore logs.</p>
+      </div>
+    );
+  }
+
+  if (events.length === 0) {
+    return (
+      <div className="rounded-3xl border border-white/10 bg-secondary/20 p-10 text-center font-mono text-text-muted">
+        <BarChart2 className="mx-auto mb-4 opacity-50" size={36} />
+        <p className="text-sm">No telemetry records exist yet. Navigate around your portfolio to generate logs!</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Top HUD Cards */}
+      <div className="grid gap-4 sm:grid-cols-3 font-mono">
+        <div className="rounded-2xl border border-white/5 bg-secondary/20 p-5">
+          <span className="text-[9px] uppercase tracking-wider text-text-muted">Total Page Views</span>
+          <h3 className="text-2xl font-bold text-accent mt-1">{stats.totalViews}</h3>
+        </div>
+        <div className="rounded-2xl border border-white/5 bg-secondary/20 p-5">
+          <span className="text-[9px] uppercase tracking-wider text-text-muted">Unique Sessions</span>
+          <h3 className="text-2xl font-bold text-accent mt-1">{stats.totalSessions}</h3>
+        </div>
+        <div className="rounded-2xl border border-white/5 bg-secondary/20 p-5">
+          <span className="text-[9px] uppercase tracking-wider text-text-muted font-bold text-emerald-400">Telemetry Uplinks</span>
+          <h3 className="text-2xl font-bold text-emerald-400 mt-1">{events.length} logs</h3>
+        </div>
+      </div>
+
+      {/* Daily Traffic Chart */}
+      <div className="rounded-2xl border border-white/10 bg-secondary/20 p-6">
+        <h3 className="font-display font-bold text-text mb-4 text-sm flex items-center gap-2">
+          <LineChart size={16} className="text-accent animate-pulse" />
+          UPLINK TRAFFIC OVER TIME (LAST 7 ACTIVE DAYS)
+        </h3>
+        
+        {/* SVG Chart */}
+        <div className="h-44 w-full flex items-end gap-3 mt-6 border-b border-white/10 pb-2 relative">
+          {stats.dateData.map((val, idx) => {
+            const pct = (val / stats.maxDailyView) * 100;
+            return (
+              <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group relative">
+                {/* Tooltip */}
+                <span className="absolute -top-6 bg-accent text-primary text-[9px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity font-mono pointer-events-none">
+                  {val} views
+                </span>
+                {/* Bar */}
+                <div 
+                  style={{ height: `${pct || 4}%` }} 
+                  className="w-full bg-accent/25 border-t border-accent rounded-t group-hover:bg-accent/40 transition-colors"
+                />
+                <span className="text-[9px] text-text-muted font-mono mt-2 block whitespace-nowrap">
+                  {stats.dateLabels[idx]}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Top Pages */}
+        <div className="rounded-2xl border border-white/10 bg-secondary/20 p-5">
+          <h3 className="font-display font-bold text-text mb-4 text-sm">TOP ORBITAL PAGES</h3>
+          <div className="space-y-3 font-mono text-xs">
+            {stats.topPages.map((page, idx) => (
+              <div key={idx} className="flex justify-between items-center bg-primary/45 border border-white/5 rounded-xl px-4 py-2.5">
+                <span className="text-text truncate">{page.path}</span>
+                <span className="text-accent font-bold">{page.count} hits</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Scroll Funnel */}
+        <div className="rounded-2xl border border-white/10 bg-secondary/20 p-5">
+          <h3 className="font-display font-bold text-text mb-4 text-sm">SCROLL DEPTH FUNNEL</h3>
+          <div className="space-y-3 font-mono text-xs">
+            {Object.entries(stats.scrollCounts).map(([depth, count]) => {
+              const pct = (count / stats.maxScrollCount) * 100;
+              return (
+                <div key={depth} className="flex items-center gap-4">
+                  <span className="w-10 text-right text-text-muted text-[10px] font-bold">{depth}</span>
+                  <div className="flex-1 h-3 bg-secondary/50 rounded overflow-hidden border border-white/5 relative p-[1px]">
+                    <div 
+                      style={{ width: `${pct || 0}%` }}
+                      className="h-full bg-accent/80 rounded"
+                    />
+                  </div>
+                  <span className="w-16 text-accent text-right font-bold">{count} logs</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Click events */}
+        <div className="rounded-2xl border border-white/10 bg-secondary/20 p-5">
+          <h3 className="font-display font-bold text-text mb-4 text-sm">OUTBOUND ACTIONS (CLICKS & DOWNLOADS)</h3>
+          <div className="space-y-3 font-mono text-xs">
+            {stats.topClicks.map((click, idx) => (
+              <div key={idx} className="flex justify-between items-center bg-primary/45 border border-white/5 rounded-xl px-4 py-2.5">
+                <span className="text-text-muted capitalize">{click.name.replace('_', ' ')}</span>
+                <span className="text-accent font-bold">{click.count} clicks</span>
+              </div>
+            ))}
+            {stats.topClicks.length === 0 && (
+              <p className="text-center text-text-muted text-xs py-4">No outbound logs yet.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Top Projects */}
+        <div className="rounded-2xl border border-white/10 bg-secondary/20 p-5">
+          <h3 className="font-display font-bold text-text mb-4 text-sm">POPULAR MISSIONS (PROJECT VIEWS)</h3>
+          <div className="space-y-3 font-mono text-xs">
+            {stats.topProjects.map((proj, idx) => (
+              <div key={idx} className="flex justify-between items-center bg-primary/45 border border-white/5 rounded-xl px-4 py-2.5">
+                <span className="text-text truncate">{proj.title}</span>
+                <span className="text-accent font-bold">{proj.count} views</span>
+              </div>
+            ))}
+            {stats.topProjects.length === 0 && (
+              <p className="text-center text-text-muted text-xs py-4">No project view logs yet.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AdminPage = () => {
   const { user, loading } = useAuthState();
   const [activeTab, setActiveTab] = useState('site');
@@ -2114,11 +2701,17 @@ const AdminPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authBusy, setAuthBusy] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const tabGroups = [
     {
       label: 'Overview',
-      items: [{ id: 'site', label: 'Website Content', icon: Settings2 }],
+      items: [
+        { id: 'site', label: 'Website Content', icon: Settings2 },
+        { id: 'media', label: 'Media Library', icon: ImageIcon },
+        { id: CMS_DOCS.messages, label: 'Inbox', icon: Mail },
+        { id: 'analytics', label: 'Analytics Feed', icon: LineChart },
+      ],
     },
     {
       label: 'Collections',
@@ -2165,8 +2758,8 @@ const AdminPage = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-primary bg-[radial-gradient(ellipse_90%_60%_at_50%_-15%,rgb(var(--color-accent-rgb)/0.1),transparent),radial-gradient(ellipse_60%_40%_at_100%_100%,rgb(var(--color-accent-rgb)/0.05),transparent)] px-4 py-10 text-text sm:py-14">
-        <div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-6xl gap-8 lg:grid-cols-[1fr_1.02fr] lg:items-stretch">
+      <div className="min-h-screen flex items-center justify-center bg-primary bg-[radial-gradient(ellipse_90%_60%_at_50%_-15%,rgb(var(--color-accent-rgb)/0.1),transparent),radial-gradient(ellipse_60%_40%_at_100%_100%,rgb(var(--color-accent-rgb)/0.05),transparent)] px-4 py-10 text-text sm:py-14">
+        <div className="w-full max-w-6xl grid gap-8 xl:grid-cols-[1fr_1.02fr] xl:items-stretch">
           <div className="flex flex-col justify-center rounded-3xl border border-white/10 bg-secondary/30 p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-md sm:p-10">
             <div className="mb-8">
               <div className="mb-5 inline-flex rounded-2xl border border-accent/25 bg-accent/10 p-3.5 text-accent">
@@ -2284,6 +2877,13 @@ const AdminPage = () => {
       <div className="mx-auto max-w-7xl space-y-6">
         <header className="flex flex-col gap-5 rounded-3xl border border-white/10 bg-secondary/30 p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-md sm:p-7 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-start gap-4">
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="lg:hidden mt-1 p-2 -ml-2 rounded-xl text-text-muted hover:text-text hover:bg-white/5 transition-colors"
+            >
+              <Menu size={24} />
+            </button>
             <div className="hidden rounded-2xl border border-accent/25 bg-accent/10 p-3 text-accent sm:block">
               <Shield size={22} strokeWidth={1.75} />
             </div>
@@ -2317,9 +2917,29 @@ const AdminPage = () => {
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)] lg:items-start">
-          <aside className="lg:sticky lg:top-6">
+          {/* Mobile Overlay */}
+          {isMobileMenuOpen && (
+            <div 
+              className="fixed inset-0 z-40 bg-primary/80 backdrop-blur-sm lg:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+          )}
+
+          <aside className={clsx(
+            "fixed inset-y-0 left-0 z-50 w-72 transform overflow-y-auto lg:overflow-y-visible bg-secondary/95 border-r border-white/10 p-6 transition-transform duration-300 ease-in-out lg:static lg:w-auto lg:transform-none lg:bg-transparent lg:border-none lg:p-0",
+            isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          )}>
+            <div className="flex items-center justify-between mb-6 lg:hidden">
+              <span className="text-sm font-mono uppercase tracking-[0.2em] text-accent">Menu</span>
+              <button 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 -mr-2 rounded-xl text-text-muted hover:text-text hover:bg-white/5"
+              >
+                <X size={20} />
+              </button>
+            </div>
             <nav
-              className="max-h-[min(70vh,calc(100vh-8rem))] overflow-y-auto rounded-3xl border border-white/10 bg-secondary/30 p-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] backdrop-blur-md [scrollbar-width:thin] lg:max-h-[calc(100vh-5rem)]"
+              className="max-h-[calc(100vh-8rem)] overflow-y-auto rounded-3xl border border-white/10 bg-secondary/30 p-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] backdrop-blur-md [scrollbar-width:thin] lg:max-h-[calc(100vh-5rem)] lg:sticky lg:top-6"
               aria-label="Admin sections"
             >
               {tabGroups.map((group) => (
@@ -2335,7 +2955,10 @@ const AdminPage = () => {
                         <button
                           key={tab.id}
                           type="button"
-                          onClick={() => setActiveTab(tab.id)}
+                          onClick={() => {
+                            setActiveTab(tab.id);
+                            setIsMobileMenuOpen(false);
+                          }}
                           className={clsx(
                             'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors',
                             isActive
@@ -2356,6 +2979,9 @@ const AdminPage = () => {
 
           <main className="min-w-0 space-y-6">
             {activeSection.id === 'site' && <SiteEditor />}
+            {activeSection.id === 'media' && <MediaLibrary />}
+            {activeSection.id === CMS_DOCS.messages && <MessagesInbox />}
+            {activeSection.id === 'analytics' && <AnalyticsDashboard />}
             {activeSection.id === CMS_DOCS.projects && (
               <CollectionEditor
                 docId={CMS_DOCS.projects}
@@ -2418,6 +3044,7 @@ const AdminPage = () => {
           </main>
         </div>
       </div>
+      <CropModalRoot />
     </div>
   );
 };

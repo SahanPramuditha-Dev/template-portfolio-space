@@ -16,6 +16,9 @@ import MobileQuickActions from './components/MobileQuickActions';
 import { Analytics } from '@vercel/analytics/react';
 import { isBotUserAgent, shouldDisableHeavyVisuals } from './utils/runtimeGuards';
 import { CmsSectionSkeleton, FooterCmsSkeleton } from './components/CmsShapeSkeleton';
+import { AchievementsProvider } from './context/AchievementsContext';
+import { AccessibilityProvider } from './context/AccessibilityContext';
+import { CMS_DOCS, useCmsDoc } from './lib/cms';
 
 const ThreeBackground = lazy(() => import('./components/ThreeBackground'));
 const CustomCursor = lazy(() => import('./components/CustomCursor'));
@@ -30,9 +33,9 @@ const Footer = lazy(() => import('./components/Footer'));
 
 function App() {
   const isBot = isBotUserAgent();
-
-  const [visualIntroDone, setVisualIntroDone] = useState(isBot);
+  const [visualIntroDone, setVisualIntroDone] = useState(() => isBot || shouldDisableHeavyVisuals());
   const [heavyVisualsEnabled, setHeavyVisualsEnabled] = useState(() => !shouldDisableHeavyVisuals());
+  const { data: siteDoc } = useCmsDoc(CMS_DOCS.site);
 
   useEffect(() => {
     let animationFrameId;
@@ -79,8 +82,13 @@ function App() {
   }, []);
 
   return (
-    <>
-      <SEO />
+    <AccessibilityProvider>
+      <AchievementsProvider>
+        <SEO 
+          title={siteDoc?.seoTitle} 
+          description={siteDoc?.seoDescription} 
+          ogImage={siteDoc?.seoImage} 
+        />
       <StructuredData />
       <SkipToContent />
       <KeyboardShortcuts />
@@ -116,7 +124,7 @@ function App() {
 
           <div className="relative z-10">
             <Navbar />
-            <main id="main-content">
+            <main id="main-content" className="pb-16 md:pb-0">
               <Hero />
               <About />
               <NowAvailability />
@@ -150,7 +158,8 @@ function App() {
           <Analytics />
         </motion.div>
       )}
-    </>
+      </AchievementsProvider>
+    </AccessibilityProvider>
   );
 }
 

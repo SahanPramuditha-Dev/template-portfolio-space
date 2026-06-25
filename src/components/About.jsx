@@ -245,9 +245,11 @@ const About = () => {
           <h3 className="text-2xl font-bold text-text mb-8 flex items-center gap-2">
             <span className="text-accent font-mono text-xl">01.2.</span> Open Source Presence
           </h3>
-          <GithubStats username={GITHUB_USERNAME} />
-          <p className="text-center text-text-muted mt-4 text-xs font-mono opacity-50">
-            * Data fetched dynamically from GitHub
+          <div className="w-full">
+            <GithubStats username={GITHUB_USERNAME} />
+          </div>
+          <p className="text-center text-text-muted mt-6 text-xs font-mono opacity-50">
+            * Data fetched dynamically from GitHub API
           </p>
         </div>
       </div>

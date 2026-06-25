@@ -15,9 +15,26 @@ service firebase.storage {
         );
     }
 
+    function isValidPublicUpload() {
+      return request.resource != null
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches(
+          'image/.*|video/mp4|video/webm|application/pdf'
+        );
+    }
+
+    match /private/{allPaths=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /{folder}/{allPaths=**} {
+      allow read: if folder in ['public', 'uploads', 'site', 'projects', 'certificates', 'resources'];
+      allow write: if isAdmin() && isValidPublicUpload();
+    }
+
     match /{allPaths=**} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read: if false;
+      allow write: if false;
     }
   }
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, RefreshCw, Trophy, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Gamepad2, Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { useAchievements } from '../context/AchievementsContext';
 
 const GRID_SIZE = 20;
 const INITIAL_SNAKE = [[10, 10], [10, 11], [10, 12]]; // Initial length 3
@@ -42,6 +43,14 @@ const playSound = (type, muted) => {
 };
 
 const SnakeGame = ({ isOpen, onClose }) => {
+  const { unlockAchievement } = useAchievements();
+
+  useEffect(() => {
+    if (isOpen) {
+      unlockAchievement('secret-hacker');
+    }
+  }, [isOpen, unlockAchievement]);
+
   const [snake, setSnake] = useState(INITIAL_SNAKE);
   const [food, setFood] = useState([5, 5]);
   const [direction, setDirection] = useState(INITIAL_DIRECTION);

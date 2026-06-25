@@ -5,7 +5,6 @@ import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
 import { trackDownload } from '../utils/analytics';
-import CopyEmailButton from '../components/CopyEmailButton';
 
 const DEFAULT_RESUME_URL = '/resume.pdf';
 
@@ -74,7 +73,7 @@ const ResumePage = () => {
               <Printer size={16} />
               Print
             </button>
-            <CopyEmailButton email={email} compact className="rounded-full" />
+
             <a
               href={resumeUrl}
               download

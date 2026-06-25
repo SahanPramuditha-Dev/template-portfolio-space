@@ -1,13 +1,31 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Github, Linkedin, Mail, Facebook, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { FooterCmsSkeleton } from './CmsShapeSkeleton';
-import CopyEmailButton from './CopyEmailButton';
+import { useAchievements } from '../context/AchievementsContext';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const { data: siteDoc, exists, loading } = useCmsDoc(CMS_DOCS.site, null);
+  const footerRef = useRef(null);
+  const { unlockAchievement } = useAchievements();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          unlockAchievement('space-voyager');
+        }
+      },
+      { threshold: 0.1 }
+    );
+    if (footerRef.current) {
+      observer.observe(footerRef.current);
+    }
+    return () => observer.disconnect();
+  }, [unlockAchievement]);
 
   if (loading || siteDoc === undefined) {
     return <FooterCmsSkeleton />;
@@ -39,7 +57,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="relative z-10 border-t border-secondary bg-primary/90 pt-12 pb-8 backdrop-blur-md">
+    <footer ref={footerRef} className="relative z-10 border-t border-secondary bg-primary/90 pt-12 pb-8 backdrop-blur-md">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mb-8 flex flex-col items-center justify-between gap-8 md:flex-row">
           <div className="text-center md:text-left">
@@ -83,7 +101,12 @@ const Footer = () => {
             </p>
             <div className="flex items-center gap-4">
               {email ? (
-                <CopyEmailButton email={email} compact className="rounded-full px-3 py-1.5 text-xs" />
+                <a
+                  href={`mailto:${email}`}
+                  className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-xs font-mono text-text-muted hover:text-accent hover:border-accent/30 transition-colors"
+                >
+                  {email}
+                </a>
               ) : null}
               <a
                 href="/admin"

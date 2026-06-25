@@ -26,8 +26,17 @@ const FOCUSABLE_SELECTOR =
 
 const ProjectModalInner = ({ project, isOpen, onClose }) => {
   const [activeMedia, setActiveMedia] = useState(0);
+  const [activeTab, setActiveTab] = useState('details');
   const dialogRef = useRef(null);
   const previousFocusRef = useRef(null);
+  const touchStartY = useRef(null);
+  const touchStartX = useRef(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab('details');
+    }
+  }, [isOpen, project]);
 
   const slides = useMemo(() => (project ? getMediaSlides(project) : []), [project]);
 
@@ -105,6 +114,28 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
     });
   };
 
+  // Swipe handlers for the whole modal (swipe down = close)
+  const handleModalTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+  const handleModalTouchEnd = (e) => {
+    if (touchStartY.current === null) return;
+    const delta = e.changedTouches[0].clientY - touchStartY.current;
+    if (delta > 80) onClose();
+    touchStartY.current = null;
+  };
+
+  // Swipe handlers for the image gallery (swipe left/right = next/prev)
+  const handleGalleryTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleGalleryTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(delta) > 40) stepMedia(delta < 0 ? 1 : -1);
+    touchStartX.current = null;
+  };
+
   const clientLine = [project.client, project.company].map((s) => String(s || '').trim()).filter(Boolean)[0];
   const industry = String(project.industry || '').trim();
   const timeline = String(project.projectTimeline || '').trim();
@@ -125,18 +156,25 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
             className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
           />
 
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[60] flex items-end justify-center p-0 sm:items-center sm:p-4">
             <motion.div
               ref={dialogRef}
-              initial={{ opacity: 0, scale: 0.96, y: 24 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 24 }}
-              className="relative flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-primary shadow-2xl md:flex-row"
+              initial={{ opacity: 0, y: '100%' }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 260 }}
+              onTouchStart={handleModalTouchStart}
+              onTouchEnd={handleModalTouchEnd}
+              className="relative flex max-h-[92dvh] w-full max-w-6xl flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-primary shadow-2xl sm:max-h-[90vh] sm:rounded-3xl md:flex-row"
               role="dialog"
               aria-modal="true"
               aria-labelledby="project-modal-title"
               aria-describedby="project-modal-description"
             >
+              {/* Drag handle — mobile only */}
+              <div className="flex justify-center pt-2 pb-0 sm:hidden" aria-hidden="true">
+                <span className="h-1 w-10 rounded-full bg-white/20" />
+              </div>
               <button
                 type="button"
                 onClick={onClose}
@@ -146,7 +184,11 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
                 <X size={22} />
               </button>
 
-              <div className="relative w-full border-b border-white/10 bg-secondary/20 md:w-[42%] md:border-b-0 md:border-r">
+              <div
+                className="relative w-full border-b border-white/10 bg-secondary/20 md:w-[42%] md:border-b-0 md:border-r"
+                onTouchStart={handleGalleryTouchStart}
+                onTouchEnd={handleGalleryTouchEnd}
+              >
                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-black/40">
                   {activeSlide ? (
                     activeSlide.kind === 'video' ? (
@@ -331,131 +373,184 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
                 </div>
               </div>
 
-              <div className="custom-scrollbar w-full overflow-y-auto bg-primary p-6 md:w-[58%] md:p-8">
-                <p id="project-modal-description" className="text-lg leading-relaxed text-text-muted">
-                  {project.description}
-                </p>
+              <div className="custom-scrollbar w-full overflow-y-auto bg-primary p-6 md:w-[58%] md:p-8 flex flex-col">
+                {/* Tabs Header if sandboxUrl is available */}
+                {project.sandboxUrl && (
+                  <div className="flex border-b border-white/5 mb-6 font-mono text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('details')}
+                      className={`px-4 py-2 border-b-2 font-bold uppercase transition-colors ${
+                        activeTab === 'details'
+                          ? 'border-accent text-accent animate-pulse'
+                          : 'border-transparent text-text-muted hover:text-text'
+                      }`}
+                    >
+                      Mission Details
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('sandbox')}
+                      className={`px-4 py-2 border-b-2 font-bold uppercase transition-colors ${
+                        activeTab === 'sandbox'
+                          ? 'border-accent text-accent animate-pulse'
+                          : 'border-transparent text-text-muted hover:text-text'
+                      }`}
+                    >
+                      Live Sandbox Feed
+                    </button>
+                  </div>
+                )}
 
-                <div className="mt-8 grid gap-4 md:grid-cols-2">
-                  <div className="rounded-2xl border border-secondary/50 bg-secondary/10 p-5">
-                    <div className="mb-3 flex items-center gap-2 text-text">
-                      <Target size={18} className="text-red-400" />
-                      <h3 className="font-bold">Problem</h3>
-                    </div>
-                    <p className="text-sm leading-relaxed text-text-muted">
-                      {project.problem || 'Information not available.'}
+                {activeTab === 'details' ? (
+                  <>
+                    <p id="project-modal-description" className="text-lg leading-relaxed text-text-muted">
+                      {project.description}
                     </p>
-                  </div>
 
-                  <div className="rounded-2xl border border-secondary/50 bg-secondary/10 p-5">
-                    <div className="mb-3 flex items-center gap-2 text-text">
-                      <Zap size={18} className="text-yellow-400" />
-                      <h3 className="font-bold">Solution</h3>
-                    </div>
-                    <p className="text-sm leading-relaxed text-text-muted">
-                      {project.solution || 'Information not available.'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-6 rounded-2xl border border-accent/20 bg-gradient-to-br from-secondary/20 to-primary p-5">
-                  <div className="mb-4 flex items-center gap-2 text-text">
-                    <Award size={18} className="text-green-400" />
-                    <h3 className="font-bold">Architecture & Delivery</h3>
-                  </div>
-                  <p className="text-sm leading-relaxed text-text-muted">
-                    {project.architecture || 'Architecture details not available.'}
-                  </p>
-                </div>
-
-                <div className="mt-6 grid gap-4 md:grid-cols-2">
-                  <div className="rounded-2xl border border-secondary/50 bg-secondary/10 p-5">
-                    <div className="mb-3 flex items-center gap-2 text-text">
-                      <ImageIcon size={18} className="text-accent" />
-                      <h3 className="font-bold">Key Features</h3>
-                    </div>
-                    <ul className="space-y-2 text-sm text-text-muted">
-                      {(project.features || []).map((feature) => (
-                        <li key={feature} className="flex items-start gap-2">
-                          <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                      {(!project.features || project.features.length === 0) && (
-                        <li>Feature breakdown not available.</li>
-                      )}
-                    </ul>
-                  </div>
-
-                  <div className="rounded-2xl border border-secondary/50 bg-secondary/10 p-5">
-                    <div className="mb-3 flex items-center gap-2 text-text">
-                      <Lightbulb size={18} className="text-amber-400" />
-                      <h3 className="font-bold">What I Learned</h3>
-                    </div>
-                    <p className="text-sm leading-relaxed text-text-muted">
-                      {project.learned || 'Learning notes not available.'}
-                    </p>
-                  </div>
-                </div>
-
-                {impactMetrics.length > 0 && (
-                  <div className="mt-6 rounded-2xl border border-secondary/50 bg-secondary/10 p-5">
-                    <h3 className="mb-4 font-bold text-text">Impact Metrics</h3>
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      {impactMetrics.map((metric) => (
-                        <div
-                          key={`${metric.label}-${metric.value}`}
-                          className="rounded-xl border border-secondary/40 bg-primary/50 p-4 text-center"
-                        >
-                          <div className="text-xl font-bold text-accent">
-                            {metric.value}
-                            {metric.suffix ? ` ${metric.suffix}` : ''}
-                          </div>
-                          <div className="mt-1 text-[11px] uppercase tracking-[0.14em] text-text-muted">
-                            {metric.label}
-                          </div>
+                    <div className="mt-8 grid gap-4 md:grid-cols-2">
+                      <div className="rounded-2xl border border-secondary/50 bg-secondary/10 p-5">
+                        <div className="mb-3 flex items-center gap-2 text-text">
+                          <Target size={18} className="text-red-400" />
+                          <h3 className="font-bold">Problem</h3>
                         </div>
-                      ))}
+                        <p className="text-sm leading-relaxed text-text-muted">
+                          {project.problem || 'Information not available.'}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-secondary/50 bg-secondary/10 p-5">
+                        <div className="mb-3 flex items-center gap-2 text-text">
+                          <Zap size={18} className="text-yellow-400" />
+                          <h3 className="font-bold">Solution</h3>
+                        </div>
+                        <p className="text-sm leading-relaxed text-text-muted">
+                          {project.solution || 'Information not available.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 rounded-2xl border border-accent/20 bg-gradient-to-br from-secondary/20 to-primary p-5">
+                      <div className="mb-4 flex items-center gap-2 text-text">
+                        <Award size={18} className="text-green-400" />
+                        <h3 className="font-bold">Architecture & Delivery</h3>
+                      </div>
+                      <p className="text-sm leading-relaxed text-text-muted">
+                        {project.architecture || 'Architecture details not available.'}
+                      </p>
+                    </div>
+
+                    <div className="mt-6 grid gap-4 md:grid-cols-2">
+                      <div className="rounded-2xl border border-secondary/50 bg-secondary/10 p-5">
+                        <div className="mb-3 flex items-center gap-2 text-text">
+                          <ImageIcon size={18} className="text-accent" />
+                          <h3 className="font-bold">Key Features</h3>
+                        </div>
+                        <ul className="space-y-2 text-sm text-text-muted">
+                          {(project.features || []).map((feature) => (
+                            <li key={feature} className="flex items-start gap-2">
+                              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                              <span>{feature}</span>
+                            </li>
+                          ))}
+                          {(!project.features || project.features.length === 0) && (
+                            <li>Feature breakdown not available.</li>
+                          )}
+                        </ul>
+                      </div>
+
+                      <div className="rounded-2xl border border-secondary/50 bg-secondary/10 p-5">
+                        <div className="mb-3 flex items-center gap-2 text-text">
+                          <Lightbulb size={18} className="text-amber-400" />
+                          <h3 className="font-bold">What I Learned</h3>
+                        </div>
+                        <p className="text-sm leading-relaxed text-text-muted">
+                          {project.learned || 'Learning notes not available.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {impactMetrics.length > 0 && (
+                      <div className="mt-6 rounded-2xl border border-secondary/50 bg-secondary/10 p-5">
+                        <h3 className="mb-4 font-bold text-text">Impact Metrics</h3>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                          {impactMetrics.map((metric) => (
+                            <div
+                              key={`${metric.label}-${metric.value}`}
+                              className="rounded-xl border border-secondary/40 bg-primary/50 p-4 text-center"
+                            >
+                              <div className="text-xl font-bold text-accent">
+                                {metric.value}
+                                {metric.suffix ? ` ${metric.suffix}` : ''}
+                              </div>
+                              <div className="mt-1 text-[11px] uppercase tracking-[0.14em] text-text-muted">
+                                {metric.label}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {(lessonsLearned || nextSteps) && (
+                      <div className="mt-6 grid gap-4 md:grid-cols-2">
+                        {lessonsLearned && (
+                          <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-5">
+                            <h3 className="mb-2 flex items-center gap-2 font-bold text-text">
+                              <Lightbulb size={18} className="text-emerald-400" />
+                              Lessons learned
+                            </h3>
+                            <p className="text-sm leading-relaxed text-text-muted">{lessonsLearned}</p>
+                          </div>
+                        )}
+                        {nextSteps && (
+                          <div className="rounded-2xl border border-sky-400/20 bg-sky-500/5 p-5">
+                            <h3 className="mb-2 flex items-center gap-2 font-bold text-text">
+                              <ArrowRight size={18} className="text-sky-400" />
+                              Next steps
+                            </h3>
+                            <p className="text-sm leading-relaxed text-text-muted">{nextSteps}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-6">
+                      <h3 className="mb-3 font-bold text-text">Technologies Used</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {techList.map((t) => (
+                          <span
+                            key={t}
+                            className="rounded-full border border-accent/20 bg-secondary/50 px-3 py-1 text-xs font-mono text-accent"
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full flex-grow flex flex-col min-h-[380px] h-full rounded-2xl overflow-hidden border border-white/10 bg-black/40">
+                    <iframe
+                      src={project.sandboxUrl}
+                      title={`${project.title} Sandbox`}
+                      className="w-full flex-grow min-h-[350px] border-0 bg-transparent"
+                      sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                      loading="lazy"
+                    />
+                    <div className="p-3 bg-secondary/80 border-t border-white/5 font-mono text-[9px] text-text-muted flex justify-between items-center">
+                      <span>SECURE SANDBOX ACTIVE</span>
+                      <a 
+                        href={project.sandboxUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-accent hover:underline flex items-center gap-0.5"
+                      >
+                        OPEN IN NEW TAB <ExternalLink size={10} />
+                      </a>
                     </div>
                   </div>
                 )}
-
-                {(lessonsLearned || nextSteps) && (
-                  <div className="mt-6 grid gap-4 md:grid-cols-2">
-                    {lessonsLearned && (
-                      <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-5">
-                        <h3 className="mb-2 flex items-center gap-2 font-bold text-text">
-                          <Lightbulb size={18} className="text-emerald-400" />
-                          Lessons learned
-                        </h3>
-                        <p className="text-sm leading-relaxed text-text-muted">{lessonsLearned}</p>
-                      </div>
-                    )}
-                    {nextSteps && (
-                      <div className="rounded-2xl border border-sky-400/20 bg-sky-500/5 p-5">
-                        <h3 className="mb-2 flex items-center gap-2 font-bold text-text">
-                          <ArrowRight size={18} className="text-sky-400" />
-                          Next steps
-                        </h3>
-                        <p className="text-sm leading-relaxed text-text-muted">{nextSteps}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="mt-6">
-                  <h3 className="mb-3 font-bold text-text">Technologies Used</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {techList.map((t) => (
-                      <span
-                        key={t}
-                        className="rounded-full border border-accent/20 bg-secondary/50 px-3 py-1 text-xs font-mono text-accent"
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
 
                 <div className="mt-8 flex flex-col gap-3 border-t border-secondary/40 pt-6 sm:flex-row">
                   {hasLive ? (

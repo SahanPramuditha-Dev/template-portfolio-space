@@ -29,6 +29,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Firebase rules sanity checks
+        run: npm run test:rules
+
       - name: Install audit tools
         run: npm install --no-save @playwright/test wait-on @lhci/cli
 
