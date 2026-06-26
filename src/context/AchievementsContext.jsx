@@ -35,6 +35,34 @@ const INITIAL_ACHIEVEMENTS = [
     unlocked: false,
     unlockedAt: null,
   },
+  {
+    id: 'galactic-first-blood',
+    title: 'First Blood',
+    description: 'Destroyed your first alien interceptor.',
+    unlocked: false,
+    unlockedAt: null,
+  },
+  {
+    id: 'galactic-asteroid-destroyer',
+    title: 'Asteroid Destroyer',
+    description: 'Vaporized a space rock before it could hit you.',
+    unlocked: false,
+    unlockedAt: null,
+  },
+  {
+    id: 'galactic-boss-slayer',
+    title: 'Boss Slayer',
+    description: 'Defeated the Dreadnought Boss.',
+    unlocked: false,
+    unlockedAt: null,
+  },
+  {
+    id: 'galactic-survivor',
+    title: 'Survivor',
+    description: 'Survived the onslaught for 60 seconds.',
+    unlocked: false,
+    unlockedAt: null,
+  },
 ];
 
 const playChime = () => {
