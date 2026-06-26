@@ -6,6 +6,7 @@ import ThemeToggle from './ThemeToggle';
 import GalacticDefender from './GalacticDefender';
 import AchievementsModal from './AchievementsModal';
 import { useAchievements } from '../context/AchievementsContext';
+import { useAccessibility } from '../context/AccessibilityContext';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,6 +16,15 @@ const Navbar = () => {
   const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
   const { unlockedCount } = useAchievements();
   const [moreOpen, setMoreOpen] = useState(false);
+
+  const {
+    reduceMotion,
+    toggleReduceMotion,
+    highContrast,
+    toggleHighContrast,
+    textSize,
+    changeTextSize
+  } = useAccessibility();
 
   // Konami Code Logic
   useEffect(() => {

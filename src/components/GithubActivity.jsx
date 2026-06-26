@@ -8,7 +8,7 @@ const GithubActivity = ({ username = 'SahanPramuditha-Dev' }) => {
 
   useEffect(() => {
     if (!username) return;
-    setLoading(true);
+    Promise.resolve().then(() => setLoading(true));
 
     fetch(`https://api.github.com/users/${username}/events/public`)
       .then((res) => {
@@ -50,14 +50,15 @@ const GithubActivity = ({ username = 'SahanPramuditha-Dev' }) => {
   const getEventDescription = (event) => {
     const repoName = event.repo.name.split('/').pop();
     switch (event.type) {
-      case 'PushEvent':
+      case 'PushEvent': {
         const commitMsg = event.payload.commits?.[0]?.message || 'Pushed commits';
         return (
           <>
             Pushed to <span className="font-bold text-accent">{repoName}</span>: "{commitMsg.length > 55 ? commitMsg.slice(0, 52) + '...' : commitMsg}"
           </>
         );
-      case 'PullRequestEvent':
+      }
+      case 'PullRequestEvent': {
         const prAction = event.payload.action;
         const prTitle = event.payload.pull_request?.title || 'Pull request';
         return (
@@ -65,14 +66,16 @@ const GithubActivity = ({ username = 'SahanPramuditha-Dev' }) => {
             {prAction} PR in <span className="font-bold text-accent">{repoName}</span>: "{prTitle}"
           </>
         );
-      case 'CreateEvent':
+      }
+      case 'CreateEvent': {
         const refType = event.payload.ref_type;
         return (
           <>
             Created new {refType} in <span className="font-bold text-accent">{repoName}</span>
           </>
         );
-      case 'IssuesEvent':
+      }
+      case 'IssuesEvent': {
         const issueAction = event.payload.action;
         const issueTitle = event.payload.issue?.title || 'Issue';
         return (
@@ -80,6 +83,7 @@ const GithubActivity = ({ username = 'SahanPramuditha-Dev' }) => {
             {issueAction} issue in <span className="font-bold text-accent">{repoName}</span>: "{issueTitle}"
           </>
         );
+      }
       default:
         return `Updated repository ${repoName}`;
     }

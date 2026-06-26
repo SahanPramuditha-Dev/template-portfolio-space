@@ -90,7 +90,7 @@ const About = () => {
         if (!cancelled) {
           setGithubData({ loc: estimatedLOC });
         }
-      } catch (e) {
+      } catch {
         // ignore
       }
     };

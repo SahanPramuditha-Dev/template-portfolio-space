@@ -1,3 +1,4 @@
+/* global process */
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, collection, getDocs, query, orderBy, limit } from 'firebase/firestore';

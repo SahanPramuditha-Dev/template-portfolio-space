@@ -49,7 +49,7 @@ const SpaceShuttleModel = ({ paused }) => {
     return clone;
   }, [scene]);
 
-  useFrame((state, delta) => {
+  useFrame((state) => {
     if (!paused && shuttleRef.current) {
       // Gentle rocking animation to simulate drifting in space
       shuttleRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.4) * 0.08;

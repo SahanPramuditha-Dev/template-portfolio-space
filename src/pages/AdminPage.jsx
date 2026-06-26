@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import {
@@ -957,7 +958,7 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId }) => {
                 if (file.type.startsWith('image/') && file.type !== 'image/gif') {
                   try {
                     file = await requestImageCrop(file, null); // Free aspect ratio for general objects
-                  } catch (err) {
+                  } catch {
                     resolve(null);
                     return;
                   }
@@ -1258,7 +1259,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
         try {
           const aspect = key === 'thumbnail' || key === 'image' ? 16/9 : null;
           file = await requestImageCrop(file, aspect);
-        } catch (err) {
+        } catch {
           return;
         }
       }
@@ -1380,7 +1381,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
       try {
         await saveCmsDoc(docId, { [collectionKey]: newItems });
         setStatus('Order saved.');
-      } catch (error) {
+      } catch {
         setStatus('Failed to save order.');
       } finally {
         setBusy(false);
@@ -2103,7 +2104,7 @@ const SiteEditor = () => {
         try {
           const aspect = key === 'profilePhotoUrl' || key === 'ogImage' ? 1 : 16/9;
           file = await requestImageCrop(file, aspect);
-        } catch (err) {
+        } catch {
           return;
         }
       }

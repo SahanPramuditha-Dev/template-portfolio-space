@@ -12,7 +12,6 @@ const NasaApod = () => {
 
   useEffect(() => {
     const apiKey = import.meta.env.VITE_NASA_API_KEY || 'DEMO_KEY';
-    setLoading(true);
     fetch(`https://api.nasa.gov/planetary/apod?api_key=${apiKey}`)
       .then((res) => {
         if (!res.ok) throw new Error('API request failed');

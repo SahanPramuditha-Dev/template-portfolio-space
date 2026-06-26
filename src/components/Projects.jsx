@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Github,
@@ -29,7 +29,6 @@ import {
   getOutcomeBadge,
   getProjectStatusLabel,
 } from '../utils/projectNormalize';
-import { shouldDisableHeavyVisuals } from '../utils/runtimeGuards';
 
 
 const isAnimatedAsset = (src) => /\.(gif|mp4|webm)(\?|#|$)/i.test(src);
@@ -40,7 +39,6 @@ const ProjectCard = ({ project, index, onOpenModal, compact = false }) => {
   const coverIndex = media.length > 1 && mediaHover ? 1 : 0;
   const cover = media[coverIndex];
   const hasMedia = media.length > 0;
-  const reversed = index % 2 === 1;
   const hasLive = isUsableHttpUrl(project.external);
   const hasGithub = isUsableHttpUrl(project.github);
   const impact = getImpactMetrics(project);
@@ -332,22 +330,6 @@ const Projects = () => {
   const [onlyFeatured, setOnlyFeatured] = useState(false);
   const [query, setQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('desc');
-  const [heavyVisualsEnabled, setHeavyVisualsEnabled] = useState(() => !shouldDisableHeavyVisuals());
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
-    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => setHeavyVisualsEnabled(!shouldDisableHeavyVisuals());
-    update();
-    reduceMotionQuery.addEventListener('change', update);
-    window.addEventListener('visual-mode-change', update);
-    window.addEventListener('storage', update);
-    return () => {
-      reduceMotionQuery.removeEventListener('change', update);
-      window.removeEventListener('visual-mode-change', update);
-      window.removeEventListener('storage', update);
-    };
-  }, []);
 
   const projectsList = useMemo(
     () => (Array.isArray(projectsDoc?.items) ? projectsDoc.items : []),

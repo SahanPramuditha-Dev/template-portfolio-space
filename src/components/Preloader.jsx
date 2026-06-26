@@ -227,7 +227,7 @@ const Preloader = ({ brand = 'Portfolio', onComplete }) => {
   const prefersReducedMotion = useReducedMotion();
   const [progress,  setProgress]  = useState(0);
   const [isExiting, setIsExiting] = useState(false);
-  const startedAtRef  = useRef(Date.now());
+  const startedAtRef  = useRef(0);
   const finishedRef   = useRef(false);
 
   const brandParts    = brand.split(/\s*[-–—]\s*/);
@@ -243,6 +243,7 @@ const Preloader = ({ brand = 'Portfolio', onComplete }) => {
 
   // Lock scroll during preloader
   useEffect(() => {
+    startedAtRef.current = Date.now();
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = prev; };

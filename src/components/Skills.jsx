@@ -5,7 +5,6 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SectionWrapper from './SectionWrapper';
 import TiltCard from './TiltCard';
-import { shouldDisableHeavyVisuals } from '../utils/runtimeGuards';
 import { useCanvasLifecycle, useIsMobileCanvas } from '../hooks/useCanvasLifecycle';
 import PerformanceMonitor from './PerformanceMonitor';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';

@@ -38,9 +38,13 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
 
   useEffect(() => {
     if (isOpen) {
-      setActiveTab('details');
+      Promise.resolve().then(() => {
+        if (activeTab !== 'details') {
+          setActiveTab('details');
+        }
+      });
     }
-  }, [isOpen, project]);
+  }, [isOpen, project, activeTab]);
 
   const slides = useMemo(() => (project ? getMediaSlides(project) : []), [project]);
 
