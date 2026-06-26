@@ -1,4 +1,4 @@
-﻿# Sahan Pramuditha Portfolio
+# Sahan Pramuditha Portfolio
 
 [![React](https://img.shields.io/badge/React-19.2-blue?logo=react&logoColor=%23EA4228)](https://reactjs.org/)
 [![Vite](https://img.shields.io/badge/Vite-7-green?logo=vite&logoColor=%23FFE043)](https://vitejs.dev/)
@@ -27,6 +27,7 @@ Interactive personal portfolio built with React, Vite, Tailwind CSS, Framer Moti
 ## 🚀 Recent Updates
 
 - **Preloader Redesign** (v2): Nebula canvas background with stars, orbiting rocket/planet loader, holographic SVG progress ring, glitch text reveals, particle bursts, enhanced neon glows and space theme (preserves ~2s duration).
+- **Code Quality Clean-up** (v2.0.1): Fixed all 40 ESLint warnings and errors across React files (including conditional hook errors, impure ref state initializations, case declarations leaking variables, and unused imports) to establish a warning-free `npm run lint` pipeline.
 
 ## Tech Stack
 
