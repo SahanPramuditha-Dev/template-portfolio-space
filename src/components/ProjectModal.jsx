@@ -185,11 +185,11 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
               </button>
 
               <div
-                className="relative w-full border-b border-white/10 bg-secondary/20 md:w-[42%] md:border-b-0 md:border-r"
+                className="relative flex flex-col h-full max-h-full w-full border-b border-white/10 bg-secondary/20 md:w-[42%] md:border-b-0 md:border-r"
                 onTouchStart={handleGalleryTouchStart}
                 onTouchEnd={handleGalleryTouchEnd}
               >
-                <div className="relative aspect-[4/3] w-full overflow-hidden bg-black/40">
+                <div className="relative shrink-0 aspect-[4/3] w-full overflow-hidden bg-black/40">
                   {activeSlide ? (
                     activeSlide.kind === 'video' ? (
                       <video
@@ -272,7 +272,7 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
                   </div>
                 )}
 
-                <div className="space-y-4 p-5">
+                <div className="space-y-4 p-5 overflow-y-auto custom-scrollbar flex-grow">
                   <div>
                     <h2 id="project-modal-title" className="text-2xl font-bold text-text md:text-3xl">
                       {project.title}
@@ -404,9 +404,9 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
 
                 {activeTab === 'details' ? (
                   <>
-                    <p id="project-modal-description" className="text-lg leading-relaxed text-text-muted">
+                    <div id="project-modal-description" className="text-lg leading-relaxed text-text-muted whitespace-pre-wrap font-sans">
                       {project.description}
-                    </p>
+                    </div>
 
                     <div className="mt-8 grid gap-4 md:grid-cols-2">
                       <div className="rounded-2xl border border-secondary/50 bg-secondary/10 p-5">
