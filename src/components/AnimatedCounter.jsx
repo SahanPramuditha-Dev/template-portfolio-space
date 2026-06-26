@@ -4,7 +4,6 @@ import { motion, useMotionValue, useTransform, animate, useInView } from 'framer
 export default function AnimatedCounter({ value, suffix = '' }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-50px' });
-  const [hasAnimated, setHasAnimated] = useState(false);
 
   // Extract the numeric part and non-numeric prefix if any
   const numericString = value.replace(/[^0-9.]/g, '');
@@ -22,15 +21,14 @@ export default function AnimatedCounter({ value, suffix = '' }) {
   );
 
   useEffect(() => {
-    if (isInView && isNumeric && !hasAnimated) {
+    if (isInView && isNumeric) {
       const controls = animate(count, parsedValue, {
         duration: 2,
         ease: 'easeOut',
       });
-      setHasAnimated(true);
       return controls.stop;
     }
-  }, [isInView, isNumeric, parsedValue, hasAnimated, count]);
+  }, [isInView, isNumeric, parsedValue, count]);
 
   if (!isNumeric) {
     return (
