@@ -1020,23 +1020,30 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId }) => {
           className={`${commonClass} font-mono text-sm`}
         />
       ) : (
-        <div className="flex gap-2">
-          <input
-            id={fieldId}
-            type={field.type === 'number' ? 'number' : 'text'}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className={commonClass}
-          />
-          {(field.type === 'image' || field.type === 'file') && onUpload && (
-            <button
-              type="button"
-              onClick={onUpload}
-              className="shrink-0 rounded-xl border border-accent/30 bg-accent/10 px-3 py-3 text-accent"
-              aria-label={`Upload ${field.label}`}
-            >
-              {field.type === 'file' ? <FileText size={16} /> : <ImageIcon size={16} />}
-            </button>
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <input
+              id={fieldId}
+              type={field.type === 'number' ? 'number' : 'text'}
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              className={commonClass}
+            />
+            {(field.type === 'image' || field.type === 'file') && onUpload && (
+              <button
+                type="button"
+                onClick={onUpload}
+                className="shrink-0 rounded-xl border border-accent/30 bg-accent/10 px-3 py-3 text-accent"
+                aria-label={`Upload ${field.label}`}
+              >
+                {field.type === 'file' ? <FileText size={16} /> : <ImageIcon size={16} />}
+              </button>
+            )}
+          </div>
+          {field.type === 'image' && value && (
+            <div className="mt-1 w-full max-w-sm rounded-lg overflow-hidden border border-white/10 bg-black/20">
+              <img src={value} alt="Preview" className="w-full h-auto max-h-48 object-contain" />
+            </div>
           )}
         </div>
       )}
@@ -1988,28 +1995,35 @@ const RepeatableObjectEditor = ({ label, helper, value, onChange, createItem, fi
                         className="w-full rounded-xl border border-secondary/50 bg-primary/50 px-4 py-3 text-text outline-none transition-colors focus:border-accent"
                       />
                     ) : field.type === 'image' ? (
-                      <div className="flex gap-2 min-w-0">
-                        <input
-                          type="text"
-                          value={item.value?.[field.key] ?? ''}
-                          onChange={(e) => updateItem(item.id, field.key, e.target.value)}
-                          placeholder="Enter image URL or upload file"
-                          className="flex-1 min-w-0 rounded-xl border border-secondary/50 bg-primary/50 px-4 py-3 text-text outline-none transition-colors focus:border-accent"
-                        />
-                        {onUpload && (
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              const url = await onUpload(field.key, field.accept);
-                              if (url) {
-                                updateItem(item.id, field.key, url);
-                              }
-                            }}
-                            className="shrink-0 relative z-10 rounded-xl border border-accent/30 bg-accent/10 px-3 py-3 text-accent"
-                            aria-label={`Upload ${field.label}`}
-                          >
-                            <ImageIcon size={16} />
-                          </button>
+                      <div className="flex flex-col gap-2 min-w-0">
+                        <div className="flex gap-2 min-w-0">
+                          <input
+                            type="text"
+                            value={item.value?.[field.key] ?? ''}
+                            onChange={(e) => updateItem(item.id, field.key, e.target.value)}
+                            placeholder="Enter image URL or upload file"
+                            className="flex-1 min-w-0 rounded-xl border border-secondary/50 bg-primary/50 px-4 py-3 text-text outline-none transition-colors focus:border-accent"
+                          />
+                          {onUpload && (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const url = await onUpload(field.key, field.accept);
+                                if (url) {
+                                  updateItem(item.id, field.key, url);
+                                }
+                              }}
+                              className="shrink-0 relative z-10 rounded-xl border border-accent/30 bg-accent/10 px-3 py-3 text-accent"
+                              aria-label={`Upload ${field.label}`}
+                            >
+                              <ImageIcon size={16} />
+                            </button>
+                          )}
+                        </div>
+                        {item.value?.[field.key] && (
+                          <div className="mt-1 w-full max-w-sm rounded-lg overflow-hidden border border-white/10 bg-black/20">
+                            <img src={item.value[field.key]} alt="Preview" className="w-full h-auto max-h-48 object-contain" />
+                          </div>
                         )}
                       </div>
                     ) : (
