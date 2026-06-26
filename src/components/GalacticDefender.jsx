@@ -15,7 +15,7 @@ const WEAPON_TYPES = {
   HOMING: 'homing'
 };
 
-const POWERUP_TYPES = ['health', 'shield', 'firerate', 'triple', 'plasma', 'homing', 'life'];
+const POWERUP_TYPES = ['health', 'shield', 'firerate', 'triple', 'plasma', 'homing', 'life', 'nuke', 'emp', 'freeze'];
 
 class GameEngine {
   constructor(canvas, saveData, onAchievement) {
@@ -41,14 +41,23 @@ class GameEngine {
     this.powerups = [];
     this.blackHoles = [];
     
+    // Level & Boss System
+    this.level = 1;
+    this.inventory = { nuke: 0, emp: 0, freeze: 0 };
+    this.empTimer = 0;
+    this.freezeTimer = 0;
+    this.currentBoss = null;
+
     // Spawners & Timers
     this.enemyTimer = 0;
     this.asteroidTimer = 0;
     this.blackHoleTimer = 20000;
-    this.bossTimer = 60000;
     this.difficultyMultiplier = 1;
     this.timeSurvived = 0;
     this.bossActive = false;
+    this.bossState = 'normal'; // 'normal' | 'warning' | 'active'
+    this.bossWarningTimer = 0;
+    this.timeInLevel = 0;
 
     // Session stats for achievements
     this.sessionStats = {
@@ -81,7 +90,15 @@ class GameEngine {
     this.isPlaying = true;
     this.isGameOver = false;
     this.bossActive = false;
-    this.bossTimer = 60000;
+    this.level = 1;
+    this.inventory = { nuke: 0, emp: 0, freeze: 0 };
+    this.empTimer = 0;
+    this.freezeTimer = 0;
+    this.currentBoss = null;
+    this.bossState = 'normal';
+    this.bossWarningTimer = 0;
+    this.timeInLevel = 0;
+
     this.projectiles = [];
     this.enemies = [];
     this.asteroids = [];
@@ -89,6 +106,10 @@ class GameEngine {
     this.powerups = [];
     this.blackHoles = [];
     this.sessionStats = { enemiesKilled: 0, asteroidsDestroyed: 0, bossesDefeated: 0, survivorUnlocked: false };
+    
+    this.enemyTimer = 0;
+    this.asteroidTimer = 0;
+    this.blackHoleTimer = 20000;
     
     // Apply Upgrades
     const maxHealth = 100 + (this.saveData.upgrades.health * 50);
@@ -117,36 +138,72 @@ class GameEngine {
       damageMultiplier: 1 + (this.saveData.upgrades.weapon * 0.25) // +25% dmg per level
     };
 
-    this.lastTime = performance.now();
-    requestAnimationFrame(this.loop);
+    this.lastTime = null; // Let the loop initialize it precisely
+    if (this.rafId) cancelAnimationFrame(this.rafId);
+    this.rafId = requestAnimationFrame(this.loop);
+    this.onStateUpdateInner();
   }
 
   stop() {
     this.isPlaying = false;
     this.isGameOver = true;
-    const earnedCredits = Math.floor(this.score / 10);
-    
-    if (this.onStateUpdate) {
-      this.onStateUpdate({
-        score: this.score,
-        lives: this.player ? this.player.lives : 0,
-        shield: this.player ? this.player.shield : 0,
-        weapon: this.player ? this.player.weapon : 'single',
-        isGameOver: true,
-        isPlaying: false,
-        earnedCredits: earnedCredits,
-        timeSurvived: Math.floor(this.timeSurvived / 1000)
-      });
-    }
+    this.onStateUpdateInner();
   }
 
   handleInput(e, isDown) {
     this.keys[e.key] = isDown;
+    if (isDown && this.isPlaying && !this.isGameOver) {
+      if (e.key === '1' && this.inventory.nuke > 0) this.triggerNuke();
+      if (e.key === '2' && this.inventory.emp > 0) this.triggerEmp();
+      if (e.key === '3' && this.inventory.freeze > 0) this.triggerFreeze();
+    }
+  }
+
+  triggerNuke() {
+    this.inventory.nuke--;
+    this.createExplosion(this.width/2, this.height/2, '#ffffff', 200);
+    
+    this.enemies.forEach(e => {
+       if (e.type !== 'boss') {
+           this.createExplosion(e.x + e.width/2, e.y + e.height/2, '#f97316', 20);
+           this.score += e.scoreVal || 10;
+       }
+    });
+    this.enemies = this.enemies.filter(e => e.type === 'boss');
+    
+    this.asteroids.forEach(a => {
+       this.createExplosion(a.x + a.width/2, a.y + a.height/2, '#94a3b8');
+       this.score += 10;
+    });
+    this.asteroids = [];
+    this.projectiles = this.projectiles.filter(p => p.isPlayer);
+    
+    if (this.currentBoss) {
+      this.currentBoss.health -= (this.currentBoss.maxHealth * 0.5);
+      if (this.currentBoss.health <= 0) {
+        this.killBoss(this.currentBoss);
+      } else {
+        this.updateBossPhase(this.currentBoss);
+      }
+    }
+    this.onStateUpdateInner();
+  }
+
+  triggerEmp() {
+    this.inventory.emp--;
+    this.empTimer = 8000;
+    for(let i=0; i<30; i++) this.createExplosion(this.width*Math.random(), this.height*Math.random(), '#3b82f6', 5);
+    this.onStateUpdateInner();
+  }
+
+  triggerFreeze() {
+    this.inventory.freeze--;
+    this.freezeTimer = 5000;
+    for(let i=0; i<30; i++) this.createExplosion(this.width*Math.random(), this.height*Math.random(), '#a855f7', 5);
+    this.onStateUpdateInner();
   }
 
   spawnEnemy() {
-    if (this.bossActive) return;
-
     const isSmall = Math.random() > 0.6;
     if (isSmall) {
       this.enemies.push({
@@ -165,18 +222,69 @@ class GameEngine {
     }
   }
 
-  spawnBoss() {
+  spawnBossForLevel() {
     this.bossActive = true;
-    this.enemies.push({
+    const isFinal = this.level >= 4;
+    const maxHealth = isFinal ? 3000 : 500 + (this.level * 400);
+    
+    this.currentBoss = {
       type: 'boss', x: this.width / 2 - 60, y: -150, width: 120, height: 80,
-      vx: 50, vy: 30,
-      health: 1000 * this.difficultyMultiplier, maxHealth: 1000 * this.difficultyMultiplier,
-      shootTimer: 1000, attackPattern: 0, scoreVal: 500
-    });
+      vx: 60 + (this.level * 15), vy: 30,
+      health: maxHealth, maxHealth: maxHealth,
+      shootTimer: 1000, specialTimer: 3000, homingTimer: 10000, powerupTimer: 5000 + Math.random() * 7000, moveTimer: 0,
+      attackPattern: 0, scoreVal: 500 * this.level,
+      phase: 1,
+      name: isFinal ? "THE VOID EMPEROR" : `LEVEL ${this.level} BOSS`
+    };
+    this.enemies.push(this.currentBoss);
+    this.onStateUpdateInner();
+  }
+
+  updateBossPhase(boss) {
+      const healthPct = boss.health / boss.maxHealth;
+      let newPhase = 1;
+      if (healthPct <= 0.4) newPhase = 3;
+      else if (healthPct <= 0.7) newPhase = 2;
+      
+      if (newPhase > boss.phase) {
+          boss.phase = newPhase;
+          boss.vx = boss.vx > 0 ? boss.vx + 40 : boss.vx - 40;
+      }
+  }
+
+  killBoss(boss) {
+    this.bossActive = false;
+    this.bossState = 'normal';
+    this.timeInLevel = 0;
+    this.sessionStats.bossesDefeated++;
+    if (this.sessionStats.bossesDefeated === 1) this.onAchievement('galactic-boss-slayer');
+    
+    for(let i=0; i<30; i++) {
+       this.createExplosion(boss.x + boss.width*Math.random(), boss.y + boss.height*Math.random(), '#f97316');
+    }
+    this.createExplosion(boss.x + boss.width/2, boss.y + boss.height/2, '#f97316', 150);
+    
+    for(let i=-1; i<=1; i++) {
+        this.spawnPowerup(boss.x + boss.width/2 + (i*40), boss.y + boss.height/2, true);
+    }
+    
+    this.score += boss.scoreVal;
+    boss.dead = true;
+    this.currentBoss = null;
+
+    if (this.level >= 4) {
+       this.onAchievement('galactic-champion');
+       setTimeout(() => this.stop(), 2000);
+    } else {
+       this.level++;
+       this.player.health = this.player.maxHealth;
+       this.player.shield = this.player.maxShield;
+    }
+    this.onStateUpdateInner();
   }
 
   spawnAsteroid() {
-    if (this.bossActive) return;
+    if (this.bossState !== 'normal') return;
     this.asteroids.push({
       x: Math.random() * (this.width - 40), y: -50, width: 40 + Math.random() * 20, height: 40 + Math.random() * 20,
       vx: (Math.random() - 0.5) * 50, vy: (100 + Math.random() * 100) * this.difficultyMultiplier,
@@ -191,9 +299,16 @@ class GameEngine {
     });
   }
 
-  spawnPowerup(x, y) {
-    if (Math.random() > 0.15 && !this.bossActive) return;
-    const type = POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)];
+  spawnPowerup(x, y, forceSpecial = false) {
+    if (!forceSpecial && Math.random() > 0.15 && !this.bossActive) return;
+    let type;
+    const rand = Math.random();
+    if (rand < 0.02) type = 'freeze';
+    else if (rand < 0.05) type = 'nuke';
+    else if (rand < 0.08) type = 'emp';
+    else {
+      type = POWERUP_TYPES[Math.floor(Math.random() * 7)];
+    }
     this.powerups.push({ x, y, width: 20, height: 20, type, vy: 50 });
   }
 
@@ -251,16 +366,33 @@ class GameEngine {
         this.player.weapon = WEAPON_TYPES.SINGLE;
         this.player.fireRateMultiplier = 1;
         this.player.invulnTimer = 3000;
+        this.onStateUpdateInner();
       } else {
         this.stop();
       }
     } else {
       this.createExplosion(this.player.x + this.player.width/2, this.player.y, '#38bdf8', 10);
+      this.onStateUpdateInner();
     }
   }
 
   update(dt) {
-    if (!this.isPlaying) return;
+    if (!this.isPlaying || this.isGameOver) return;
+
+    if (this.bossState === 'normal') {
+       this.timeInLevel += dt;
+       const threshold = 15000 + (this.level * 10000);
+       if (this.timeInLevel >= threshold) {
+          this.bossState = 'warning';
+          this.bossWarningTimer = 3000;
+       }
+    } else if (this.bossState === 'warning') {
+       this.bossWarningTimer -= dt;
+       if (this.bossWarningTimer <= 0) {
+          this.bossState = 'active';
+          this.spawnBossForLevel();
+       }
+    }
 
     const dtS = dt / 1000;
     this.timeSurvived += dt;
@@ -271,19 +403,23 @@ class GameEngine {
       this.onAchievement('galactic-survivor');
     }
 
+    if (this.freezeTimer > 0) {
+        this.freezeTimer -= dt;
+        if (this.freezeTimer <= 0) this.onStateUpdateInner();
+    }
+    if (this.empTimer > 0) {
+        this.empTimer -= dt;
+        if (this.empTimer <= 0) this.onStateUpdateInner();
+    }
+
     if (this.player.invulnTimer > 0) this.player.invulnTimer -= dt;
     if (this.player.weaponTimer > 0) {
       this.player.weaponTimer -= dt;
       if (this.player.weaponTimer <= 0) {
         this.player.weapon = WEAPON_TYPES.SINGLE;
         this.player.fireRateMultiplier = 1;
+        this.onStateUpdateInner();
       }
-    }
-
-    this.bossTimer -= dt;
-    if (this.bossTimer <= 0 && !this.bossActive && this.blackHoles.length === 0) {
-      this.spawnBoss();
-      this.bossTimer = 90000;
     }
 
     this.player.vx = 0;
@@ -323,23 +459,7 @@ class GameEngine {
       this.player.shootTimer = this.player.baseCooldown / this.player.fireRateMultiplier;
     }
 
-    this.enemyTimer -= dt;
-    if (this.enemyTimer <= 0 && !this.bossActive) {
-      this.spawnEnemy();
-      this.enemyTimer = Math.max(400, 2000 - (this.difficultyMultiplier * 200));
-    }
 
-    this.asteroidTimer -= dt;
-    if (this.asteroidTimer <= 0 && !this.bossActive) {
-      this.spawnAsteroid();
-      this.asteroidTimer = Math.max(800, 3000 - (this.difficultyMultiplier * 300));
-    }
-
-    this.blackHoleTimer -= dt;
-    if (this.blackHoleTimer <= 0 && !this.bossActive) {
-      this.spawnBlackHole();
-      this.blackHoleTimer = 35000 + Math.random() * 20000;
-    }
 
     this.stars.forEach(s => {
       s.y += s.speed * (dt / 16) * this.difficultyMultiplier;
@@ -351,6 +471,8 @@ class GameEngine {
       bh.rotation += 2 * dtS;
     });
     this.blackHoles = this.blackHoles.filter(bh => bh.y - bh.radius < this.height);
+
+    let inventoryChanged = false;
 
     this.powerups.forEach(p => {
       p.y += p.vy * dtS;
@@ -368,13 +490,97 @@ class GameEngine {
           case 'plasma': this.player.weapon = WEAPON_TYPES.PLASMA; this.player.weaponTimer = 15000; break;
           case 'homing': this.player.weapon = WEAPON_TYPES.HOMING; this.player.weaponTimer = 15000; break;
           case 'life': this.player.lives++; break;
+          case 'nuke': this.inventory.nuke++; inventoryChanged = true; break;
+          case 'emp': this.inventory.emp++; inventoryChanged = true; break;
+          case 'freeze': this.inventory.freeze++; inventoryChanged = true; break;
         }
         p.collected = true;
+        this.onStateUpdateInner();
       }
     });
     this.powerups = this.powerups.filter(p => !p.collected && p.y < this.height);
 
+    if (inventoryChanged) this.onStateUpdateInner();
+
+    // Temporal Freeze logic - skip enemy/projectile updates
+    if (this.freezeTimer > 0) {
+       this.updateProjectiles(dtS, dt, true);
+       return;
+    }
+
+    this.enemyTimer -= dt;
+    if (this.enemyTimer <= 0 && this.bossState === 'normal') {
+      this.spawnEnemy();
+      this.enemyTimer = Math.max(400, 2000 - (this.difficultyMultiplier * 200));
+    }
+
+    this.asteroidTimer -= dt;
+    if (this.asteroidTimer <= 0 && this.bossState === 'normal') {
+      this.spawnAsteroid();
+      this.asteroidTimer = Math.max(800, 3000 - (this.difficultyMultiplier * 300));
+    }
+
+    this.blackHoleTimer -= dt;
+    if (this.blackHoleTimer <= 0 && !this.bossActive) {
+      this.spawnBlackHole();
+      this.blackHoleTimer = 35000 + Math.random() * 20000;
+    }
+
+    this.blackHoles.forEach(bh => {
+      bh.y += bh.vy * dtS;
+      bh.rotation += 2 * dtS;
+    });
+    this.blackHoles = this.blackHoles.filter(bh => bh.y - bh.radius < this.height);
+
+    this.updateProjectiles(dtS, dt, false);
+    this.updateEnemies(dtS, dt);
+
+    this.asteroids.forEach(a => {
+      a.x += a.vx * dtS;
+      a.y += a.vy * dtS;
+      a.rotation += a.rotSpeed * dtS;
+    });
+    
+    if (this.player.invulnTimer <= 0) {
+      this.enemies.forEach(e => {
+        if (this.player.x < e.x + e.width && this.player.x + this.player.width > e.x && 
+            this.player.y < e.y + e.height && this.player.y + this.player.height > e.y) {
+          this.damagePlayer(e.type === 'boss' ? 50 : 20);
+          if (e.type !== 'boss') {
+            this.createExplosion(e.x + e.width/2, e.y + e.height/2, '#f97316');
+            e.dead = true;
+          }
+        }
+      });
+      this.enemies = this.enemies.filter(e => !e.dead);
+
+      this.asteroids.forEach(a => {
+        if (this.player.x < a.x + a.width && this.player.x + this.player.width > a.x && 
+            this.player.y < a.y + a.height && this.player.y + this.player.height > a.y) {
+          this.damagePlayer(30);
+          this.createExplosion(a.x + a.width/2, a.y + a.height/2, '#94a3b8');
+          a.dead = true;
+        }
+      });
+      this.asteroids = this.asteroids.filter(a => !a.dead);
+    }
+
+    this.enemies = this.enemies.filter(e => e.y < this.height + 100);
+    this.asteroids = this.asteroids.filter(a => a.y < this.height + 100);
+
+    this.particles.forEach(p => {
+      p.x += p.vx * dtS;
+      p.y += p.vy * dtS;
+      p.life -= dtS * 1.5;
+    });
+    this.particles = this.particles.filter(p => p.life > 0);
+  }
+
+  updateProjectiles(dtS, dt, playerOnly) {
     this.projectiles.forEach(p => {
+      if (playerOnly && !p.isPlayer) return;
+      if (this.empTimer > 0 && !p.isPlayer) return;
+
       if (p.type === 'homing') {
         let nearestDist = Infinity;
         let target = null;
@@ -383,26 +589,25 @@ class GameEngine {
           const dx = (t.x + t.width/2) - p.x;
           const dy = (t.y + t.height/2) - p.y;
           const dist = dx*dx + dy*dy;
-          // Only track targets that are visible on screen
           if (dist < nearestDist && t.y > -50 && t.y < this.height) { 
-            nearestDist = dist; 
-            target = t; 
+            nearestDist = dist; target = t; 
           }
         };
 
-        this.enemies.forEach(checkTarget);
-        this.asteroids.forEach(checkTarget);
+        if (p.isPlayer) {
+            this.enemies.forEach(checkTarget);
+            this.asteroids.forEach(checkTarget);
+        } else {
+            checkTarget(this.player);
+        }
 
         if (target) {
           const dx = (target.x + target.width/2) - p.x;
           const dy = (target.y + target.height/2) - p.y;
           const angle = Math.atan2(dy, dx);
-          
           const speed = 600;
           const desiredVx = Math.cos(angle) * speed;
           const desiredVy = Math.sin(angle) * speed;
-          
-          // Steer towards desired velocity
           p.vx += (desiredVx - p.vx) * 8 * dtS;
           p.vy += (desiredVy - p.vy) * 8 * dtS;
         }
@@ -410,42 +615,203 @@ class GameEngine {
       p.x += p.vx * dtS;
       p.y += p.vy * dtS;
     });
+
     this.projectiles = this.projectiles.filter(p => p.y > -50 && p.y < this.height + 50 && p.x > -50 && p.x < this.width + 50);
 
+    for (let i = this.projectiles.length - 1; i >= 0; i--) {
+      let p = this.projectiles[i];
+      if (!p.isPlayer) continue;
+      let hit = false;
+      
+      for (let j = this.enemies.length - 1; j >= 0; j--) {
+        let e = this.enemies[j];
+        if (p.x < e.x + e.width && p.x + p.width > e.x && p.y < e.y + e.height && p.y + p.height > e.y) {
+          e.health -= p.dmg;
+          this.createExplosion(p.x, p.y, p.type === 'plasma' ? '#a855f7' : '#38bdf8');
+          
+          if (e.type === 'boss') this.updateBossPhase(e);
+
+          if (e.health <= 0) {
+            if (e.type === 'boss') {
+              this.killBoss(e);
+            } else {
+              this.createExplosion(e.x + e.width/2, e.y + e.height/2, '#f97316', 20);
+              this.score += e.scoreVal;
+              if (Math.random() < 0.1) this.spawnPowerup(e.x + e.width/2, e.y + e.height/2);
+              
+              this.sessionStats.enemiesKilled++;
+              if (this.sessionStats.enemiesKilled === 1) this.onAchievement('galactic-first-blood');
+              e.dead = true;
+            }
+          }
+          hit = true;
+          if (p.type === 'plasma') {
+            p.pierceCount--;
+            if (p.pierceCount <= 0) this.projectiles.splice(i, 1);
+            hit = false;
+          }
+          break;
+        }
+      }
+      this.enemies = this.enemies.filter(e => !e.dead);
+      if (hit) { if (p.type !== 'plasma') this.projectiles.splice(i, 1); continue; }
+
+      for (let j = this.asteroids.length - 1; j >= 0; j--) {
+        let a = this.asteroids[j];
+        if (p.x < a.x + a.width && p.x + p.width > a.x && p.y < a.y + a.height && p.y + p.height > a.y) {
+          this.createExplosion(p.x, p.y, '#94a3b8');
+          this.score += 10;
+          a.dead = true;
+          
+          this.sessionStats.asteroidsDestroyed++;
+          if (this.sessionStats.asteroidsDestroyed === 1) this.onAchievement('galactic-asteroid-destroyer');
+
+          if (p.type !== 'plasma') this.projectiles.splice(i, 1);
+          break;
+        }
+      }
+      this.asteroids = this.asteroids.filter(a => !a.dead);
+    }
+
+    for (let i = this.projectiles.length - 1; i >= 0; i--) {
+      let p = this.projectiles[i];
+      if (p.isPlayer) continue;
+      if (p.x < this.player.x + this.player.width && p.x + p.width > this.player.x && 
+          p.y < this.player.y + this.player.height && p.y + p.height > this.player.y) {
+        this.damagePlayer(15);
+        this.projectiles.splice(i, 1);
+      }
+    }
+  }
+
+  updateEnemies(dtS, dt) {
     this.enemies.forEach(e => {
+      if (this.empTimer > 0 && e.type === 'drone') return;
+
       if (e.type === 'small') {
         if (e.x <= 0 || e.x + e.width >= this.width) e.vx *= -1;
       } else if (e.type === 'boss') {
-        if (e.y < 50) e.y += e.vy * dtS;
-        else {
-          e.x += e.vx * dtS;
-          if (e.x <= 50 || e.x + e.width >= this.width - 50) e.vx *= -1;
+        if (e.y < 20 && e.targetX === undefined) {
+             e.y += 100 * dtS; // Slide in smoothly
+        } else {
+             e.moveTimer -= dt;
+             if (e.targetX === undefined || e.moveTimer <= 0) {
+                e.targetX = 20 + Math.random() * (this.width - 40 - e.width);
+                e.targetY = 20 + Math.random() * (this.height * 0.4);
+                e.moveTimer = 3000 + Math.random() * 3000;
+             }
+
+             const dx = e.targetX - e.x;
+             const dy = e.targetY - e.y;
+             const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+
+             const speed = e.phase === 3 ? 150 : 80 + (this.level * 15);
+             const desiredVx = (dx / dist) * speed;
+             const desiredVy = (dy / dist) * speed;
+             
+             e.vx += (desiredVx - e.vx) * 3 * dtS;
+             e.vy += (desiredVy - e.vy) * 3 * dtS;
+             
+             e.x += e.vx * dtS;
+             e.y += e.vy * dtS;
+
+             if (e.x < 0) { e.x = 0; e.vx *= -0.5; }
+             if (e.x + e.width > this.width) { e.x = this.width - e.width; e.vx *= -0.5; }
+             if (e.y < 0) { e.y = 0; e.vy *= -0.5; }
+             if (e.y > this.height * 0.5) { e.y = this.height * 0.5; e.vy *= -0.5; }
         }
+        
+        e.powerupTimer -= dt;
+        if (e.powerupTimer <= 0) {
+           e.powerupTimer = 5000 + Math.random() * 7000;
+           this.spawnPowerup(e.x + e.width/2, e.y + e.height/2, false);
+        }
+        
+        if (this.empTimer > 0) return;
+
         e.shootTimer -= dt;
         if (e.shootTimer <= 0) {
+          const shootDelay = e.phase === 3 ? 800 : (e.phase === 2 ? 1500 : 2500);
+          
           if (e.attackPattern === 0) {
-            for (let i = 0; i < 12; i++) {
-              const angle = (i * Math.PI * 2) / 12;
+            const count = e.phase >= 2 ? 16 : 12;
+            for (let i = 0; i < count; i++) {
+              const angle = (i * Math.PI * 2) / count;
               this.projectiles.push({
                 x: e.x + e.width / 2, y: e.y + e.height, width: 6, height: 6,
                 vx: Math.cos(angle) * 200, vy: Math.sin(angle) * 200 + 100, isPlayer: false, type: 'normal'
               });
             }
-            e.shootTimer = 2500; e.attackPattern = 1;
+            e.attackPattern = 1;
           } else {
             const dx = (this.player.x + this.player.width/2) - (e.x + e.width/2);
             const dy = (this.player.y) - (e.y + e.height);
             const angle = Math.atan2(dy, dx);
-            for (let i = -2; i <= 2; i++) {
+            const spread = e.phase === 3 ? 3 : 2;
+            for (let i = -spread; i <= spread; i++) {
               this.projectiles.push({
                 x: e.x + e.width / 2, y: e.y + e.height, width: 6, height: 15,
-                vx: Math.cos(angle + i*0.2) * 300, vy: Math.sin(angle + i*0.2) * 300, isPlayer: false, type: 'normal'
+                vx: Math.cos(angle + i*0.15) * 300, vy: Math.sin(angle + i*0.15) * 300, isPlayer: false, type: 'normal'
               });
             }
-            e.shootTimer = 1500; e.attackPattern = 0;
+            e.attackPattern = 0;
           }
+          e.shootTimer = shootDelay;
+        }
+
+        e.specialTimer -= dt;
+        if (e.specialTimer <= 0) {
+           e.specialTimer = e.phase === 3 ? 3000 : 5000;
+           
+           if (this.level === 1 || this.level >= 4) {
+              for(let i=0; i<3; i++) {
+                 this.asteroids.push({
+                    x: e.x + (i*40), y: e.y + e.height, width: 30, height: 30,
+                    vx: (Math.random() - 0.5) * 100, vy: 200,
+                    rotation: 0, rotSpeed: 1
+                 });
+              }
+           }
+           if (this.level === 2 || this.level >= 4) {
+              this.enemies.push({
+                  type: 'drone', x: e.x - 20, y: e.y + e.height, width: 15, height: 15,
+                  vx: (Math.random() - 0.5) * 300, vy: 150,
+                  health: 15, maxHealth: 15,
+                  shootTimer: Math.random() * 1000, scoreVal: 20
+              });
+              this.enemies.push({
+                  type: 'drone', x: e.x + e.width + 20, y: e.y + e.height, width: 15, height: 15,
+                  vx: (Math.random() - 0.5) * 300, vy: 150,
+                  health: 15, maxHealth: 15,
+                  shootTimer: Math.random() * 1000, scoreVal: 20
+              });
+           }
+           if (this.level === 3 || this.level >= 4) {
+              this.createExplosion(e.x + e.width/2, e.y + e.height/2, '#a855f7', 40);
+              e.x = 50 + Math.random() * (this.width - 150);
+              e.y = 50 + Math.random() * 100;
+              e.targetX = e.x;
+              e.targetY = e.y;
+              e.vx = 0;
+              e.vy = 0;
+              this.createExplosion(e.x + e.width/2, e.y + e.height/2, '#a855f7', 40);
+           }
+        }
+
+        e.homingTimer -= dt;
+        if (e.homingTimer <= 0) {
+           e.homingTimer = e.phase === 3 ? 7000 : 12000;
+           this.projectiles.push({
+              x: e.x + e.width/2, y: e.y + e.height, width: 8, height: 16,
+              vx: 0, vy: 100, isPlayer: false, type: 'homing', dmg: 20
+           });
+           if (this.level >= 4) {
+               this.projectiles.push({ x: e.x, y: e.y + e.height, width: 8, height: 16, vx: -100, vy: 100, isPlayer: false, type: 'homing', dmg: 20 });
+               this.projectiles.push({ x: e.x+e.width, y: e.y + e.height, width: 8, height: 16, vx: 100, vy: 100, isPlayer: false, type: 'homing', dmg: 20 });
+           }
         }
       } else {
+        if (this.empTimer > 0) return;
         e.shootTimer -= dt;
         if (e.shootTimer <= 0) {
           this.projectiles.push({
@@ -459,103 +825,6 @@ class GameEngine {
       e.y += e.vy * dtS;
     });
 
-    this.asteroids.forEach(a => {
-      a.x += a.vx * dtS;
-      a.y += a.vy * dtS;
-      a.rotation += a.rotSpeed * dtS;
-    });
-
-    this.particles.forEach(p => {
-      p.x += p.vx * dtS; p.y += p.vy * dtS; p.life -= dtS * 2;
-    });
-    this.particles = this.particles.filter(p => p.life > 0);
-
-    for (let i = this.projectiles.length - 1; i >= 0; i--) {
-      let p = this.projectiles[i];
-      if (!p.isPlayer) continue;
-      let hit = false;
-      
-      for (let j = this.enemies.length - 1; j >= 0; j--) {
-        let e = this.enemies[j];
-        if (p.x < e.x + e.width && p.x + p.width > e.x && p.y < e.y + e.height && p.y + p.height > e.y) {
-          e.health -= p.dmg;
-          this.createExplosion(p.x, p.y, p.type === 'plasma' ? '#a855f7' : '#38bdf8');
-          
-          if (e.health <= 0) {
-            this.createExplosion(e.x + e.width/2, e.y + e.height/2, '#f97316', e.type === 'boss' ? 100 : 20);
-            this.score += e.scoreVal;
-            this.spawnPowerup(e.x + e.width/2, e.y + e.height/2);
-            
-            this.sessionStats.enemiesKilled++;
-            if (this.sessionStats.enemiesKilled === 1) this.onAchievement('galactic-first-blood');
-
-            if (e.type === 'boss') {
-              this.bossActive = false;
-              this.sessionStats.bossesDefeated++;
-              if (this.sessionStats.bossesDefeated === 1) this.onAchievement('galactic-boss-slayer');
-            }
-            this.enemies.splice(j, 1);
-          }
-          hit = true;
-          if (p.type === 'plasma') {
-            p.pierceCount--;
-            if (p.pierceCount <= 0) this.projectiles.splice(i, 1);
-            hit = false;
-          }
-          break;
-        }
-      }
-      if (hit) { if (p.type !== 'plasma') this.projectiles.splice(i, 1); continue; }
-
-      for (let j = this.asteroids.length - 1; j >= 0; j--) {
-        let a = this.asteroids[j];
-        if (p.x < a.x + a.width && p.x + p.width > a.x && p.y < a.y + a.height && p.y + p.height > a.y) {
-          this.createExplosion(p.x, p.y, '#94a3b8');
-          this.score += 10;
-          this.asteroids.splice(j, 1);
-          
-          this.sessionStats.asteroidsDestroyed++;
-          if (this.sessionStats.asteroidsDestroyed === 1) this.onAchievement('galactic-asteroid-destroyer');
-
-          if (p.type !== 'plasma') this.projectiles.splice(i, 1);
-          break;
-        }
-      }
-    }
-
-    for (let i = this.projectiles.length - 1; i >= 0; i--) {
-      let p = this.projectiles[i];
-      if (p.isPlayer) continue;
-      if (p.x < this.player.x + this.player.width && p.x + p.width > this.player.x && 
-          p.y < this.player.y + this.player.height && p.y + p.height > this.player.y) {
-        this.damagePlayer(15);
-        this.projectiles.splice(i, 1);
-      }
-    }
-
-    if (this.player.invulnTimer <= 0) {
-      this.enemies.forEach((e, j) => {
-        if (this.player.x < e.x + e.width && this.player.x + this.player.width > e.x && 
-            this.player.y < e.y + e.height && this.player.y + this.player.height > e.y) {
-          this.damagePlayer(e.type === 'boss' ? 50 : 20);
-          if (e.type !== 'boss') {
-            this.createExplosion(e.x + e.width/2, e.y + e.height/2, '#f97316');
-            this.enemies.splice(j, 1);
-          }
-        }
-      });
-      this.asteroids.forEach((a, j) => {
-        if (this.player.x < a.x + a.width && this.player.x + this.player.width > a.x && 
-            this.player.y < a.y + a.height && this.player.y + this.player.height > a.y) {
-          this.damagePlayer(30);
-          this.createExplosion(a.x + a.width/2, a.y + a.height/2, '#94a3b8');
-          this.asteroids.splice(j, 1);
-        }
-      });
-    }
-
-    this.enemies = this.enemies.filter(e => e.y < this.height + 100);
-    this.asteroids = this.asteroids.filter(a => a.y < this.height + 100);
   }
 
   draw() {
@@ -570,6 +839,16 @@ class GameEngine {
     this.ctx.globalAlpha = 1;
 
     if (!this.isPlaying && !this.isGameOver) return;
+
+    if (this.bossState === 'warning') {
+      this.ctx.fillStyle = `rgba(255, 50, 50, ${Math.abs(Math.sin(this.bossWarningTimer / 150))})`;
+      this.ctx.font = 'bold 36px monospace';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText("WARNING", this.width/2, this.height/3);
+      this.ctx.font = 'bold 24px monospace';
+      this.ctx.fillText("BOSS INCOMING", this.width/2, this.height/3 + 40);
+      this.ctx.textAlign = 'left';
+    }
 
     this.blackHoles.forEach(bh => {
       this.ctx.save();
@@ -708,25 +987,35 @@ class GameEngine {
     }
   }
 
-  loop(time) {
-    const dt = time - this.lastTime;
-    this.lastTime = time;
-    this.update(dt);
-    this.draw();
-
-    if (this.onStateUpdate && this.isPlaying) {
+  onStateUpdateInner() {
+    if (this.onStateUpdate) {
       this.onStateUpdate({
         score: this.score,
         lives: this.player ? this.player.lives : 0,
         shield: this.player ? this.player.shield : 0,
         weapon: this.player ? this.player.weapon : 'single',
         isGameOver: this.isGameOver,
-        isPlaying: this.isPlaying
+        isPlaying: this.isPlaying,
+        earnedCredits: Math.floor(this.score / 10),
+        timeSurvived: Math.floor(this.timeSurvived / 1000),
+        level: this.level,
+        inventory: this.inventory,
+        boss: this.currentBoss ? { health: this.currentBoss.health, maxHealth: this.currentBoss.maxHealth, name: this.currentBoss.name, phase: this.currentBoss.phase } : null
       });
     }
+  }
+
+  loop(time) {
+    if (!this.lastTime) this.lastTime = time;
+    let dt = time - this.lastTime;
+    if (dt > 100) dt = 16; // Cap delta time to prevent massive jumps when tab is inactive
+    this.lastTime = time;
+    
+    this.update(dt);
+    this.draw();
 
     if (this.isPlaying || this.isGameOver) {
-      requestAnimationFrame(this.loop);
+      this.rafId = requestAnimationFrame(this.loop);
     }
   }
 }
@@ -743,7 +1032,8 @@ const GalacticDefender = ({ isOpen, onClose }) => {
   const [leaderboardError, setLeaderboardError] = useState(null);
   
   const [gameState, setGameState] = useState({
-    score: 0, lives: 3, shield: 0, weapon: 'single', isPlaying: false, isGameOver: false, earnedCredits: 0, timeSurvived: 0
+    score: 0, lives: 3, shield: 0, weapon: 'single', isPlaying: false, isGameOver: false, earnedCredits: 0, timeSurvived: 0,
+    level: 1, inventory: { nuke: 0, emp: 0, freeze: 0 }, boss: null
   });
 
   const [saveData, setSaveData] = useState(() => {
@@ -762,7 +1052,17 @@ const GalacticDefender = ({ isOpen, onClose }) => {
   }, [saveData]);
 
   useEffect(() => {
-    if (isOpen) unlockAchievement('secret-hacker');
+    if (isOpen) {
+      unlockAchievement('secret-hacker');
+      const prevBody = document.body.style.overflow;
+      const prevHtml = document.documentElement.style.overflow;
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prevBody;
+        document.documentElement.style.overflow = prevHtml;
+      };
+    }
   }, [isOpen, unlockAchievement]);
 
   const handleAchievement = useCallback((id) => {
@@ -774,7 +1074,6 @@ const GalacticDefender = ({ isOpen, onClose }) => {
       engineRef.current = new GameEngine(canvasRef.current, saveData, handleAchievement);
       engineRef.current.onStateUpdate = (state) => {
         setGameState(prev => {
-          // If game over just hit, update save data
           if (state.isGameOver && !prev.isGameOver) {
             setSaveData(curr => ({
               ...curr,
@@ -783,10 +1082,8 @@ const GalacticDefender = ({ isOpen, onClose }) => {
             }));
             setScoreSubmitted(false);
           }
-          if (prev.score !== state.score || prev.isGameOver !== state.isGameOver || prev.isPlaying !== state.isPlaying || prev.lives !== state.lives || prev.shield !== state.shield || prev.weapon !== state.weapon) {
-            return state;
-          }
-          return prev;
+          // We always update state now to ensure Boss Health / Inventory updates are fluid
+          return state;
         });
       };
       engineRef.current.draw();
@@ -915,7 +1212,7 @@ const GalacticDefender = ({ isOpen, onClose }) => {
         <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-primary/95 backdrop-blur-md" />
           
-          <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="relative bg-secondary/90 border border-accent/20 p-4 sm:p-6 rounded-2xl shadow-2xl backdrop-blur-xl flex flex-col items-center max-w-[100vw] h-[95vh] sm:h-auto">
+          <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="relative bg-secondary/90 border border-accent/20 p-4 sm:p-6 rounded-2xl shadow-2xl backdrop-blur-xl flex flex-col items-center max-w-[100vw] max-h-[95vh] overflow-y-auto custom-scrollbar w-full sm:w-auto" data-lenis-prevent>
             <button onClick={onClose} className="absolute top-4 right-4 text-text-muted hover:text-accent transition-colors bg-primary/50 p-2 rounded-full border border-white/5 z-30">
               <X size={20} />
             </button>
@@ -934,20 +1231,47 @@ const GalacticDefender = ({ isOpen, onClose }) => {
 
             {/* In-Game HUD */}
             {gameState.isPlaying && (
-              <div className="flex flex-wrap gap-2 sm:gap-4 mb-4 w-full justify-center font-mono text-xs sm:text-sm">
-                <div className="flex items-center gap-2 bg-primary/40 px-3 py-1.5 rounded border border-white/5">
-                  <span className="text-text-muted">Score:</span><span className="text-accent font-bold">{gameState.score}</span>
-                </div>
-                <div className="flex items-center gap-2 bg-primary/40 px-3 py-1.5 rounded border border-white/5">
-                  <Heart size={14} className="text-red-400" /><span className="text-white font-bold">x {gameState.lives}</span>
-                </div>
-                {gameState.shield > 0 && (
-                  <div className="flex items-center gap-2 bg-primary/40 px-3 py-1.5 rounded border border-white/5">
-                    <ShieldIcon size={14} className="text-blue-400" /><span className="text-white font-bold">{Math.ceil(gameState.shield)}</span>
+              <div className="flex flex-col items-center mb-4 w-full justify-center font-mono text-xs sm:text-sm relative">
+                
+                {gameState.boss && (
+                  <div className="w-full max-w-sm mb-3">
+                    <div className="flex justify-between text-[10px] mb-1 px-1">
+                      <span className="text-white font-bold">{gameState.boss.name}</span>
+                      <span className="text-text-muted">{Math.ceil((gameState.boss.health / gameState.boss.maxHealth) * 100)}%</span>
+                    </div>
+                    <div className="h-2 w-full bg-black/50 rounded-full overflow-hidden border border-white/10">
+                      <div 
+                        className={`h-full transition-all duration-300 ${gameState.boss.phase === 1 ? 'bg-green-500' : gameState.boss.phase === 2 ? 'bg-yellow-400' : 'bg-red-500'}`}
+                        style={{ width: `${Math.max(0, (gameState.boss.health / gameState.boss.maxHealth) * 100)}%` }}
+                      />
+                    </div>
                   </div>
                 )}
-                <div className="flex items-center gap-2 bg-primary/40 px-3 py-1.5 rounded border border-white/5">
-                  <span className="text-text-muted">WPN:</span><span className="text-purple-400 font-bold uppercase">{gameState.weapon}</span>
+
+                <div className="flex flex-wrap gap-2 justify-center w-full">
+                  <div className="flex items-center gap-2 bg-primary/40 px-3 py-1.5 rounded border border-white/5">
+                    <span className="text-text-muted">Score:</span><span className="text-accent font-bold">{gameState.score}</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-primary/40 px-3 py-1.5 rounded border border-white/5">
+                    <Heart size={14} className="text-red-400" /><span className="text-white font-bold">x {gameState.lives}</span>
+                  </div>
+                  {gameState.shield > 0 && (
+                    <div className="flex items-center gap-2 bg-primary/40 px-3 py-1.5 rounded border border-white/5">
+                      <ShieldIcon size={14} className="text-blue-400" /><span className="text-white font-bold">{Math.ceil(gameState.shield)}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-2 justify-center w-full mt-2 text-[10px]">
+                  <div className={`flex items-center gap-1 px-2 py-1 rounded border ${gameState.inventory?.nuke > 0 ? 'bg-red-500/20 border-red-500/50 text-red-200' : 'bg-black/40 border-white/5 text-text-muted opacity-50'}`}>
+                    <span className="font-bold">1</span> ☢ Nuke: {gameState.inventory?.nuke || 0}
+                  </div>
+                  <div className={`flex items-center gap-1 px-2 py-1 rounded border ${gameState.inventory?.emp > 0 ? 'bg-blue-500/20 border-blue-500/50 text-blue-200' : 'bg-black/40 border-white/5 text-text-muted opacity-50'}`}>
+                    <span className="font-bold">2</span> ⚡ EMP: {gameState.inventory?.emp || 0}
+                  </div>
+                  <div className={`flex items-center gap-1 px-2 py-1 rounded border ${gameState.inventory?.freeze > 0 ? 'bg-purple-500/20 border-purple-500/50 text-purple-200' : 'bg-black/40 border-white/5 text-text-muted opacity-50'}`}>
+                    <span className="font-bold">3</span> ❄ Freeze: {gameState.inventory?.freeze || 0}
+                  </div>
                 </div>
               </div>
             )}
@@ -955,8 +1279,8 @@ const GalacticDefender = ({ isOpen, onClose }) => {
             <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-inner bg-primary flex flex-col" style={{ width: GAME_WIDTH, maxWidth: '100%' }}>
               
               {/* Canvas Container */}
-              <div className="relative" style={{ height: (!gameState.isPlaying && !gameState.isGameOver) ? 0 : 'auto' }}>
-                <canvas ref={canvasRef} width={GAME_WIDTH} height={GAME_HEIGHT} className={`max-w-full h-auto object-contain block ${(!gameState.isPlaying && !gameState.isGameOver) ? 'hidden' : ''}`} />
+              <div className="relative flex justify-center items-center" style={{ height: (!gameState.isPlaying && !gameState.isGameOver) ? 0 : 'auto' }}>
+                <canvas ref={canvasRef} width={GAME_WIDTH} height={GAME_HEIGHT} className={`max-w-full h-auto max-h-[65vh] object-contain block ${(!gameState.isPlaying && !gameState.isGameOver) ? 'hidden' : ''}`} />
                 
                 {/* Game Over Overlay */}
                 {gameState.isGameOver && (
@@ -1000,7 +1324,7 @@ const GalacticDefender = ({ isOpen, onClose }) => {
                   </div>
 
                   {/* Tab Content */}
-                  <div className="flex-1 overflow-y-auto overflow-x-hidden rounded-xl bg-primary/30 border border-white/5 p-4 custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto overflow-x-hidden rounded-xl bg-primary/30 border border-white/5 p-4 custom-scrollbar" data-lenis-prevent>
                     
                     {tab === 'play' && (
                       <div className="flex flex-col items-center justify-center h-full text-center">

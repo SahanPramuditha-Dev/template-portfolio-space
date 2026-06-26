@@ -209,7 +209,7 @@ const KeyboardShortcuts = () => {
                   <X size={18} />
                 </button>
               </div>
-              <div className="max-h-[60vh] overflow-y-auto p-2">
+              <div className="max-h-[60vh] overflow-y-auto p-2" data-lenis-prevent>
                 {visibleCommands.map((command) => (
                   <button
                     key={command.key}

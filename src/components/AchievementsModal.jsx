@@ -6,6 +6,19 @@ import { useAchievements } from '../context/AchievementsContext';
 const AchievementsModal = ({ isOpen, onClose }) => {
   const { achievements, resetAchievements, unlockedCount } = useAchievements();
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -67,7 +80,7 @@ const AchievementsModal = ({ isOpen, onClose }) => {
           </div>
 
           {/* List of Badges */}
-          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar" data-lenis-prevent>
             {achievements.map((achievement) => {
               const isUnlocked = achievement.unlocked;
               return (

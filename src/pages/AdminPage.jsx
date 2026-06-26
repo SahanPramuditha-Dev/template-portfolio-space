@@ -1002,11 +1002,11 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId }) => {
           onChange={(e) => onChange(e.target.value)}
           className={commonClass}
         >
-          <option value="" disabled>
+          <option value="" disabled className="bg-secondary text-text">
             Select {field.label.toLowerCase()}
           </option>
           {(field.options || []).map((option) => (
-            <option key={option} value={option}>
+            <option key={option} value={option} className="bg-secondary text-text">
               {option}
             </option>
           ))}
@@ -1994,11 +1994,11 @@ const RepeatableObjectEditor = ({ label, helper, value, onChange, createItem, fi
                         onChange={(e) => updateItem(item.id, field.key, e.target.value)}
                         className="w-full rounded-xl border border-secondary/50 bg-primary/50 px-4 py-3 text-text outline-none transition-colors focus:border-accent"
                       >
-                        <option value="" disabled>
+                        <option value="" disabled className="bg-secondary text-text">
                           Select {field.label.toLowerCase()}
                         </option>
                         {(field.options || []).map((option) => (
-                          <option key={option} value={option}>
+                          <option key={option} value={option} className="bg-secondary text-text">
                             {option}
                           </option>
                         ))}

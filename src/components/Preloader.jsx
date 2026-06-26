@@ -135,7 +135,7 @@ const OrbitRings = ({ progress, reduced }) => (
     {/* Centre emblem */}
     <div className="absolute inset-0 flex items-center justify-center">
       <motion.div
-        className="flex flex-col items-center justify-center rounded-full border"
+        className="flex items-center justify-center rounded-full border"
         style={{
           width: 100, height: 100,
           background: 'linear-gradient(135deg, rgb(var(--color-secondary-rgb,30,41,59)/0.8), rgb(var(--color-primary-rgb,15,23,42)/0.9))',
@@ -151,19 +151,21 @@ const OrbitRings = ({ progress, reduced }) => (
         transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
       >
         {/* Percent counter */}
-        <motion.span
-          className="font-mono tabular-nums leading-none"
-          style={{ fontSize: 26, fontWeight: 700, color: 'var(--color-text)' }}
-          key={Math.floor(progress / 5) * 5}
-        >
-          {String(Math.round(progress)).padStart(2, '0')}
-        </motion.span>
-        <span
-          className="font-mono text-[9px] uppercase tracking-[0.25em] mt-0.5"
-          style={{ color: 'var(--color-accent)' }}
-        >
-          %
-        </span>
+        <div className="flex items-baseline gap-0.5 select-none translate-x-[2px]">
+          <motion.span
+            className="font-mono tabular-nums leading-none"
+            style={{ fontSize: 26, fontWeight: 700, color: 'var(--color-text)' }}
+            key={Math.floor(progress / 5) * 5}
+          >
+            {String(Math.round(progress)).padStart(2, '0')}
+          </motion.span>
+          <span
+            className="font-mono text-sm font-semibold leading-none"
+            style={{ color: 'var(--color-accent)' }}
+          >
+            %
+          </span>
+        </div>
       </motion.div>
     </div>
   </div>
