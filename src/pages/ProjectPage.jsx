@@ -60,15 +60,10 @@ const ProjectPage = () => {
       <>
         <SEO title="Project not found | Sahan Pramuditha" description="The requested project could not be found." canonicalPath={`/projects/${slug || ''}`} noindex />
         <PageShell
-          eyebrow="Case Study"
+          eyebrow="Portfolio"
           title="Project not found"
           description="That case study is not published yet or the URL is wrong."
-          actions={(
-            <Link to="/#projects" className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-4 py-2 text-sm font-medium text-accent">
-              <ChevronLeft size={16} />
-              Back to projects
-            </Link>
-          )}
+          backHref="/#projects"
         >
           <div className="rounded-3xl border border-white/10 bg-secondary/20 p-10 text-center text-text-muted">
             Try another project from the homepage.
@@ -117,12 +112,7 @@ const ProjectPage = () => {
       />
 
       <PageShell
-        actions={(
-          <Link to="/#projects" className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-4 py-2 text-sm font-medium text-accent">
-            <ChevronLeft size={16} />
-            Back to projects
-          </Link>
-        )}
+        backHref="/#projects"
       >
         <article className="mx-auto w-full max-w-5xl space-y-12 lg:space-y-16 pb-20">
           {/* Hero Section */}

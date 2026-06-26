@@ -44,12 +44,7 @@ const BlogPostPage = () => {
           eyebrow="Blog"
           title="Post not found"
           description="That article isn’t published yet or the slug is wrong."
-          actions={(
-            <Link to="/blog" className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-4 py-2 text-sm font-medium text-accent">
-              <ChevronLeft size={16} />
-              Back to blog
-            </Link>
-          )}
+          backHref="/blog"
         >
           <div className="rounded-3xl border border-white/10 bg-secondary/20 p-10 text-center text-text-muted">
             Try a different post from the blog index.
@@ -70,12 +65,7 @@ const BlogPostPage = () => {
         eyebrow="Dev Writing"
         title={title}
         description={description}
-        actions={(
-          <Link to="/blog" className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-4 py-2 text-sm font-medium text-accent">
-            <ChevronLeft size={16} />
-            Back to blog
-          </Link>
-        )}
+        backHref="/blog"
       >
         <article className="rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md">
           <div className="mb-4 flex flex-wrap items-center gap-2">
