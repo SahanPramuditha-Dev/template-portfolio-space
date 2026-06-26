@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ChevronLeft, ExternalLink, Github, Calendar, Layers, Target, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ChevronLeft, ChevronRight, ExternalLink, Github, Calendar, Layers, Target, Zap, ArrowLeft, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
@@ -12,6 +13,7 @@ import { renderSimpleMarkdown } from '../utils/markdown';
 
 const ProjectPage = () => {
   const { slug } = useParams();
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const { data, loading } = useCmsDoc(CMS_DOCS.projects, { items: [] });
   const projects = useMemo(() => (Array.isArray(data?.items) ? data.items : []), [data]);
   const project = projects.find((item) => {
@@ -56,12 +58,19 @@ const ProjectPage = () => {
   const pageSlug = slugify(project.slug || project.id || project.title || project.missionCode);
   const description = project.shortDescription || project.description || 'Project case study and build details.';
   const slides = getMediaSlides(project);
-  const heroSlide = slides[0];
+  const heroSlide = slides[activeSlideIndex] || slides[0];
   const impactMetrics = getImpactMetrics(project);
   const tech = Array.isArray(project.tech) ? project.tech : [];
   const features = Array.isArray(project.features) ? project.features : [];
   const hasLive = isUsableHttpUrl(project.external);
   const hasGithub = isUsableHttpUrl(project.github);
+
+  const currentIndex = projects.findIndex(p => (p.id === project.id || p.title === project.title));
+  const prevProject = currentIndex > 0 ? projects[currentIndex - 1] : null;
+  const nextProject = currentIndex < projects.length - 1 ? projects[currentIndex + 1] : null;
+
+  const nextSlide = () => setActiveSlideIndex((prev) => (prev + 1) % slides.length);
+  const prevSlide = () => setActiveSlideIndex((prev) => (prev - 1 + slides.length) % slides.length);
 
   return (
     <>
@@ -100,6 +109,36 @@ const ProjectPage = () => {
             {/* Dark gradients for readability */}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent" />
+
+            {/* Gallery Navigation */}
+            {slides.length > 1 && (
+              <>
+                <button
+                  onClick={prevSlide}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white backdrop-blur-md transition-all hover:bg-accent hover:text-primary z-20"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <button
+                  onClick={nextSlide}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white backdrop-blur-md transition-all hover:bg-accent hover:text-primary z-20"
+                >
+                  <ChevronRight size={24} />
+                </button>
+                <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-2 z-20">
+                  {slides.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveSlideIndex(i)}
+                      className={`h-2.5 rounded-full transition-all ${
+                        i === activeSlideIndex ? 'w-8 bg-accent' : 'w-2.5 bg-white/50 hover:bg-white/80'
+                      }`}
+                      aria-label={`Go to slide ${i + 1}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Header & Quick Facts */}
@@ -160,20 +199,53 @@ const ProjectPage = () => {
             </dl>
           </div>
 
-          {/* Main Content Area */}
-          <div className="mx-auto max-w-4xl space-y-16 px-4 sm:px-6">
+          {/* Content Wrapper */}
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:flex lg:gap-16">
             
-            {/* Case Study Narrative */}
-            {(project.description || description) && (
-              <section className="prose prose-invert prose-lg max-w-none font-sans leading-relaxed text-text-muted">
-                {renderSimpleMarkdown(project.description || description)}
-              </section>
-            )}
+            {/* Sticky Table of Contents */}
+            <div className="hidden lg:block w-64 shrink-0">
+              <div className="sticky top-24 space-y-4">
+                <h3 className="font-mono text-sm uppercase tracking-widest text-text">Contents</h3>
+                <nav className="flex flex-col gap-3 border-l border-white/10 pl-4">
+                  {(project.description || description) && (
+                    <a href="#overview" className="text-sm font-medium text-text-muted hover:text-accent transition-colors">Overview</a>
+                  )}
+                  {project.problem && (
+                    <a href="#problem" className="text-sm font-medium text-text-muted hover:text-accent transition-colors">Problem</a>
+                  )}
+                  {project.solution && (
+                    <a href="#solution" className="text-sm font-medium text-text-muted hover:text-accent transition-colors">Solution</a>
+                  )}
+                  {(project.architecture || project.learned || project.lessonsLearned) && (
+                    <a href="#build-notes" className="text-sm font-medium text-text-muted hover:text-accent transition-colors">Build Notes</a>
+                  )}
+                  {features.length > 0 && (
+                    <a href="#features" className="text-sm font-medium text-text-muted hover:text-accent transition-colors">Key Features</a>
+                  )}
+                  {impactMetrics.length > 0 && (
+                    <a href="#impact" className="text-sm font-medium text-text-muted hover:text-accent transition-colors">Impact</a>
+                  )}
+                  {tech.length > 0 && (
+                    <a href="#tech" className="text-sm font-medium text-text-muted hover:text-accent transition-colors">Tech Stack</a>
+                  )}
+                </nav>
+              </div>
+            </div>
+
+            {/* Main Content Area */}
+            <div className="flex-1 space-y-16 min-w-0">
+              
+              {/* Case Study Narrative */}
+              {(project.description || description) && (
+                <motion.section id="overview" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 prose prose-invert prose-lg max-w-none font-sans leading-relaxed text-text-muted">
+                  {renderSimpleMarkdown(project.description || description)}
+                </motion.section>
+              )}
 
             {(project.problem || project.solution) && (
               <div className="grid gap-6 lg:grid-cols-2">
                 {project.problem && (
-                  <section className="rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
+                  <motion.section id="problem" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
                     <h2 className="mb-4 flex items-center gap-2 text-2xl font-bold text-text">
                       <Target size={22} className="text-red-400" />
                       Problem
@@ -181,10 +253,10 @@ const ProjectPage = () => {
                     <div className="prose prose-invert font-sans text-text-muted">
                       {renderSimpleMarkdown(project.problem)}
                     </div>
-                  </section>
+                  </motion.section>
                 )}
                 {project.solution && (
-                  <section className="rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
+                  <motion.section id="solution" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
                     <h2 className="mb-4 flex items-center gap-2 text-2xl font-bold text-text">
                       <Zap size={22} className="text-yellow-400" />
                       Solution
@@ -192,13 +264,13 @@ const ProjectPage = () => {
                     <div className="prose prose-invert font-sans text-text-muted">
                       {renderSimpleMarkdown(project.solution)}
                     </div>
-                  </section>
+                  </motion.section>
                 )}
               </div>
             )}
 
             {(project.architecture || project.learned || project.lessonsLearned) && (
-              <section className="rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
+              <motion.section id="build-notes" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
                 <h2 className="mb-6 text-2xl font-bold text-text">Build Notes</h2>
                 <div className="grid gap-8 lg:grid-cols-2">
                   {project.architecture && (
@@ -218,11 +290,11 @@ const ProjectPage = () => {
                     </div>
                   )}
                 </div>
-              </section>
+              </motion.section>
             )}
 
           {features.length > 0 && (
-            <section className="rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md">
+            <motion.section id="features" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md">
               <h2 className="mb-4 text-2xl font-bold text-text">Key Features</h2>
               <ul className="grid gap-3 sm:grid-cols-2">
                 {features.map((feature) => (
@@ -231,11 +303,11 @@ const ProjectPage = () => {
                   </li>
                 ))}
               </ul>
-            </section>
+            </motion.section>
           )}
 
           {impactMetrics.length > 0 && (
-            <section className="rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
+            <motion.section id="impact" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
               <h2 className="mb-6 text-2xl font-bold text-text">Impact</h2>
               <div className="grid gap-4 sm:grid-cols-3">
                 {impactMetrics.map((metric) => (
@@ -248,11 +320,11 @@ const ProjectPage = () => {
                   </div>
                 ))}
               </div>
-            </section>
+            </motion.section>
           )}
 
           {tech.length > 0 && (
-            <section className="rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
+            <motion.section id="tech" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
               <h2 className="mb-6 text-2xl font-bold text-text">Tech Stack</h2>
               <div className="flex flex-wrap gap-3">
                 {tech.map((item) => (
@@ -261,10 +333,35 @@ const ProjectPage = () => {
                   </span>
                 ))}
               </div>
-            </section>
+            </motion.section>
           )}
           </div>
+          </div>
         </article>
+
+        {/* Next / Previous Project Navigation */}
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 mt-20 border-t border-white/10 pt-16">
+          <div className="grid sm:grid-cols-2 gap-6">
+            {prevProject ? (
+              <Link to={`/projects/${slugify(prevProject.slug || prevProject.id || prevProject.title || prevProject.missionCode)}`} className="group flex flex-col justify-center rounded-3xl border border-white/10 bg-secondary/20 p-8 transition-all hover:bg-secondary/40 hover:border-accent/40">
+                <span className="mb-2 flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-text-muted transition-colors group-hover:text-accent">
+                  <ArrowLeft size={14} />
+                  Previous Project
+                </span>
+                <span className="text-2xl font-bold text-text">{prevProject.title}</span>
+              </Link>
+            ) : <div />}
+            {nextProject ? (
+              <Link to={`/projects/${slugify(nextProject.slug || nextProject.id || nextProject.title || nextProject.missionCode)}`} className="group flex flex-col justify-center items-end text-right rounded-3xl border border-white/10 bg-secondary/20 p-8 transition-all hover:bg-secondary/40 hover:border-accent/40">
+                <span className="mb-2 flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-text-muted transition-colors group-hover:text-accent">
+                  Next Project
+                  <ArrowRight size={14} />
+                </span>
+                <span className="text-2xl font-bold text-text">{nextProject.title}</span>
+              </Link>
+            ) : <div />}
+          </div>
+        </div>
       </PageShell>
     </>
   );

@@ -90,13 +90,24 @@ const ProjectCard = ({ project, index, onOpenModal, compact = false }) => {
           <div className="relative aspect-[16/10] sm:aspect-[2/1] overflow-hidden border-b border-white/10">
             {hasMedia ? (
               <>
-                <img
-                  src={cover}
-                  alt={project.title}
-                  className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                  decoding="async"
-                />
+                {cover.match(/\.(mp4|webm)(\?|#|$)/i) ? (
+                  <video
+                    src={cover}
+                    autoPlay={mediaHover}
+                    loop
+                    muted
+                    playsInline
+                    className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <img
+                    src={cover}
+                    alt={project.title}
+                    className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                )}
                 {media.length > 1 && (
                   <div className="absolute bottom-3 right-3 flex gap-2">
                     {media.slice(0, 3).map((src, i) => (
@@ -615,15 +626,16 @@ const Projects = () => {
                   <Sparkles size={18} className="text-accent" />
                   <h3 className="text-lg sm:text-xl font-bold text-text">Featured Projects</h3>
                 </div>
-                <div className="grid gap-6 lg:grid-cols-2">
+                <div className="columns-1 lg:columns-2 gap-6 space-y-6">
                   {featuredProjects.map((project, index) => (
-                    <ProjectCard
-                      key={project.id || project.title || index}
-                      project={project}
-                      index={index}
-                      onOpenModal={setSelectedProject}
-                      compact
-                    />
+                    <div key={project.id || project.title || index} className="break-inside-avoid">
+                      <ProjectCard
+                        project={project}
+                        index={index}
+                        onOpenModal={setSelectedProject}
+                        compact
+                      />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -681,12 +693,12 @@ const Projects = () => {
                         <div className="sticky top-20 z-20 -ml-2 mb-4 inline-flex items-center rounded-full border border-accent/25 bg-primary/90 px-4 py-2 font-mono text-sm font-bold text-accent shadow-lg backdrop-blur-md">
                           {year}
                         </div>
-                        <div className="grid gap-8 lg:grid-cols-2">
+                        <div className="columns-1 lg:columns-2 gap-8 space-y-8">
                           {items.map((project, index) => (
                             <div
                               key={project.id || project.title || index}
                               id={`project-${project.id || project.title}`}
-                              className="relative scroll-mt-32"
+                              className="relative scroll-mt-32 break-inside-avoid"
                             >
                               <div className="absolute left-[-0.35rem] top-8 h-3.5 w-3.5 rounded-full border-2 border-primary bg-accent shadow-[0_0_18px_rgb(var(--color-accent-rgb)/0.6)] md:left-[0.1rem]" />
                               <div className="mb-3 flex items-center gap-3">
