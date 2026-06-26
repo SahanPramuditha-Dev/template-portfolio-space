@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Info, Calendar, ChevronDown, ChevronUp, Loader2, Maximize2, ExternalLink } from 'lucide-react';
 
@@ -160,7 +161,7 @@ const NasaApod = () => {
 
       {/* Lightbox Modal */}
       <AnimatePresence>
-        {showLightbox && !isVideo && (
+        {showLightbox && !isVideo && typeof document !== 'undefined' && createPortal(
           <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
@@ -212,7 +213,8 @@ const NasaApod = () => {
                 )}
               </div>
             </motion.div>
-          </div>
+          </div>,
+          document.body
         )}
       </AnimatePresence>
     </>
