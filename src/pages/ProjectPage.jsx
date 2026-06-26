@@ -27,6 +27,18 @@ const ProjectPage = () => {
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const { data, loading } = useCmsDoc(CMS_DOCS.projects, { items: [] });
   const projects = useMemo(() => (Array.isArray(data?.items) ? data.items : []), [data]);
+
+  // UNCONDITIONAL HOOKS (Must be above early returns)
+  const { scrollYProgress, scrollY } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+  const heroY = useTransform(scrollY, [0, 800], [0, 200]);
+  
+  const [showActionBar, setShowActionBar] = useState(false);
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    if (latest > 500 && !showActionBar) setShowActionBar(true);
+    else if (latest <= 500 && showActionBar) setShowActionBar(false);
+  });
+
   const project = projects.find((item) => {
     const candidates = [item.id, item.slug, item.title, item.missionCode].map(slugify).filter(Boolean);
     return candidates.includes(slug);
@@ -83,23 +95,10 @@ const ProjectPage = () => {
   const nextSlide = () => setActiveSlideIndex((prev) => (prev + 1) % slides.length);
   const prevSlide = () => setActiveSlideIndex((prev) => (prev - 1 + slides.length) % slides.length);
 
-  // Feature 1: Read Time & Progress Bar
+  // Feature 1: Read Time
   const allText = [project.description, description, project.problem, project.solution, project.architecture, project.learned, project.lessonsLearned].filter(Boolean).join(' ');
   const wordCount = allText.split(/\s+/).length;
   const readTime = Math.max(1, Math.ceil(wordCount / 200));
-
-  const { scrollYProgress, scrollY } = useScroll();
-  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
-
-  // Feature 2: Parallax Hero
-  const heroY = useTransform(scrollY, [0, 800], [0, 200]);
-
-  // Feature 3: Floating Action Bar State
-  const [showActionBar, setShowActionBar] = useState(false);
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    if (latest > 500 && !showActionBar) setShowActionBar(true);
-    else if (latest <= 500 && showActionBar) setShowActionBar(false);
-  });
 
   return (
     <>
