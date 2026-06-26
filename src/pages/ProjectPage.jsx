@@ -1,15 +1,26 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ExternalLink, Github, Calendar, Layers, Target, Zap, ArrowLeft, ArrowRight } from 'lucide-react';
+import { motion, useScroll, useSpring, useTransform, AnimatePresence, useMotionValueEvent } from 'framer-motion';
+import { ChevronLeft, ChevronRight, ExternalLink, Github, Calendar, Layers, Target, Zap, ArrowLeft, ArrowRight, Clock, Code2, Database, Layout, Server, Globe, Boxes } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
+import AnimatedCounter from '../components/AnimatedCounter';
 import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { isUsableHttpUrl } from '../utils/projectUrls';
 import { getImpactMetrics, getMediaSlides } from '../utils/projectNormalize';
 import { slugify } from '../utils/slugify';
 import { renderSimpleMarkdown } from '../utils/markdown';
+
+const getTechIcon = (name) => {
+  const n = name.toLowerCase();
+  if (n.includes('react') || n.includes('vue') || n.includes('next')) return <Boxes size={18} />;
+  if (n.includes('node') || n.includes('express') || n.includes('backend') || n.includes('server')) return <Server size={18} />;
+  if (n.includes('firebase') || n.includes('sql') || n.includes('mongo') || n.includes('db')) return <Database size={18} />;
+  if (n.includes('css') || n.includes('tailwind') || n.includes('ui') || n.includes('design')) return <Layout size={18} />;
+  if (n.includes('api') || n.includes('cloud') || n.includes('web')) return <Globe size={18} />;
+  return <Code2 size={18} />;
+};
 
 const ProjectPage = () => {
   const { slug } = useParams();
@@ -72,6 +83,24 @@ const ProjectPage = () => {
   const nextSlide = () => setActiveSlideIndex((prev) => (prev + 1) % slides.length);
   const prevSlide = () => setActiveSlideIndex((prev) => (prev - 1 + slides.length) % slides.length);
 
+  // Feature 1: Read Time & Progress Bar
+  const allText = [project.description, description, project.problem, project.solution, project.architecture, project.learned, project.lessonsLearned].filter(Boolean).join(' ');
+  const wordCount = allText.split(/\s+/).length;
+  const readTime = Math.max(1, Math.ceil(wordCount / 200));
+
+  const { scrollYProgress, scrollY } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+
+  // Feature 2: Parallax Hero
+  const heroY = useTransform(scrollY, [0, 800], [0, 200]);
+
+  // Feature 3: Floating Action Bar State
+  const [showActionBar, setShowActionBar] = useState(false);
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    if (latest > 500 && !showActionBar) setShowActionBar(true);
+    else if (latest <= 500 && showActionBar) setShowActionBar(false);
+  });
+
   return (
     <>
       <SEO
@@ -80,6 +109,13 @@ const ProjectPage = () => {
         canonicalPath={`/projects/${pageSlug}`}
         ogImage={heroSlide?.kind === 'image' ? heroSlide.url : undefined}
       />
+      
+      {/* Top Progress Bar */}
+      <motion.div 
+        className="fixed top-0 left-0 right-0 h-1 bg-accent origin-left z-50 shadow-[0_0_15px_rgb(var(--color-accent-rgb))]" 
+        style={{ scaleX }} 
+      />
+
       <PageShell
         actions={(
           <Link to="/#projects" className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-4 py-2 text-sm font-medium text-accent">
@@ -91,21 +127,23 @@ const ProjectPage = () => {
         <article className="mx-auto w-full max-w-5xl space-y-12 lg:space-y-16 pb-20">
           {/* Hero Section */}
           <div className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-black/40 shadow-2xl h-[40vh] min-h-[300px] md:h-[60vh] md:min-h-[500px]">
-            {heroSlide?.kind === 'video' ? (
-              <div className="relative h-full w-full flex items-center justify-center bg-black">
-                <img src={heroSlide.poster || ''} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30 blur-3xl saturate-200" aria-hidden="true" />
-                <video src={heroSlide.url} controls playsInline preload="metadata" className="relative z-10 h-full w-full object-contain p-4 md:p-8 drop-shadow-2xl" />
-              </div>
-            ) : heroSlide ? (
-              <div className="relative h-full w-full flex items-center justify-center bg-black">
-                <img src={heroSlide.url} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30 blur-3xl saturate-200" aria-hidden="true" />
-                <img src={heroSlide.url} alt={heroSlide.alt || project.title} className="relative z-10 h-full w-full object-contain p-4 md:p-8 drop-shadow-2xl" loading="lazy" decoding="async" />
-              </div>
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,rgb(var(--color-accent-rgb)/0.22),transparent_45%),linear-gradient(135deg,rgba(15,23,42,0.98),rgba(30,41,59,0.82))]">
-                <Layers size={54} className="text-accent/80" />
-              </div>
-            )}
+            <motion.div style={{ y: heroY }} className="absolute inset-0 w-full h-full">
+              {heroSlide?.kind === 'video' ? (
+                <div className="relative h-full w-full flex items-center justify-center bg-black">
+                  <img src={heroSlide.poster || ''} alt="" className="absolute inset-0 h-[120%] w-[120%] -left-[10%] -top-[10%] object-cover opacity-30 blur-3xl saturate-200" aria-hidden="true" />
+                  <video src={heroSlide.url} controls playsInline preload="metadata" className="relative z-10 h-full w-full object-contain p-4 md:p-8 drop-shadow-2xl" />
+                </div>
+              ) : heroSlide ? (
+                <div className="relative h-full w-full flex items-center justify-center bg-black">
+                  <img src={heroSlide.url} alt="" className="absolute inset-0 h-[120%] w-[120%] -left-[10%] -top-[10%] object-cover opacity-30 blur-3xl saturate-200" aria-hidden="true" />
+                  <img src={heroSlide.url} alt={heroSlide.alt || project.title} className="relative z-10 h-full w-full object-contain p-4 md:p-8 drop-shadow-2xl" loading="lazy" decoding="async" />
+                </div>
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,rgb(var(--color-accent-rgb)/0.22),transparent_45%),linear-gradient(135deg,rgba(15,23,42,0.98),rgba(30,41,59,0.82))]">
+                  <Layers size={54} className="text-accent/80" />
+                </div>
+              )}
+            </motion.div>
             {/* Dark gradients for readability */}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent" />
@@ -167,6 +205,10 @@ const ProjectPage = () => {
                   {project.status}
                 </span>
               )}
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-text-muted font-medium">
+                <Clock size={14} />
+                {readTime} min read
+              </span>
             </div>
 
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -309,11 +351,8 @@ const ProjectPage = () => {
               <div className="grid gap-4 sm:grid-cols-3">
                 {impactMetrics.map((metric) => (
                   <div key={`${metric.label}-${metric.value}`} className="rounded-2xl border border-accent/20 bg-accent/10 p-6 text-center">
-                    <p className="text-4xl font-black text-accent">
-                      {metric.value}
-                      {metric.suffix ? ` ${metric.suffix}` : ''}
-                    </p>
-                    <p className="mt-3 text-xs font-bold uppercase tracking-[0.15em] text-text-muted">{metric.label}</p>
+                    <AnimatedCounter value={metric.value} suffix={metric.suffix} />
+                    <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted">{metric.label}</p>
                   </div>
                 ))}
               </div>
@@ -323,11 +362,16 @@ const ProjectPage = () => {
           {tech.length > 0 && (
             <motion.section id="tech" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
               <h2 className="mb-6 text-2xl font-bold text-text">Tech Stack</h2>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-4">
                 {tech.map((item) => (
-                  <span key={item} className="rounded-full border border-accent/20 bg-primary/50 px-4 py-2 text-sm font-mono text-accent">
-                    {item}
-                  </span>
+                  <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 transition-colors hover:border-accent/40 hover:bg-accent/10">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-accent shadow-inner">
+                      {getTechIcon(item)}
+                    </div>
+                    <span className="font-mono text-sm font-semibold text-white/90">
+                      {item}
+                    </span>
+                  </div>
                 ))}
               </div>
             </motion.section>
@@ -360,6 +404,30 @@ const ProjectPage = () => {
           </div>
         </div>
       </PageShell>
+
+      {/* Floating Action Bar */}
+      <AnimatePresence>
+        {showActionBar && (hasLive || hasGithub) && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 rounded-full border border-white/10 bg-black/60 p-2 backdrop-blur-xl shadow-2xl"
+          >
+            {hasLive && (
+              <a href={project.external} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-sm font-bold text-primary transition-transform hover:scale-105">
+                <ExternalLink size={16} /> Live Demo
+              </a>
+            )}
+            {hasGithub && (
+              <a href={project.github} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full bg-white/10 px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white/20">
+                <Github size={16} /> Source Code
+              </a>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

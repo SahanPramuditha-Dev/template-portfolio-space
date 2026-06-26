@@ -3,6 +3,12 @@ import React from 'react';
 export const renderSimpleMarkdown = (text) => {
   if (!text) return null;
 
+  const codeBlocks = [];
+  let processedText = text.replace(/```([\s\S]*?)```/g, (match, code) => {
+    codeBlocks.push(code.trim());
+    return `\n__CODE_BLOCK_${codeBlocks.length - 1}__\n`;
+  });
+
   const parseInline = (str) => {
     if (typeof str !== 'string') return str;
     let html = str
@@ -12,9 +18,28 @@ export const renderSimpleMarkdown = (text) => {
     return <span dangerouslySetInnerHTML={{ __html: html }} />;
   };
 
-  return text.split('\n').map((line, i) => {
+  return processedText.split('\n').map((line, i) => {
     const trimmed = line.trim();
-    if (trimmed === '---') {
+    if (trimmed.startsWith('__CODE_BLOCK_')) {
+      const index = parseInt(trimmed.match(/\d+/)[0]);
+      return (
+        <div key={i} className="my-8 rounded-xl overflow-hidden border border-white/10 bg-[#0d1117] shadow-2xl">
+          <div className="flex items-center px-4 py-3 border-b border-white/10 bg-black/40">
+            <div className="flex gap-1.5">
+              <div className="h-3 w-3 rounded-full bg-red-500/80"></div>
+              <div className="h-3 w-3 rounded-full bg-yellow-500/80"></div>
+              <div className="h-3 w-3 rounded-full bg-green-500/80"></div>
+            </div>
+            <div className="ml-4 text-xs font-mono text-white/40 tracking-widest uppercase">Terminal</div>
+          </div>
+          <div className="p-5 overflow-x-auto">
+            <pre className="font-mono text-[13px] leading-relaxed text-blue-300">
+              <code>{codeBlocks[index]}</code>
+            </pre>
+          </div>
+        </div>
+      );
+    } else if (trimmed === '---') {
       return <hr key={i} className="my-14 border-white/10" />;
     } else if (trimmed.startsWith('# ')) {
       return (
