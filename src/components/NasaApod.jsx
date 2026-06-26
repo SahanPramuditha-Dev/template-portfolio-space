@@ -22,8 +22,7 @@ const NasaApod = () => {
         setApodData(data);
         setError(false);
       })
-      .catch((err) => {
-        console.error('Failed to fetch NASA APOD:', err);
+      .catch(() => {
         setError(true);
       })
       .finally(() => {

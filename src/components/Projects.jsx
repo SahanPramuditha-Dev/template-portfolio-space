@@ -628,7 +628,7 @@ const Projects = () => {
                 </div>
                 <div className="columns-1 lg:columns-2 gap-6 space-y-6">
                   {featuredProjects.map((project, index) => (
-                    <div key={project.id || project.title || index} className="break-inside-avoid">
+                    <div key={project.id || project.title || index} className="relative break-inside-avoid">
                       <ProjectCard
                         project={project}
                         index={index}
