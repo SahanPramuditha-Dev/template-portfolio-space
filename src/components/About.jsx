@@ -66,16 +66,10 @@ const Counter = ({ value, suffix }) => {
 
 const About = () => {
   const { data: siteDoc, exists, loading } = useCmsDoc(CMS_DOCS.site, null);
-
-  if (loading || siteDoc === undefined) {
-    return <CmsSectionSkeleton id="about" />;
-  }
-
-  const GITHUB_USERNAME = siteDoc?.githubUsername || 'SahanPramuditha-Dev';
-  const profilePhotoUrl = siteDoc?.profilePhotoUrl || profilePhoto;
-  
   const { data: projectsDoc } = useCmsDoc(CMS_DOCS.projects, { items: [] });
+  
   const [githubData, setGithubData] = useState({ loc: 0 });
+  const GITHUB_USERNAME = siteDoc?.githubUsername || 'SahanPramuditha-Dev';
 
   useEffect(() => {
     let cancelled = false;
@@ -103,6 +97,12 @@ const About = () => {
     fetchGit();
     return () => { cancelled = true; };
   }, [GITHUB_USERNAME]);
+
+  if (loading || siteDoc === undefined) {
+    return <CmsSectionSkeleton id="about" />;
+  }
+
+  const profilePhotoUrl = siteDoc?.profilePhotoUrl || profilePhoto;
 
   const aboutParagraphs = exists && siteDoc?.aboutParagraphs
     ? String(siteDoc.aboutParagraphs)
