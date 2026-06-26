@@ -298,8 +298,8 @@ class GameEngine {
     this.ctx.fillRect(0, 0, this.width, this.height);
 
     // Stars
-    this.ctx.fillStyle = '#ffffff';
     this.stars.forEach(s => {
+      this.ctx.fillStyle = s.size > 1.5 ? '#e2e8f0' : (Math.random() > 0.5 ? '#bfdbfe' : '#fef08a');
       this.ctx.globalAlpha = Math.random() * 0.5 + 0.5;
       this.ctx.fillRect(s.x, s.y, s.size, s.size);
     });
@@ -322,64 +322,125 @@ class GameEngine {
     // Projectiles
     this.projectiles.forEach(p => {
       this.ctx.fillStyle = p.isPlayer ? '#38bdf8' : '#ef4444';
-      this.ctx.fillRect(p.x, p.y, p.width, p.height);
-      // Glow
-      this.ctx.shadowBlur = 10;
-      this.ctx.shadowColor = p.isPlayer ? '#38bdf8' : '#ef4444';
-      this.ctx.fillRect(p.x, p.y, p.width, p.height);
+      this.ctx.shadowBlur = 12;
+      this.ctx.shadowColor = p.isPlayer ? '#0ea5e9' : '#dc2626';
+      this.ctx.beginPath();
+      this.ctx.roundRect ? this.ctx.roundRect(p.x, p.y, p.width, p.height, 4) : this.ctx.fillRect(p.x, p.y, p.width, p.height);
+      this.ctx.fill();
       this.ctx.shadowBlur = 0;
     });
 
     // Enemies (Red Ships)
     this.enemies.forEach(e => {
+      this.ctx.save();
+      this.ctx.translate(e.x + e.width / 2, e.y + e.height / 2);
+      
       this.ctx.fillStyle = '#f43f5e';
+      this.ctx.shadowBlur = 5;
+      this.ctx.shadowColor = '#be123c';
+      
+      // Swept forward wings
       this.ctx.beginPath();
-      this.ctx.moveTo(e.x + e.width / 2, e.y + e.height);
-      this.ctx.lineTo(e.x, e.y);
-      this.ctx.lineTo(e.x + e.width, e.y);
+      this.ctx.moveTo(0, e.height / 2); // Nose pointing down
+      this.ctx.lineTo(-e.width / 2, -e.height / 2); // Left wing tip
+      this.ctx.lineTo(-e.width / 4, -e.height / 4); // Left inner
+      this.ctx.lineTo(e.width / 4, -e.height / 4); // Right inner
+      this.ctx.lineTo(e.width / 2, -e.height / 2); // Right wing tip
       this.ctx.closePath();
       this.ctx.fill();
+      
+      // Cockpit glow
+      this.ctx.fillStyle = '#fde047';
+      this.ctx.beginPath();
+      this.ctx.arc(0, 0, e.width / 6, 0, Math.PI * 2);
+      this.ctx.fill();
+      
+      this.ctx.restore();
     });
 
     // Asteroids (Grey rocks)
     this.ctx.fillStyle = '#64748b';
-    this.ctx.strokeStyle = '#475569';
-    this.ctx.lineWidth = 2;
+    this.ctx.strokeStyle = '#94a3b8';
+    this.ctx.lineWidth = 1.5;
     this.asteroids.forEach(a => {
       this.ctx.save();
       this.ctx.translate(a.x + a.width/2, a.y + a.height/2);
       this.ctx.rotate(a.rotation);
-      this.ctx.fillRect(-a.width/2, -a.height/2, a.width, a.height);
-      this.ctx.strokeRect(-a.width/2, -a.height/2, a.width, a.height);
+      
+      // Draw irregular octagon
+      this.ctx.beginPath();
+      const r = a.width / 2;
+      for (let i = 0; i < 8; i++) {
+        const angle = (i * Math.PI) / 4;
+        // Deterministic jaggedness based on asteroid properties to keep it stable
+        const radiusOffset = (a.width + i) % 3 === 0 ? r * 0.8 : r;
+        const x = Math.cos(angle) * radiusOffset;
+        const y = Math.sin(angle) * radiusOffset;
+        if (i === 0) this.ctx.moveTo(x, y);
+        else this.ctx.lineTo(x, y);
+      }
+      this.ctx.closePath();
+      
+      this.ctx.fill();
+      this.ctx.stroke();
       this.ctx.restore();
     });
 
     // Player (Blue Ship)
     if (!this.isGameOver) {
-      this.ctx.fillStyle = '#38bdf8';
-      this.ctx.beginPath();
-      this.ctx.moveTo(this.player.x + this.player.width / 2, this.player.y);
-      this.ctx.lineTo(this.player.x, this.player.y + this.player.height);
-      this.ctx.lineTo(this.player.x + this.player.width, this.player.y + this.player.height);
-      this.ctx.closePath();
-      this.ctx.fill();
-      
-      // Engine trail
+      this.ctx.save();
+      this.ctx.translate(this.player.x + this.player.width / 2, this.player.y + this.player.height / 2);
+
+      // Engine trail (drawn first so it's under the ship)
       this.ctx.fillStyle = '#f59e0b';
       this.ctx.globalAlpha = Math.random() * 0.5 + 0.5;
       this.ctx.beginPath();
-      this.ctx.moveTo(this.player.x + 5, this.player.y + this.player.height);
-      this.ctx.lineTo(this.player.x + this.player.width - 5, this.player.y + this.player.height);
-      this.ctx.lineTo(this.player.x + this.player.width / 2, this.player.y + this.player.height + 15 + Math.random()*10);
+      this.ctx.moveTo(-this.player.width / 4, this.player.height / 2);
+      this.ctx.lineTo(this.player.width / 4, this.player.height / 2);
+      this.ctx.lineTo(0, this.player.height / 2 + 15 + Math.random() * 10);
       this.ctx.closePath();
+      this.ctx.fill();
+      
+      // Core Thruster glow
+      this.ctx.fillStyle = '#fbbf24';
+      this.ctx.beginPath();
+      this.ctx.arc(0, this.player.height / 2 + 2, 4, 0, Math.PI * 2);
       this.ctx.fill();
       this.ctx.globalAlpha = 1;
 
-      // Health Bar
+      // Ship body
+      this.ctx.fillStyle = '#0ea5e9';
+      this.ctx.shadowBlur = 8;
+      this.ctx.shadowColor = '#38bdf8';
+      
+      this.ctx.beginPath();
+      this.ctx.moveTo(0, -this.player.height / 2); // Nose
+      this.ctx.lineTo(-this.player.width / 2, this.player.height / 2); // Left wing
+      this.ctx.lineTo(-this.player.width / 4, this.player.height / 4); // Left indent
+      this.ctx.lineTo(this.player.width / 4, this.player.height / 4); // Right indent
+      this.ctx.lineTo(this.player.width / 2, this.player.height / 2); // Right wing
+      this.ctx.closePath();
+      this.ctx.fill();
+      
+      this.ctx.shadowBlur = 0;
+
+      // Cockpit
+      this.ctx.fillStyle = '#e0f2fe';
+      this.ctx.beginPath();
+      this.ctx.ellipse(0, -this.player.height / 6, 4, 8, 0, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      this.ctx.restore();
+
+      // Health Bar (moved ABOVE the ship to avoid engine overlap)
       this.ctx.fillStyle = '#ef4444';
-      this.ctx.fillRect(this.player.x, this.player.y + this.player.height + 5, this.player.width, 3);
+      this.ctx.fillRect(this.player.x, this.player.y - 12, this.player.width, 4);
       this.ctx.fillStyle = '#22c55e';
-      this.ctx.fillRect(this.player.x, this.player.y + this.player.height + 5, this.player.width * (this.player.health / this.player.maxHealth), 3);
+      this.ctx.fillRect(this.player.x, this.player.y - 12, this.player.width * (this.player.health / this.player.maxHealth), 4);
+      
+      // Health bar border
+      this.ctx.strokeStyle = '#ffffff20';
+      this.ctx.strokeRect(this.player.x, this.player.y - 12, this.player.width, 4);
     }
   }
 
