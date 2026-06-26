@@ -82,7 +82,7 @@ const Skills = () => {
   const controlsRef = useRef(null);
   const isMobile = useIsMobileCanvas();
   const { enabled: threeEnabled, shouldAnimate } = useCanvasLifecycle(containerRef);
-  const [zoomEnabled, setZoomEnabled] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [highlightCategory, setHighlightCategory] = useState(null);
   const [issInfo, setIssInfo] = useState(null);
   const [issError, setIssError] = useState(false);
@@ -346,8 +346,8 @@ const Skills = () => {
              <div 
                 ref={containerRef}
                 className="relative w-full h-[260px] sm:h-[300px] lg:h-[380px] cursor-move bg-secondary/20 rounded-2xl border border-secondary/50 backdrop-blur-sm overflow-hidden flex-shrink-0"
-                onMouseEnter={() => setZoomEnabled(true)}
-                onMouseLeave={() => setZoomEnabled(false)}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
              >
                {/* Decorative background gradient */}
                <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent pointer-events-none z-0" />
@@ -389,8 +389,8 @@ const Skills = () => {
 
                      <OrbitControls
                        ref={controlsRef}
-                       enableZoom={zoomEnabled}
-                       autoRotate={!zoomEnabled}
+                       enableZoom={false}
+                       autoRotate={!isHovered}
                        autoRotateSpeed={0.5}
                        minPolarAngle={Math.PI / 6}
                        maxPolarAngle={Math.PI - Math.PI / 6}
@@ -445,7 +445,7 @@ const Skills = () => {
                  <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 right-2 sm:right-4 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 sm:gap-0">
                    {threeEnabled && (
                      <div className="text-[0.55rem] sm:text-[0.65rem] md:text-xs text-text-muted/80 font-mono bg-secondary/90 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded backdrop-blur-sm border border-white/10 whitespace-nowrap self-start sm:self-auto">
-                       Rotate: drag · Zoom: scroll
+                       Rotate: drag
                      </div>
                    )}
                    <div className="text-[0.55rem] sm:text-xs text-text-muted font-mono bg-secondary/90 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded backdrop-blur-sm border border-white/5 whitespace-nowrap self-end sm:self-auto">
