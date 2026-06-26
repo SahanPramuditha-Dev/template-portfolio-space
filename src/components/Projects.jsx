@@ -81,15 +81,13 @@ const ProjectCard = ({ project, index, onOpenModal, compact = false }) => {
         compact ? 'h-full' : ''
       }`}
     >
-      <div
-        className={`grid h-full gap-0 ${compact ? 'md:grid-cols-[1.1fr_0.9fr]' : 'lg:grid-cols-[1.1fr_0.9fr]'}`}
-      >
+      <div className="flex h-full flex-col">
         <div
-          className={`relative overflow-hidden ${reversed && !compact ? 'lg:order-2' : ''}`}
+          className="relative shrink-0 overflow-hidden"
           onMouseEnter={() => setMediaHover(true)}
           onMouseLeave={() => setMediaHover(false)}
         >
-          <div className={`relative overflow-hidden border-b border-white/10 ${compact ? 'aspect-[16/10] md:aspect-auto md:h-full' : 'aspect-[16/10] lg:aspect-auto lg:h-full'}`}>
+          <div className="relative aspect-[16/10] sm:aspect-[2/1] overflow-hidden border-b border-white/10">
             {hasMedia ? (
               <>
                 <img
@@ -165,7 +163,7 @@ const ProjectCard = ({ project, index, onOpenModal, compact = false }) => {
           </div>
         </div>
 
-        <div className={`p-6 sm:p-7 ${reversed && !compact ? 'lg:order-1' : ''}`}>
+        <div className="flex flex-1 flex-col p-6 sm:p-7">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             {project.featured && (
               <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.12em] text-amber-300">
@@ -221,7 +219,7 @@ const ProjectCard = ({ project, index, onOpenModal, compact = false }) => {
             ))}
           </div>
 
-          <div className={`mt-5 grid gap-3 ${hasLive && hasGithub ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
+          <div className={`mt-auto pt-5 grid gap-3 ${hasLive && hasGithub ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
             {hasLive ? (
               <a
                 href={project.external}
