@@ -25,6 +25,7 @@ const Blog = () => {
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative">
         <h2 className="flex flex-wrap items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold text-text mb-8 sm:mb-12 md:mb-16 font-display gradient-text">
           <span className="text-accent font-mono text-lg sm:text-xl mr-0 sm:mr-2">08.</span>
+          <span className="flex-grow min-w-0">Latest Articles</span>
           <span className="h-px bg-secondary flex-grow min-w-[60px] ml-0 sm:ml-4 opacity-50 w-full sm:w-auto order-3 sm:order-none" />
         </h2>
 
