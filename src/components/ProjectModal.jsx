@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -620,7 +621,11 @@ const ProjectModal = (props) => {
   const key = props.project
     ? `p-${String(props.project.id ?? '')}-${String(props.project.title ?? '')}`
     : 'closed';
-  return <ProjectModalInner key={key} {...props} />;
+  const modal = <ProjectModalInner key={key} {...props} />;
+  
+  if (typeof document === 'undefined') return modal;
+  
+  return createPortal(modal, document.body);
 };
 
 export default ProjectModal;
