@@ -73,6 +73,36 @@ const About = () => {
 
   const GITHUB_USERNAME = siteDoc?.githubUsername || 'SahanPramuditha-Dev';
   const profilePhotoUrl = siteDoc?.profilePhotoUrl || profilePhoto;
+  
+  const { data: projectsDoc } = useCmsDoc(CMS_DOCS.projects, { items: [] });
+  const [githubData, setGithubData] = useState({ loc: 0 });
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchGit = async () => {
+      try {
+        const token = import.meta.env.VITE_GITHUB_TOKEN || '';
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const r = await fetch(`https://api.github.com/users/${GITHUB_USERNAME}/repos?per_page=100`, { headers });
+        if (!r.ok) return;
+        const repos = await r.json();
+        
+        let estimatedLOC = 0;
+        repos.forEach(repo => {
+          // Github repo.size is in KB. Roughly ~25-30 lines per KB
+          estimatedLOC += (repo.size * 25); 
+        });
+        
+        if (!cancelled) {
+          setGithubData({ loc: estimatedLOC });
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+    fetchGit();
+    return () => { cancelled = true; };
+  }, [GITHUB_USERNAME]);
 
   const aboutParagraphs = exists && siteDoc?.aboutParagraphs
     ? String(siteDoc.aboutParagraphs)
@@ -80,7 +110,20 @@ const About = () => {
         .map((paragraph) => paragraph.trim())
         .filter(Boolean)
     : [];
-  const aboutStats = Array.isArray(siteDoc?.aboutStatsJson) ? siteDoc.aboutStatsJson : [];
+
+  const projectCount = Array.isArray(projectsDoc?.items) ? projectsDoc.items.length : 0;
+  
+  const aboutStats = Array.isArray(siteDoc?.aboutStatsJson) ? siteDoc.aboutStatsJson.map(stat => {
+    const labelLower = stat.label?.toLowerCase() || '';
+    if (labelLower.includes('projects completed')) {
+      return { ...stat, value: projectCount > 0 ? projectCount : stat.value };
+    }
+    if (labelLower.includes('lines of code') && githubData.loc > 0) {
+      const kLines = Math.floor(githubData.loc / 1000);
+      return { ...stat, value: kLines > 0 ? kLines : githubData.loc, suffix: kLines > 0 ? 'k+' : '+' };
+    }
+    return stat;
+  }) : [];
   const engineeringApproach = Array.isArray(siteDoc?.engineeringApproachJson) ? siteDoc.engineeringApproachJson : [];
   const careerGoals = Array.isArray(siteDoc?.careerGoalsJson) ? siteDoc.careerGoalsJson : [];
   const hobbies = Array.isArray(siteDoc?.hobbiesJson) ? siteDoc.hobbiesJson : [];
