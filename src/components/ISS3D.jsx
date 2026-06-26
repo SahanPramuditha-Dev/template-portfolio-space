@@ -46,7 +46,7 @@ const ISSModel = ({ modelPath }) => {
   });
 
   return (
-    <group ref={group} scale={0.014} rotation={[0.1, -0.8, 0]}>
+    <group ref={group} scale={0.025} rotation={[0.1, -0.8, 0]}>
       <primitive object={scene} />
     </group>
   );
