@@ -218,17 +218,17 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
               </button>
 
               <div
-                className="relative flex flex-col h-full max-h-full w-full border-b border-white/10 bg-secondary/20 md:w-[42%] md:border-b-0 md:border-r"
+                className="relative flex h-[35vh] md:h-full w-full border-b border-white/10 bg-black md:w-[42%] md:border-b-0 md:border-r"
                 onTouchStart={handleGalleryTouchStart}
                 onTouchEnd={handleGalleryTouchEnd}
               >
-                <div className="relative shrink-0 aspect-[4/3] w-full overflow-hidden bg-black/40">
+                <div className="relative h-full w-full overflow-hidden">
                   {activeSlide ? (
                     activeSlide.kind === 'video' ? (
                       <video
                         key={activeSlide.url}
                         src={activeSlide.url}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover opacity-90"
                         controls
                         playsInline
                         preload="metadata"
@@ -237,7 +237,7 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
                       <img
                         src={activeSlide.url}
                         alt={activeSlide.alt || project.title}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover opacity-90"
                         loading="lazy"
                         decoding="async"
                       />
@@ -253,9 +253,11 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
                     </div>
                   )}
 
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent" />
+                  {/* Gradient Overlays for Readability */}
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent" />
 
-                  <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full border border-accent/25 bg-black/30 px-3 py-1 text-[0.7rem] font-mono uppercase tracking-[0.16em] text-accent">
+                  <div className="absolute left-6 top-6 flex items-center gap-2 rounded-full border border-accent/25 bg-black/40 px-3 py-1.5 text-[0.7rem] font-mono uppercase tracking-[0.16em] text-accent backdrop-blur-md">
                     <span>{project.missionCode}</span>
                     <span className="text-white/50">•</span>
                     <span>{project.year}</span>
@@ -266,50 +268,50 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
                       <button
                         type="button"
                         onClick={() => stepMedia(-1)}
-                        className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/10 bg-black/40 p-2 text-white transition-colors hover:bg-accent hover:text-primary"
+                        className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-black/50 p-3 text-white transition-all hover:bg-accent hover:text-primary hover:scale-110 backdrop-blur-md"
                         aria-label="Previous slide"
                       >
-                        <ChevronLeft size={18} />
+                        <ChevronLeft size={20} />
                       </button>
                       <button
                         type="button"
                         onClick={() => stepMedia(1)}
-                        className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/10 bg-black/40 p-2 text-white transition-colors hover:bg-accent hover:text-primary"
+                        className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-black/50 p-3 text-white transition-all hover:bg-accent hover:text-primary hover:scale-110 backdrop-blur-md"
                         aria-label="Next slide"
                       >
-                        <ChevronRight size={18} />
+                        <ChevronRight size={20} />
                       </button>
                     </>
                   )}
-                </div>
 
-                {activeSlide?.caption && (
-                  <p className="border-b border-white/10 bg-black/25 px-4 py-2 text-center text-xs text-text-muted">
-                    {activeSlide.caption}
-                  </p>
-                )}
+                  {/* Bottom Elements: Caption & Dots */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col items-center gap-4">
+                    {activeSlide?.caption && (
+                      <p className="text-center text-sm font-medium text-white/90 drop-shadow-md">
+                        {activeSlide.caption}
+                      </p>
+                    )}
 
-                {slides.length > 1 && (
-                  <div className="flex justify-center gap-1.5 py-4 border-b border-white/10 shrink-0">
-                    {slides.map((s, index) => (
-                      <button
-                        key={`${s.url}-${index}`}
-                        type="button"
-                        onClick={() => setActiveMedia(index)}
-                        className={`h-2 w-2 rounded-full transition-colors ${
-                          index === activeMedia ? 'bg-accent' : 'bg-white/25 hover:bg-white/45'
-                        }`}
-                        aria-label={`Go to slide ${index + 1}`}
-                      />
-                    ))}
+                    {slides.length > 1 && (
+                      <div className="flex justify-center gap-2">
+                        {slides.map((s, index) => (
+                          <button
+                            key={`${s.url}-${index}`}
+                            type="button"
+                            onClick={() => setActiveMedia(index)}
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              index === activeMedia ? 'w-8 bg-accent' : 'w-2 bg-white/40 hover:bg-white/70'
+                            }`}
+                            aria-label={`Go to slide ${index + 1}`}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-                
-                {/* Visual padding to push gallery up if there's no caption */}
-                <div className="flex-grow bg-primary/10" />
+                </div>
               </div>
 
-              <div className="custom-scrollbar w-full overflow-y-auto bg-primary p-6 md:w-[58%] md:p-10 flex flex-col" data-lenis-prevent>
+              <div className="custom-scrollbar w-full overflow-y-auto bg-primary p-6 md:w-[58%] md:p-10 block" data-lenis-prevent>
                 {/* Header Section */}
                 <div className="mb-8">
                   <h2 id="project-modal-title" className="text-3xl font-extrabold text-text md:text-5xl tracking-tight mb-2">
