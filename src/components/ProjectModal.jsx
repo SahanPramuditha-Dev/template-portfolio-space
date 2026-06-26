@@ -191,7 +191,7 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
               transition={{ type: 'spring', damping: 28, stiffness: 260 }}
               onTouchStart={handleModalTouchStart}
               onTouchEnd={handleModalTouchEnd}
-              className="relative flex max-h-[92dvh] w-full max-w-6xl flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-primary shadow-2xl sm:max-h-[90vh] sm:rounded-3xl md:flex-row"
+              className="relative flex h-[92dvh] w-full max-w-6xl flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-primary shadow-2xl sm:h-[90vh] sm:rounded-3xl md:flex-row"
               role="dialog"
               aria-modal="true"
               aria-labelledby="project-modal-title"
