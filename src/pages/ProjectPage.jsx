@@ -216,22 +216,35 @@ const ProjectPage = () => {
               )}
             </div>
 
-            <dl className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-xl shadow-2xl">
-              {[
+            {(() => {
+              const metaItems = [
                 ['Client', project.client || project.company, <Target size={16} />],
                 ['Industry', project.industry, <Layers size={16} />],
                 ['Timeline', project.projectTimeline, <Calendar size={16} />],
                 ['Team', project.teamSize, <Zap size={16} />],
-              ].filter(([, value]) => value).map(([label, value, icon]) => (
-                <div key={label} className="group flex flex-col justify-center rounded-2xl border border-white/5 bg-white/5 p-6 transition-colors hover:bg-accent/10 hover:border-accent/30">
-                  <dt className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted transition-colors group-hover:text-accent">
-                    {icon}
-                    {label}
-                  </dt>
-                  <dd className="text-lg font-black tracking-tight text-white">{value}</dd>
-                </div>
-              ))}
-            </dl>
+              ].filter(([, value]) => value);
+
+              if (metaItems.length === 0) return null;
+
+              let gridCols = 'grid-cols-2 lg:grid-cols-4';
+              if (metaItems.length === 1) gridCols = 'grid-cols-1';
+              if (metaItems.length === 2) gridCols = 'grid-cols-1 sm:grid-cols-2';
+              if (metaItems.length === 3) gridCols = 'grid-cols-1 sm:grid-cols-3';
+
+              return (
+                <dl className={`grid ${gridCols} gap-4 p-4 rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-xl shadow-2xl`}>
+                  {metaItems.map(([label, value, icon]) => (
+                    <div key={label} className="group flex flex-col justify-center rounded-2xl border border-white/5 bg-white/5 p-6 transition-colors hover:bg-accent/10 hover:border-accent/30">
+                      <dt className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted transition-colors group-hover:text-accent">
+                        {icon}
+                        {label}
+                      </dt>
+                      <dd className="text-lg font-black tracking-tight text-white">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              );
+            })()}
           </div>
 
           {/* Content Wrapper */}
