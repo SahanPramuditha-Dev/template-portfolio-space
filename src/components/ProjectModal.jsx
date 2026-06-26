@@ -224,24 +224,34 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
               >
                 <div className="relative h-full w-full overflow-hidden">
                   {activeSlide ? (
-                    activeSlide.kind === 'video' ? (
-                      <video
-                        key={activeSlide.url}
-                        src={activeSlide.url}
-                        className="h-full w-full object-cover opacity-90"
-                        controls
-                        playsInline
-                        preload="metadata"
-                      />
-                    ) : (
+                    <div className="relative h-full w-full flex items-center justify-center bg-black">
+                      {/* Blurred background wash */}
                       <img
-                        src={activeSlide.url}
-                        alt={activeSlide.alt || project.title}
-                        className="h-full w-full object-cover opacity-90"
-                        loading="lazy"
-                        decoding="async"
+                        src={activeSlide.kind === 'video' ? activeSlide.poster || '' : activeSlide.url}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover opacity-30 blur-3xl saturate-200"
+                        aria-hidden="true"
                       />
-                    )
+                      
+                      {activeSlide.kind === 'video' ? (
+                        <video
+                          key={activeSlide.url}
+                          src={activeSlide.url}
+                          className="relative z-10 h-full w-full object-contain p-4 md:p-8 drop-shadow-2xl"
+                          controls
+                          playsInline
+                          preload="metadata"
+                        />
+                      ) : (
+                        <img
+                          src={activeSlide.url}
+                          alt={activeSlide.alt || project.title}
+                          className="relative z-10 h-full w-full object-contain p-4 md:p-8 drop-shadow-2xl"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      )}
+                    </div>
                   ) : (
                     <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,rgb(var(--color-accent-rgb)/0.18),transparent_50%),linear-gradient(135deg,rgba(15,23,42,1),rgba(30,41,59,1))]">
                       <div className="text-center">
