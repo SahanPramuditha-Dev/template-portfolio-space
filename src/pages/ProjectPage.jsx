@@ -225,16 +225,19 @@ const ProjectPage = () => {
               )}
             </div>
 
-            <dl className="grid gap-6 sm:grid-cols-2 md:grid-cols-4 rounded-3xl border border-white/5 bg-secondary/10 p-8 shadow-xl">
+            <dl className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-xl shadow-2xl">
               {[
-                ['Client', project.client || project.company],
-                ['Industry', project.industry],
-                ['Timeline', project.projectTimeline],
-                ['Team', project.teamSize],
-              ].filter(([, value]) => value).map(([label, value]) => (
-                <div key={label}>
-                  <dt className="mb-2 text-[10px] font-mono uppercase tracking-wider text-text-muted">{label}</dt>
-                  <dd className="text-base font-semibold text-text">{value}</dd>
+                ['Client', project.client || project.company, <Target size={16} />],
+                ['Industry', project.industry, <Layers size={16} />],
+                ['Timeline', project.projectTimeline, <Calendar size={16} />],
+                ['Team', project.teamSize, <Zap size={16} />],
+              ].filter(([, value]) => value).map(([label, value, icon]) => (
+                <div key={label} className="group flex flex-col justify-center rounded-2xl border border-white/5 bg-white/5 p-6 transition-colors hover:bg-accent/10 hover:border-accent/30">
+                  <dt className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted transition-colors group-hover:text-accent">
+                    {icon}
+                    {label}
+                  </dt>
+                  <dd className="text-lg font-black tracking-tight text-white">{value}</dd>
                 </div>
               ))}
             </dl>
