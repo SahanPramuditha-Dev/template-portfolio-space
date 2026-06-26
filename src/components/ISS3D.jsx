@@ -62,11 +62,7 @@ const ISS3D = ({ modelPath = DEFAULT_MODEL_PATH, highlightCategory }) => {
         <ISSModel modelPath={modelPath} />
       </Float>
 
-      {/* Space background plane */}
-      <mesh position={[0, -2, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[10, 10]} />
-        <meshStandardMaterial color="#020617" transparent opacity={0.4} />
-      </mesh>
+
 
       {/* Orbital sparkles/debris */}
       <Sparkles
