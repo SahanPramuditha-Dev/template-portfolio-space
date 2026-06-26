@@ -436,12 +436,7 @@ const Projects = () => {
     return n;
   }, [
     activeCategory,
-    selectedTags.length,
     selectedTech.length,
-    activeGoal,
-    onlyLive,
-    onlySource,
-    onlyFeatured,
     query,
     sortOrder,
   ]);
