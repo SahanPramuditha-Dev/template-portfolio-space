@@ -24,7 +24,7 @@ const INITIAL_ACHIEVEMENTS = [
   {
     id: 'secret-hacker',
     title: 'Secret Hacker',
-    description: 'Discovered and triggered the hidden Konami code Snake Game.',
+    description: 'Discovered and triggered the hidden Konami code Space Game.',
     unlocked: false,
     unlockedAt: null,
   },

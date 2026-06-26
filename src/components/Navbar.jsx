@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Menu, X, Gamepad2, Trophy } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
-import SnakeGame from './SnakeGame';
+import SpaceGame from './SpaceGame';
 import AchievementsModal from './AchievementsModal';
 import { useAchievements } from '../context/AchievementsContext';
 
@@ -377,7 +377,7 @@ const Navbar = () => {
       </nav>
 
       {/* Game Modal */}
-      <SnakeGame isOpen={isGameOpen} onClose={() => setIsGameOpen(false)} />
+      <SpaceGame isOpen={isGameOpen} onClose={() => setIsGameOpen(false)} />
 
       {/* Achievements Modal */}
       <AchievementsModal isOpen={isAchievementsOpen} onClose={() => setIsAchievementsOpen(false)} />
