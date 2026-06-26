@@ -290,7 +290,7 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
                 )}
 
                 {slides.length > 1 && (
-                  <div className="flex justify-center gap-1.5 border-b border-white/10 py-2">
+                  <div className="flex justify-center gap-1.5 py-4 border-b border-white/10 shrink-0">
                     {slides.map((s, index) => (
                       <button
                         key={`${s.url}-${index}`}
@@ -304,101 +304,113 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
                     ))}
                   </div>
                 )}
-
-                <div className="space-y-4 p-5 overflow-y-auto custom-scrollbar flex-grow">
-                  <div>
-                    <h2 id="project-modal-title" className="text-2xl font-bold text-text md:text-3xl">
-                      {project.title}
-                    </h2>
-                    <p className="mt-2 text-sm text-text-muted">{project.role}</p>
-                  </div>
-
-                  {slides.length > 1 && (
-                    <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
-                      {slides.map((s, index) => (
-                        <button
-                          key={`thumb-${s.url}-${index}`}
-                          type="button"
-                          onClick={() => setActiveMedia(index)}
-                          className={`h-16 w-24 shrink-0 overflow-hidden rounded-lg border transition-all ${
-                            index === activeMedia
-                              ? 'border-accent ring-2 ring-accent/20'
-                              : 'border-white/10 opacity-70 hover:opacity-100'
-                          }`}
-                        >
-                          {s.kind === 'video' ? (
-                            <div className="flex h-full w-full items-center justify-center bg-black/50 text-[10px] font-mono text-white/80">
-                              VIDEO
-                            </div>
-                          ) : (
-                            <img src={s.url} alt="" className="h-full w-full object-cover" loading="lazy" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {(clientLine || industry || timeline || teamSize || role) && (
-                    <div className="rounded-2xl border border-accent/20 bg-primary/40 p-4">
-                      <h3 className="mb-3 text-xs font-mono uppercase tracking-[0.16em] text-accent">Quick facts</h3>
-                      <dl className="grid gap-3 text-sm">
-                        {clientLine && (
-                          <div className="flex gap-2">
-                            <dt className="flex shrink-0 items-center gap-1 text-text-muted">
-                              <Building2 size={14} className="text-accent" />
-                              Client
-                            </dt>
-                            <dd className="text-text">{clientLine}</dd>
-                          </div>
-                        )}
-                        {industry && (
-                          <div className="flex gap-2">
-                            <dt className="flex shrink-0 items-center gap-1 text-text-muted">
-                              <Briefcase size={14} className="text-accent" />
-                              Industry
-                            </dt>
-                            <dd className="text-text">{industry}</dd>
-                          </div>
-                        )}
-                        {timeline && (
-                          <div className="flex gap-2">
-                            <dt className="flex shrink-0 items-center gap-1 text-text-muted">
-                              <Clock size={14} className="text-accent" />
-                              Timeline
-                            </dt>
-                            <dd className="text-text">{timeline}</dd>
-                          </div>
-                        )}
-                        {teamSize && (
-                          <div className="flex gap-2">
-                            <dt className="flex shrink-0 items-center gap-1 text-text-muted">
-                              <Users size={14} className="text-accent" />
-                              Team
-                            </dt>
-                            <dd className="text-text">{teamSize}</dd>
-                          </div>
-                        )}
-                        {role && (
-                          <div className="flex gap-2">
-                            <dt className="flex shrink-0 items-center gap-1 text-text-muted">
-                              <Briefcase size={14} className="text-accent" />
-                              Role
-                            </dt>
-                            <dd className="text-text">{role}</dd>
-                          </div>
-                        )}
-                      </dl>
-                    </div>
-                  )}
-
-
-                </div>
+                
+                {/* Visual padding to push gallery up if there's no caption */}
+                <div className="flex-grow bg-primary/10" />
               </div>
 
-              <div className="custom-scrollbar w-full overflow-y-auto bg-primary p-6 md:w-[58%] md:p-8 flex flex-col" data-lenis-prevent>
+              <div className="custom-scrollbar w-full overflow-y-auto bg-primary p-6 md:w-[58%] md:p-10 flex flex-col" data-lenis-prevent>
+                {/* Header Section */}
+                <div className="mb-8">
+                  <h2 id="project-modal-title" className="text-3xl font-extrabold text-text md:text-5xl tracking-tight mb-2">
+                    {project.title}
+                  </h2>
+                  <p className="text-lg font-medium text-accent">{project.role}</p>
+                </div>
+                
+                {/* Thumbnails */}
+                {slides.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto pb-4 mb-6 [scrollbar-width:thin]">
+                    {slides.map((s, index) => (
+                      <button
+                        key={`thumb-${s.url}-${index}`}
+                        type="button"
+                        onClick={() => setActiveMedia(index)}
+                        className={`h-20 w-32 shrink-0 overflow-hidden rounded-xl border transition-all ${
+                          index === activeMedia
+                            ? 'border-accent ring-2 ring-accent/30'
+                            : 'border-white/10 opacity-70 hover:opacity-100'
+                        }`}
+                      >
+                        {s.kind === 'video' ? (
+                          <div className="flex h-full w-full items-center justify-center bg-black/50 text-[10px] font-mono text-white/80">
+                            VIDEO
+                          </div>
+                        ) : (
+                          <img src={s.url} alt="" className="h-full w-full object-cover" loading="lazy" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                
+                {/* CTA Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 mb-8">
+                  {hasLive && (
+                    <a
+                      href={project.external}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3.5 font-bold text-primary transition-transform hover:scale-[1.02]"
+                    >
+                      <ExternalLink size={18} />
+                      Live Demo
+                    </a>
+                  )}
+                  {hasGithub && (
+                    <a
+                      href={project.github}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-accent/30 bg-accent/5 px-6 py-3.5 font-bold text-accent transition-colors hover:bg-accent/10"
+                    >
+                      <Github size={18} />
+                      Source Code
+                    </a>
+                  )}
+                </div>
+                
+                {/* Quick Facts */}
+                {(clientLine || industry || timeline || teamSize || role) && (
+                  <div className="mb-10 grid grid-cols-2 gap-4 rounded-2xl border border-white/5 bg-secondary/10 p-5 lg:grid-cols-4">
+                    {clientLine && (
+                      <div>
+                        <div className="mb-1 flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-text-muted">
+                          <Building2 size={12} className="text-accent" /> Client
+                        </div>
+                        <div className="text-sm font-semibold text-text">{clientLine}</div>
+                      </div>
+                    )}
+                    {industry && (
+                      <div>
+                        <div className="mb-1 flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-text-muted">
+                          <Briefcase size={12} className="text-accent" /> Industry
+                        </div>
+                        <div className="text-sm font-semibold text-text">{industry}</div>
+                      </div>
+                    )}
+                    {timeline && (
+                      <div>
+                        <div className="mb-1 flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-text-muted">
+                          <Clock size={12} className="text-accent" /> Timeline
+                        </div>
+                        <div className="text-sm font-semibold text-text">{timeline}</div>
+                      </div>
+                    )}
+                    {teamSize && (
+                      <div>
+                        <div className="mb-1 flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-text-muted">
+                          <Users size={12} className="text-accent" /> Team
+                        </div>
+                        <div className="text-sm font-semibold text-text">{teamSize}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Tabs Header if sandboxUrl is available */}
                 {project.sandboxUrl && (
-                  <div className="flex border-b border-white/5 mb-6 font-mono text-xs">
+                  <div className="flex border-b border-white/5 mb-8 font-mono text-xs">
                     <button
                       type="button"
                       onClick={() => setActiveTab('details')}
@@ -574,40 +586,8 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
                   </div>
                 )}
 
-                <div className="mt-8 flex flex-col gap-3 border-t border-secondary/40 pt-6 sm:flex-row">
-                  {hasLive ? (
-                    <a
-                      href={project.external}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-accent px-6 py-4 font-bold text-primary transition-transform hover:scale-[1.01]"
-                    >
-                      <ExternalLink size={18} />
-                      Live Demo
-                    </a>
-                  ) : (
-                    <span className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-secondary/40 bg-secondary/20 px-6 py-4 font-bold text-text-muted">
-                      <ExternalLink size={18} />
-                      No live link
-                    </span>
-                  )}
-                  {hasGithub ? (
-                    <a
-                      href={project.github}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-accent px-6 py-4 font-bold text-accent transition-colors hover:bg-accent hover:text-primary"
-                    >
-                      <Github size={18} />
-                      Source Code
-                    </a>
-                  ) : (
-                    <span className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-secondary/40 bg-secondary/20 px-6 py-4 font-bold text-text-muted">
-                      <Github size={18} />
-                      No public repo
-                    </span>
-                  )}
-                </div>
+                {/* Bottom padding for comfort */}
+                <div className="pt-12" />
               </div>
             </motion.div>
           </div>
