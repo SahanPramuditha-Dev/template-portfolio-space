@@ -160,9 +160,10 @@ const NasaApod = () => {
       </div>
 
       {/* Lightbox Modal */}
-      <AnimatePresence>
-        {showLightbox && !isVideo && typeof document !== 'undefined' && createPortal(
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showLightbox && !isVideo && (
+            <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -213,10 +214,11 @@ const NasaApod = () => {
                 )}
               </div>
             </motion.div>
-          </div>,
-          document.body
-        )}
-      </AnimatePresence>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   );
 };
