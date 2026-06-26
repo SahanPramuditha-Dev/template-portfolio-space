@@ -69,11 +69,17 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
     
+    // Tell SmoothScroll to pause
+    window.dispatchEvent(new CustomEvent('modal-toggle', { detail: { isOpen: true } }));
+    
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => {
+      // Resume SmoothScroll
+      window.dispatchEvent(new CustomEvent('modal-toggle', { detail: { isOpen: false } }));
+      
       document.body.style.overflow = previousBodyOverflow;
       document.documentElement.style.overflow = previousHtmlOverflow;
       window.removeEventListener('keydown', handleKeyDown);
@@ -388,7 +394,7 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
                 </div>
               </div>
 
-              <div className="custom-scrollbar w-full overflow-y-auto bg-primary p-6 md:w-[58%] md:p-8 flex flex-col">
+              <div className="custom-scrollbar w-full overflow-y-auto bg-primary p-6 md:w-[58%] md:p-8 flex flex-col" data-lenis-prevent>
                 {/* Tabs Header if sandboxUrl is available */}
                 {project.sandboxUrl && (
                   <div className="flex border-b border-white/5 mb-6 font-mono text-xs">

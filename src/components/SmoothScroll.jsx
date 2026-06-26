@@ -27,7 +27,17 @@ const SmoothScroll = () => {
 
     rafId = requestAnimationFrame(raf);
 
+    const handleModalToggle = (e) => {
+      if (e.detail?.isOpen) {
+        lenis.stop();
+      } else {
+        lenis.start();
+      }
+    };
+    window.addEventListener('modal-toggle', handleModalToggle);
+
     return () => {
+      window.removeEventListener('modal-toggle', handleModalToggle);
       if (rafId) cancelAnimationFrame(rafId);
       lenis.destroy();
     };
