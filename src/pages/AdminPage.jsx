@@ -35,6 +35,7 @@ import {
   GripVertical,
   Menu,
   X,
+  UploadCloud,
 } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
@@ -303,6 +304,7 @@ const initialProject = {
   external: '',
   thumbnail: '',
   screenshots: [],
+  documents: [],
   problem: '',
   solution: '',
   role: '',
@@ -641,6 +643,18 @@ const projectFields = [
   { key: 'videoCaption', label: 'Video caption', type: 'text', group: 'media' },
   { key: 'thumbnail', label: 'Thumbnail URL', type: 'image', group: 'media' },
   {
+    key: 'documents',
+    label: 'Documents & Presentations',
+    type: 'object-list',
+    group: 'media',
+    helper: 'Upload PDFs, slide decks, or text documents (click upload icon).',
+    createItem: () => ({ url: '', name: '' }),
+    fields: [
+      { key: 'url', label: 'File URL', type: 'file' },
+      { key: 'name', label: 'Document Name', type: 'text', placeholder: 'e.g. Pitch Deck' },
+    ],
+  },
+  {
     key: 'screenshots',
     label: 'Screenshots & motion',
     type: 'object-list',
@@ -926,10 +940,10 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId }) => {
   }
 
   if (field.type === 'object-list') {
-    const needsNestedUpload = field.fields?.some((f) => f.type === 'image');
+    const needsNestedUpload = field.fields?.some((f) => f.type === 'image' || f.type === 'file');
     const uploadForObjectList =
       needsNestedUpload && section && docId
-        ? async (_nestedKey, accept = 'image/*,.gif,.mp4,.webm') =>
+        ? async (_nestedKey, accept = 'image/*,.gif,.mp4,.webm,.pdf,.doc,.docx,.ppt,.pptx') =>
             new Promise((resolve) => {
               const input = document.createElement('input');
               input.type = 'file';
@@ -1996,14 +2010,14 @@ const RepeatableObjectEditor = ({ label, helper, value, onChange, createItem, fi
                         onChange={(e) => updateItem(item.id, field.key, e.target.value)}
                         className="w-full rounded-xl border border-secondary/50 bg-primary/50 px-4 py-3 text-text outline-none transition-colors focus:border-accent"
                       />
-                    ) : field.type === 'image' ? (
+                    ) : field.type === 'image' || field.type === 'file' ? (
                       <div className="flex flex-col gap-2 min-w-0">
                         <div className="flex gap-2 min-w-0">
                           <input
                             type="text"
                             value={item.value?.[field.key] ?? ''}
                             onChange={(e) => updateItem(item.id, field.key, e.target.value)}
-                            placeholder="Enter image URL or upload file"
+                            placeholder={field.type === 'image' ? "Enter image URL or upload file" : "Enter file URL or upload file"}
                             className="flex-1 min-w-0 rounded-xl border border-secondary/50 bg-primary/50 px-4 py-3 text-text outline-none transition-colors focus:border-accent"
                           />
                           {onUpload && (
@@ -2018,11 +2032,11 @@ const RepeatableObjectEditor = ({ label, helper, value, onChange, createItem, fi
                               className="shrink-0 relative z-10 rounded-xl border border-accent/30 bg-accent/10 px-3 py-3 text-accent"
                               aria-label={`Upload ${field.label}`}
                             >
-                              <ImageIcon size={16} />
+                              {field.type === 'image' ? <ImageIcon size={16} /> : <UploadCloud size={16} />}
                             </button>
                           )}
                         </div>
-                        {item.value?.[field.key] && (
+                        {field.type === 'image' && item.value?.[field.key] && (
                           <div className="mt-1 w-full max-w-sm rounded-lg overflow-hidden border border-white/10 bg-black/20">
                             <img src={item.value[field.key]} alt="Preview" className="w-full h-auto max-h-48 object-contain" />
                           </div>

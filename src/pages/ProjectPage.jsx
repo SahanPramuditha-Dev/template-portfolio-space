@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion, useScroll, useSpring, useTransform, AnimatePresence, useMotionValueEvent } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ExternalLink, Github, Calendar, Layers, Target, Zap, ArrowLeft, ArrowRight, Clock, Code2, Database, Layout, Server, Globe, Boxes } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ExternalLink, Github, Calendar, Layers, Target, Zap, ArrowLeft, ArrowRight, Clock, Code2, Database, Layout, Server, Globe, Boxes, FileText, Download } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import AnimatedCounter from '../components/AnimatedCounter';
@@ -85,6 +85,7 @@ const ProjectPage = () => {
   const impactMetrics = getImpactMetrics(project);
   const tech = Array.isArray(project.tech) ? project.tech : [];
   const features = Array.isArray(project.features) ? project.features : [];
+  const documents = Array.isArray(project.documents) ? project.documents : [];
   const hasLive = isUsableHttpUrl(project.external);
   const hasGithub = isUsableHttpUrl(project.github);
 
@@ -374,6 +375,30 @@ const ProjectPage = () => {
                       {item}
                     </span>
                   </div>
+                ))}
+              </div>
+            </motion.section>
+          )}
+
+          {documents.length > 0 && (
+            <motion.section id="documents" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
+              <h2 className="mb-6 text-2xl font-bold text-text">Documents & Presentations</h2>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {documents.map((doc, idx) => (
+                  <a key={idx} href={doc.url} target="_blank" rel="noreferrer" className="group flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 p-4 transition-all hover:bg-accent/10 hover:border-accent/30">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-black/40 text-accent transition-transform group-hover:scale-110">
+                        <FileText size={20} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-white group-hover:text-accent transition-colors">{doc.name || 'Document'}</span>
+                        <span className="text-xs text-text-muted">PDF / Document</span>
+                      </div>
+                    </div>
+                    <div className="mr-2 text-text-muted transition-colors group-hover:text-accent">
+                      <Download size={18} />
+                    </div>
+                  </a>
                 ))}
               </div>
             </motion.section>
