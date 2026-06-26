@@ -727,6 +727,7 @@ const GalacticDefender = ({ isOpen, onClose }) => {
   const [tab, setTab] = useState('play'); // 'play', 'shop', 'leaderboard'
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+  const [leaderboardError, setLeaderboardError] = useState(null);
   
   const [gameState, setGameState] = useState({
     score: 0, lives: 3, shield: 0, weapon: 'single', isPlaying: false, isGameOver: false, earnedCredits: 0, timeSurvived: 0
@@ -820,6 +821,7 @@ const GalacticDefender = ({ isOpen, onClose }) => {
 
   const fetchLeaderboard = async () => {
     setLoadingLeaderboard(true);
+    setLeaderboardError(null);
     try {
       if (!db) throw new Error("Firebase not initialized");
       const q = query(collection(db, "galactic_leaderboard"), orderBy("score", "desc"), limit(10));
@@ -828,7 +830,12 @@ const GalacticDefender = ({ isOpen, onClose }) => {
       querySnapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() }));
       setLeaderboardData(data);
     } catch (e) {
-      console.error("Error fetching leaderboard", e);
+      if (e.code === 'permission-denied') {
+        setLeaderboardError("Missing Firebase Permissions");
+      } else {
+        setLeaderboardError("Failed to load leaderboard");
+        console.error("Error fetching leaderboard", e);
+      }
     }
     setLoadingLeaderboard(false);
   };
@@ -848,7 +855,11 @@ const GalacticDefender = ({ isOpen, onClose }) => {
       fetchLeaderboard();
       setTab('leaderboard');
     } catch (e) {
-      console.error("Error adding score", e);
+      if (e.code === 'permission-denied') {
+        setLeaderboardError("Missing Firebase Permissions");
+      } else {
+        console.error("Error adding score", e);
+      }
     }
     setSubmittingScore(false);
   };
@@ -1016,6 +1027,14 @@ const GalacticDefender = ({ isOpen, onClose }) => {
                         
                         {loadingLeaderboard ? (
                           <div className="flex-1 flex items-center justify-center text-text-muted"><RefreshCw className="animate-spin" /></div>
+                        ) : leaderboardError ? (
+                          <div className="flex-1 flex flex-col items-center justify-center text-red-400 text-sm text-center font-mono p-4">
+                            <TriangleAlert className="mb-2 text-red-500" size={24} />
+                            <span>{leaderboardError}</span>
+                            {leaderboardError.includes('Permissions') && (
+                              <span className="text-[10px] text-text-muted mt-2">Check Firestore Rules for 'galactic_leaderboard' collection.</span>
+                            )}
+                          </div>
                         ) : leaderboardData.length === 0 ? (
                           <div className="flex-1 flex items-center justify-center text-text-muted text-sm text-center">No scores yet.<br/>Be the first!</div>
                         ) : (
