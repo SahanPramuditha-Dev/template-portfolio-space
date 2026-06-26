@@ -317,12 +317,10 @@ const Projects = () => {
   const { data: projectsDoc, loading } = useCmsDoc(CMS_DOCS.projects, { items: [] });
   const [selectedProject, setSelectedProject] = useState(null);
   const [activeCategory, setActiveCategory] = useState('All');
-  const [selectedTags, setSelectedTags] = useState([]);
   const [selectedTech, setSelectedTech] = useState([]);
   const [onlyLive, setOnlyLive] = useState(false);
   const [onlySource, setOnlySource] = useState(false);
   const [onlyFeatured, setOnlyFeatured] = useState(false);
-  const [activeGoal, setActiveGoal] = useState('all');
   const [query, setQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('desc');
   const [heavyVisualsEnabled, setHeavyVisualsEnabled] = useState(() => !shouldDisableHeavyVisuals());
@@ -352,19 +350,10 @@ const Projects = () => {
     [projectsList]
   );
 
-  const tagOptions = useMemo(
-    () => [...new Set(projectsList.flatMap((p) => p.tags || []))].sort(),
-    [projectsList]
-  );
-
   const techOptions = useMemo(
     () => [...new Set(projectsList.flatMap((p) => (Array.isArray(p.tech) ? p.tech : [])))].sort(),
     [projectsList]
   );
-
-  const toggleTag = (tag) => {
-    setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
-  };
 
   const toggleTech = (tech) => {
     setSelectedTech((prev) => (prev.includes(tech) ? prev.filter((t) => t !== tech) : [...prev, tech]));
@@ -373,30 +362,10 @@ const Projects = () => {
   const filteredProjects = useMemo(() => {
     return projectsList.filter((project) => {
       const categoryMatch = activeCategory === 'All' || project.category === activeCategory;
-      const tags = Array.isArray(project.tags) ? project.tags : [];
       const tech = Array.isArray(project.tech) ? project.tech : [];
-      const tagMatch =
-        selectedTags.length === 0 || selectedTags.some((t) => tags.includes(t));
       const techMatch =
         selectedTech.length === 0 || selectedTech.some((t) => tech.includes(t));
       const search = query.trim().toLowerCase();
-      const goal = QUICK_GOALS.find((item) => item.id === activeGoal);
-      const goalHaystack = [
-        project.title,
-        project.shortDescription,
-        project.description,
-        project.category,
-        project.role,
-        project.industry,
-        ...(Array.isArray(project.tags) ? project.tags : []),
-        ...(Array.isArray(project.tech) ? project.tech : []),
-      ]
-        .join(' ')
-        .toLowerCase();
-      const goalMatch =
-        activeGoal === 'all' ||
-        !goal ||
-        goal.terms.some((term) => goalHaystack.includes(term));
       const searchMatch =
         !search ||
         String(project.title || '').toLowerCase().includes(search) ||
@@ -407,8 +376,7 @@ const Projects = () => {
         String(project.client || '').toLowerCase().includes(search) ||
         String(project.company || '').toLowerCase().includes(search) ||
         String(project.industry || '').toLowerCase().includes(search) ||
-        tech.some((item) => String(item).toLowerCase().includes(search)) ||
-        tags.some((t) => String(t).toLowerCase().includes(search));
+        tech.some((item) => String(item).toLowerCase().includes(search));
 
       const liveOk = !onlyLive || isUsableHttpUrl(project.external);
       const sourceOk = !onlySource || isUsableHttpUrl(project.github);
@@ -417,8 +385,6 @@ const Projects = () => {
 
       return (
         categoryMatch &&
-        goalMatch &&
-        tagMatch &&
         techMatch &&
         searchMatch &&
         liveOk &&
@@ -430,9 +396,7 @@ const Projects = () => {
   }, [
     projectsList,
     activeCategory,
-    selectedTags,
     selectedTech,
-    activeGoal,
     onlyLive,
     onlySource,
     onlyFeatured,
@@ -466,12 +430,7 @@ const Projects = () => {
   const filterCount = useMemo(() => {
     let n = 0;
     if (activeCategory !== 'All') n += 1;
-    n += selectedTags.length;
     n += selectedTech.length;
-    if (onlyLive) n += 1;
-    if (onlySource) n += 1;
-    if (onlyFeatured) n += 1;
-    if (activeGoal !== 'all') n += 1;
     if (query.trim().length > 0) n += 1;
     if (sortOrder !== 'desc') n += 1;
     return n;
@@ -493,12 +452,10 @@ const Projects = () => {
 
   const clearAllFilters = () => {
     setActiveCategory('All');
-    setSelectedTags([]);
     setSelectedTech([]);
     setOnlyLive(false);
     setOnlySource(false);
     setOnlyFeatured(false);
-    setActiveGoal('all');
     setQuery('');
     setSortOrder('desc');
   };
@@ -573,26 +530,6 @@ const Projects = () => {
               </button>
             </div>
           </div>
-
-
-        </div>
-
-        <div className="mb-5">
-          <div className="mb-2 flex items-center gap-2 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
-            <Target size={14} className="text-accent" />
-            Goal
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <ChipToggle active={activeGoal === 'all'} label="All goals" onClick={() => setActiveGoal('all')} />
-            {QUICK_GOALS.map((goal) => (
-              <ChipToggle
-                key={goal.id}
-                active={activeGoal === goal.id}
-                label={goal.label}
-                onClick={() => setActiveGoal((current) => (current === goal.id ? 'all' : goal.id))}
-              />
-            ))}
-          </div>
         </div>
 
         <div className="mb-5">
@@ -618,32 +555,7 @@ const Projects = () => {
               </motion.button>
             ))}
           </div>
-        </div>
-
-        <div className="mb-4">
-          <div className="mb-2 flex items-center gap-2 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
-            <Filter size={14} className="text-accent" />
-            Tags (multi-select)
-          </div>
-          <div className="-mx-1 flex max-w-full gap-2 overflow-x-auto overflow-y-hidden px-1 pb-1 [scrollbar-width:thin]">
-            {tagOptions.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => toggleTag(tag)}
-                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-mono transition-colors ${
-                  selectedTags.includes(tag)
-                    ? 'bg-accent/15 text-accent border border-accent/30'
-                    : 'bg-primary/50 text-text-muted border border-secondary/40 hover:border-accent/25 hover:text-text'
-                }`}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mb-6">
+        </div>        <div className="mb-6">
           <div className="mb-2 flex items-center gap-2 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
             <Layers size={14} className="text-accent" />
             Tech stack (multi-select)
