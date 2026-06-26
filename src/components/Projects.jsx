@@ -89,7 +89,7 @@ const ProjectCard = ({ project, index, onOpenModal, compact = false }) => {
           onMouseEnter={() => setMediaHover(true)}
           onMouseLeave={() => setMediaHover(false)}
         >
-          <div className="relative aspect-[16/10] overflow-hidden border-b border-white/10">
+          <div className={`relative overflow-hidden border-b border-white/10 ${compact ? 'aspect-[16/10] md:aspect-auto md:h-full' : 'aspect-[16/10] lg:aspect-auto lg:h-full'}`}>
             {hasMedia ? (
               <>
                 <img
@@ -183,7 +183,7 @@ const ProjectCard = ({ project, index, onOpenModal, compact = false }) => {
             <h3 className="text-2xl font-bold text-text">{project.title}</h3>
           </div>
           {subtitle && (
-            <p className="mb-2 text-xs font-mono uppercase tracking-[0.12em] text-accent/90 line-clamp-2">{subtitle}</p>
+            <p className="mb-2 text-xs font-mono uppercase tracking-[0.12em] text-accent/90">{subtitle}</p>
           )}
           {outcome && (
             <p className="mb-3 inline-flex max-w-full items-center rounded-full border border-green-400/25 bg-green-500/10 px-3 py-1.5 text-xs font-semibold text-green-100/95">
