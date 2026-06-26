@@ -65,6 +65,11 @@ service cloud.firestore {
       allow write: if isAdmin() || isBootstrapOwner();
     }
 
+    match /galactic_leaderboard/{scoreId} {
+      // Game leaderboard is completely public
+      allow read, write: if true;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
