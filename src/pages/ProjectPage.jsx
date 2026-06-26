@@ -237,7 +237,7 @@ const ProjectPage = () => {
               
               {/* Case Study Narrative */}
               {(project.description || description) && (
-                <motion.section id="overview" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 prose prose-invert prose-lg max-w-none font-sans leading-relaxed text-text-muted">
+                <motion.section id="overview" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 max-w-none font-sans leading-relaxed text-text-muted">
                   {renderSimpleMarkdown(project.description || description)}
                 </motion.section>
               )}
@@ -250,7 +250,7 @@ const ProjectPage = () => {
                       <Target size={22} className="text-red-400" />
                       Problem
                     </h2>
-                    <div className="prose prose-invert font-sans text-text-muted">
+                    <div className="font-sans text-text-muted">
                       {renderSimpleMarkdown(project.problem)}
                     </div>
                   </motion.section>
@@ -261,7 +261,7 @@ const ProjectPage = () => {
                       <Zap size={22} className="text-yellow-400" />
                       Solution
                     </h2>
-                    <div className="prose prose-invert font-sans text-text-muted">
+                    <div className="font-sans text-text-muted">
                       {renderSimpleMarkdown(project.solution)}
                     </div>
                   </motion.section>
@@ -276,7 +276,7 @@ const ProjectPage = () => {
                   {project.architecture && (
                     <div>
                       <h3 className="mb-3 font-semibold text-text text-lg">Architecture</h3>
-                      <div className="prose prose-invert text-sm text-text-muted">
+                      <div className="text-sm text-text-muted">
                         {renderSimpleMarkdown(project.architecture)}
                       </div>
                     </div>
@@ -284,7 +284,7 @@ const ProjectPage = () => {
                   {(project.learned || project.lessonsLearned) && (
                     <div>
                       <h3 className="mb-3 font-semibold text-text text-lg">What I learned</h3>
-                      <div className="prose prose-invert text-sm text-text-muted">
+                      <div className="text-sm text-text-muted">
                         {renderSimpleMarkdown(project.learned || project.lessonsLearned)}
                       </div>
                     </div>
