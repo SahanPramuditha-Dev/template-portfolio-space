@@ -270,20 +270,17 @@ const ProjectPage = () => {
             )}
 
             {(project.architecture || project.learned || project.lessonsLearned) && (
-              <motion.section id="build-notes" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
-                <h2 className="mb-6 text-2xl font-bold text-text">Build Notes</h2>
-                <div className="grid gap-8 lg:grid-cols-2">
+              <motion.section id="build-notes" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 rounded-3xl border border-white/10 bg-secondary/20 p-8 sm:p-12 backdrop-blur-md">
+                <h2 className="mb-8 text-3xl font-bold text-text border-b border-white/10 pb-6">Build Notes</h2>
+                <div className="flex flex-col gap-16">
                   {project.architecture && (
-                    <div>
-                      <h3 className="mb-3 font-semibold text-text text-lg">Architecture</h3>
-                      <div className="text-sm text-text-muted">
-                        {renderSimpleMarkdown(project.architecture)}
-                      </div>
+                    <div className="font-sans">
+                      {renderSimpleMarkdown(project.architecture)}
                     </div>
                   )}
                   {(project.learned || project.lessonsLearned) && (
-                    <div>
-                      <h3 className="mb-3 font-semibold text-text text-lg">What I learned</h3>
+                    <div className="font-sans border-t border-white/10 pt-10">
+                      <h3 className="mb-6 text-2xl font-bold text-white tracking-tight">What I learned</h3>
                       <div className="text-sm text-text-muted">
                         {renderSimpleMarkdown(project.learned || project.lessonsLearned)}
                       </div>
