@@ -127,11 +127,11 @@ const Skills = () => {
         .then((res) => (res.ok ? res.json() : Promise.reject()))
         .then((data) => {
           if (cancelled) return Promise.reject('cancelled');
-          return fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${data.latitude}&longitude=${data.longitude}&localityLanguage=en`)
+          return fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${data.latitude}&lon=${data.longitude}&zoom=3&accept-language=en`)
             .then((geoRes) => (geoRes.ok ? geoRes.json() : {}))
             .then((geoData) => {
               if (cancelled) return;
-              const country = geoData.countryName || geoData.locality || geoData.description || 'International Waters';
+              const country = geoData.address?.country || geoData.name || 'International Waters';
               setIssInfo({
                 latitude: data.latitude,
                 longitude: data.longitude,
