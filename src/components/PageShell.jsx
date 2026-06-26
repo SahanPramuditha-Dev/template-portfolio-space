@@ -18,24 +18,28 @@ const PageShell = ({ eyebrow, title, description, actions, children, backHref = 
           {actions ? <div className="flex flex-wrap gap-3">{actions}</div> : null}
         </div>
 
-        <motion.header
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-10 rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md"
-        >
-          {eyebrow ? (
-            <p className="mb-3 font-mono text-xs uppercase tracking-[0.28em] text-accent">{eyebrow}</p>
-          ) : null}
-          <h1 className="max-w-4xl text-4xl font-bold leading-tight text-text sm:text-5xl">
-            {title}
-          </h1>
-          {description ? (
-            <p className="mt-4 max-w-3xl text-base leading-relaxed text-text-muted sm:text-lg">
-              {description}
-            </p>
-          ) : null}
-        </motion.header>
+        {(eyebrow || title || description) && (
+          <motion.header
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-10 rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md"
+          >
+            {eyebrow ? (
+              <p className="mb-3 font-mono text-xs uppercase tracking-[0.28em] text-accent">{eyebrow}</p>
+            ) : null}
+            {title ? (
+              <h1 className="max-w-4xl text-4xl font-bold leading-tight text-text sm:text-5xl">
+                {title}
+              </h1>
+            ) : null}
+            {description ? (
+              <p className="mt-4 max-w-3xl text-base leading-relaxed text-text-muted sm:text-lg">
+                {description}
+              </p>
+            ) : null}
+          </motion.header>
+        )}
 
         <main className="space-y-8">{children}</main>
       </div>

@@ -72,9 +72,6 @@ const ProjectPage = () => {
         ogImage={heroSlide?.kind === 'image' ? heroSlide.url : undefined}
       />
       <PageShell
-        eyebrow={project.missionCode || 'Case Study'}
-        title={project.title || 'Project case study'}
-        description={description}
         actions={(
           <Link to="/#projects" className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-4 py-2 text-sm font-medium text-accent">
             <ChevronLeft size={16} />
@@ -222,7 +219,7 @@ const ProjectPage = () => {
                   )}
                 </div>
               </section>
-            )}>
+            )}
 
           {features.length > 0 && (
             <section className="rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md">
