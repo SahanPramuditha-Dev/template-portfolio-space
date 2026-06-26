@@ -597,7 +597,6 @@ const projectFields = [
   { key: 'title', label: 'Title', type: 'text', group: 'summary' },
   { key: 'shortDescription', label: 'Short Description', type: 'textarea', group: 'summary' },
   { key: 'tech', label: 'Tech Stack', type: 'list', placeholder: 'Enter a technology', group: 'summary' },
-  { key: 'tags', label: 'Tags', type: 'list', placeholder: 'Enter a tag', group: 'summary' },
   { key: 'category', label: 'Category', type: 'text', group: 'summary' },
   {
     key: 'status',

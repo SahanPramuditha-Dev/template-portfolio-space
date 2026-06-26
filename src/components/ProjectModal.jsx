@@ -378,18 +378,7 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
                     </div>
                   )}
 
-                  {project.tags?.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {project.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-mono text-accent"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+
                 </div>
               </div>
 
