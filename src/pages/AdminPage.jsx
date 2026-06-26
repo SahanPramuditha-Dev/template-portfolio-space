@@ -1065,8 +1065,9 @@ const DraftPreview = ({ draft, fields, title }) => {
   const tags = ['tech', 'tags', 'skills']
     .flatMap((key) => (Array.isArray(draft[key]) ? draft[key] : []))
     .slice(0, 8);
-  const imageField = fields.find((field) => field.type === 'image' && draft[field.key]);
-  const imageUrl = imageField ? draft[imageField.key] : '';
+  const hasImageFieldInSchema = fields.some((field) => field.type === 'image');
+  const imageFieldWithValue = fields.find((field) => field.type === 'image' && draft[field.key]);
+  const imageUrl = imageFieldWithValue ? draft[imageFieldWithValue.key] : '';
 
   return (
     <div className="rounded-2xl border border-accent/20 bg-accent/5 p-5">
@@ -1078,12 +1079,14 @@ const DraftPreview = ({ draft, fields, title }) => {
         <Eye size={18} className="text-accent" aria-hidden />
       </div>
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-primary/40">
-        {imageUrl ? (
-          <img src={imageUrl} alt="" className="h-36 w-full object-cover" />
-        ) : (
-          <div className="flex h-28 items-center justify-center bg-secondary/30 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
-            No media selected
-          </div>
+        {hasImageFieldInSchema && (
+          imageUrl ? (
+            <img src={imageUrl} alt="" className="h-36 w-full object-cover" />
+          ) : (
+            <div className="flex h-28 items-center justify-center bg-secondary/30 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
+              No media selected
+            </div>
+          )
         )}
         <div className="p-4">
           {meta ? <p className="mb-2 text-xs font-mono uppercase tracking-[0.14em] text-accent">{meta}</p> : null}
