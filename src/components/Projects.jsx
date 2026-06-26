@@ -200,8 +200,8 @@ const ProjectCard = ({ project, index, onOpenModal, compact = false }) => {
                   key={`${m.label}-${m.value}`}
                   className="flex flex-wrap items-baseline justify-between gap-2 text-xs text-text-muted"
                 >
-                  <span className="font-mono uppercase tracking-[0.1em] text-text-muted/90">{m.label}</span>
-                  <span className="font-semibold text-accent">
+                  <span className="font-mono uppercase tracking-[0.1em] text-text-muted/90 line-clamp-1 flex-1">{m.label}</span>
+                  <span className="font-semibold text-accent shrink-0">
                     {m.value}
                     {m.suffix ? ` ${m.suffix}` : ''}
                   </span>
