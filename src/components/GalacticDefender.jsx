@@ -378,20 +378,33 @@ class GameEngine {
       if (p.type === 'homing') {
         let nearestDist = Infinity;
         let target = null;
-        this.enemies.forEach(e => {
-          const dx = (e.x + e.width/2) - p.x;
-          const dy = (e.y + e.height/2) - p.y;
+        
+        const checkTarget = (t) => {
+          const dx = (t.x + t.width/2) - p.x;
+          const dy = (t.y + t.height/2) - p.y;
           const dist = dx*dx + dy*dy;
-          if (dist < nearestDist) { nearestDist = dist; target = e; }
-        });
+          // Only track targets that are visible on screen
+          if (dist < nearestDist && t.y > -50 && t.y < this.height) { 
+            nearestDist = dist; 
+            target = t; 
+          }
+        };
+
+        this.enemies.forEach(checkTarget);
+        this.asteroids.forEach(checkTarget);
+
         if (target) {
           const dx = (target.x + target.width/2) - p.x;
           const dy = (target.y + target.height/2) - p.y;
           const angle = Math.atan2(dy, dx);
-          p.vx += Math.cos(angle) * 800 * dtS;
-          p.vy += Math.sin(angle) * 800 * dtS;
-          const speed = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
-          if (speed > 500) { p.vx = (p.vx / speed) * 500; p.vy = (p.vy / speed) * 500; }
+          
+          const speed = 600;
+          const desiredVx = Math.cos(angle) * speed;
+          const desiredVy = Math.sin(angle) * speed;
+          
+          // Steer towards desired velocity
+          p.vx += (desiredVx - p.vx) * 8 * dtS;
+          p.vy += (desiredVy - p.vy) * 8 * dtS;
         }
       }
       p.x += p.vx * dtS;
