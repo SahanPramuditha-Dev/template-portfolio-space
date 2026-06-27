@@ -188,7 +188,9 @@ const Navbar = () => {
                     initial={{ opacity: 0, y: 8, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                    className="absolute right-0 top-9 w-56 rounded-2xl border border-white/10 bg-primary/95 p-2 shadow-2xl backdrop-blur-md"
+                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    className="absolute right-0 top-9 w-56 rounded-2xl border border-accent/20 bg-[#090c1a] p-2 shadow-[0_8px_40px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)]"
+                    style={{ zIndex: 9999 }}
                     role="menu"
                   >
                     {moreLinks.map((link) => (
@@ -197,10 +199,10 @@ const Navbar = () => {
                         href={link.href}
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={(e) => handleClick(e, link.href)}
-                        className={`block rounded-xl px-4 py-2.5 text-sm transition-colors ${
+                        className={`block rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
                           activeSection === link.id
-                            ? 'bg-accent/10 text-accent'
-                            : 'text-text-muted hover:bg-secondary/50 hover:text-text'
+                            ? 'bg-accent/15 text-accent'
+                            : 'text-slate-200 hover:bg-white/8 hover:text-white'
                         }`}
                         role="menuitem"
                       >
