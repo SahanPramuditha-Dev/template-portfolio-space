@@ -91,8 +91,8 @@ const CertificationCard = ({ cert, index, onViewPdf }) => {
       className="glass-card p-6 rounded-xl border border-secondary/50 hover:border-accent/50 transition-all duration-300 group bg-secondary/20 hover:bg-secondary/30"
     >
       {cert.image && (
-        <div className="w-full h-32 mb-6 rounded-lg bg-black/30 border border-white/5 flex items-center justify-center overflow-hidden p-2">
-          <img src={cert.image} alt={`${cert.title} badge`} className="max-w-full max-h-full object-contain drop-shadow-lg" />
+        <div className="w-full h-56 mb-6 rounded-xl overflow-hidden border border-white/10 bg-black/40">
+          <img src={cert.image} alt={`${cert.title} badge`} className="w-full h-full object-cover" />
         </div>
       )}
       <div className="flex items-start gap-4 mb-4">
