@@ -37,6 +37,7 @@ import {
   Menu,
   X,
   UploadCloud,
+  ExternalLink,
 } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
