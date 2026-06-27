@@ -189,8 +189,13 @@ const Navbar = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.98 }}
                     transition={{ duration: 0.15, ease: 'easeOut' }}
-                    className="absolute right-0 top-9 w-56 rounded-2xl border border-accent/20 bg-[#090c1a] p-2 shadow-[0_8px_40px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)]"
-                    style={{ zIndex: 9999 }}
+                    className="absolute right-0 top-9 w-56 rounded-2xl border border-accent/25 p-2 shadow-[0_8px_32px_rgba(0,0,0,0.6),0_0_0_1px_rgba(var(--color-accent-rgb),0.1)]"
+                    style={{
+                      zIndex: 9999,
+                      background: 'rgba(8, 12, 30, 0.97)',
+                      backdropFilter: 'blur(24px)',
+                      WebkitBackdropFilter: 'blur(24px)',
+                    }}
                     role="menu"
                   >
                     {moreLinks.map((link) => (
@@ -202,7 +207,7 @@ const Navbar = () => {
                         className={`block rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
                           activeSection === link.id
                             ? 'bg-accent/15 text-accent'
-                            : 'text-slate-200 hover:bg-white/8 hover:text-white'
+                            : 'text-text hover:bg-accent/8 hover:text-accent'
                         }`}
                         role="menuitem"
                       >
