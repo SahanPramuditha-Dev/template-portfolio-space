@@ -332,6 +332,7 @@ const initialCertificate = {
   link: '',
   skills: '',
   image: '',
+  pdfUrl: '',
 };
 
 const initialSkillGroup = {
@@ -677,7 +678,8 @@ const certificateFields = [
   { key: 'credential', label: 'Credential', type: 'text', group: 'identity' },
   { key: 'link', label: 'Verification Link', type: 'text', group: 'identity' },
   { key: 'skills', label: 'Skills', type: 'list', placeholder: 'Enter a skill', group: 'identity' },
-  { key: 'image', label: 'Image URL', type: 'image', group: 'media' },
+  { key: 'image', label: 'Badge / Logo Image', type: 'image', group: 'media' },
+  { key: 'pdfUrl', label: 'Certificate PDF', type: 'pdf', group: 'media', accept: 'application/pdf,.pdf' },
 ];
 
 const skillFields = [
@@ -1043,20 +1045,41 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId }) => {
               onChange={(e) => onChange(e.target.value)}
               className={commonClass}
             />
-            {(field.type === 'image' || field.type === 'file') && onUpload && (
+            {(field.type === 'image' || field.type === 'file' || field.type === 'pdf') && onUpload && (
               <button
                 type="button"
                 onClick={onUpload}
                 className="shrink-0 rounded-xl border border-accent/30 bg-accent/10 px-3 py-3 text-accent"
                 aria-label={`Upload ${field.label}`}
               >
-                {field.type === 'file' ? <FileText size={16} /> : <ImageIcon size={16} />}
+                {field.type === 'pdf' ? <FileText size={16} /> : field.type === 'file' ? <FileText size={16} /> : <ImageIcon size={16} />}
               </button>
             )}
           </div>
           {field.type === 'image' && value && (
             <div className="mt-1 w-full max-w-sm rounded-lg overflow-hidden border border-white/10 bg-black/20">
               <img src={value} alt="Preview" className="w-full h-auto max-h-48 object-contain" />
+            </div>
+          )}
+          {field.type === 'pdf' && value && (
+            <div className="mt-2 w-full rounded-xl overflow-hidden border border-accent/20 bg-black/30">
+              <div className="flex items-center justify-between px-4 py-2 bg-accent/10 border-b border-accent/15">
+                <span className="text-xs font-mono text-accent uppercase tracking-widest">PDF Preview</span>
+                <a
+                  href={value}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-accent hover:underline flex items-center gap-1"
+                >
+                  <ExternalLink size={12} /> Open in new tab
+                </a>
+              </div>
+              <iframe
+                src={value}
+                title="Certificate PDF Preview"
+                className="w-full"
+                style={{ height: '480px', border: 'none' }}
+              />
             </div>
           )}
         </div>
@@ -1079,9 +1102,11 @@ const DraftPreview = ({ draft, fields, title }) => {
   const tags = ['tech', 'tags', 'skills']
     .flatMap((key) => (Array.isArray(draft[key]) ? draft[key] : []))
     .slice(0, 8);
-  const hasImageFieldInSchema = fields.some((field) => field.type === 'image');
+  const hasImageFieldInSchema = fields.some((field) => field.type === 'image' || field.type === 'pdf');
   const imageFieldWithValue = fields.find((field) => field.type === 'image' && draft[field.key]);
   const imageUrl = imageFieldWithValue ? draft[imageFieldWithValue.key] : '';
+  const pdfFieldWithValue = fields.find((field) => field.type === 'pdf' && draft[field.key]);
+  const pdfUrl = pdfFieldWithValue ? draft[pdfFieldWithValue.key] : '';
 
   return (
     <div className="rounded-2xl border border-accent/20 bg-accent/5 p-5">
@@ -1101,6 +1126,15 @@ const DraftPreview = ({ draft, fields, title }) => {
               No media selected
             </div>
           )
+        )}
+        {pdfUrl && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-accent/10 border-t border-accent/15">
+            <FileText size={14} className="text-accent shrink-0" />
+            <span className="text-xs font-mono text-accent truncate">PDF attached</span>
+            <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="ml-auto text-xs text-accent hover:underline">
+              Preview
+            </a>
+          </div>
         )}
         <div className="p-4">
           {meta ? <p className="mb-2 text-xs font-mono uppercase tracking-[0.14em] text-accent">{meta}</p> : null}
@@ -1248,10 +1282,11 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
     setDraft((prev) => ({ ...prev, [key]: value }));
   };
 
-  const uploadAsset = async (key, accept = 'image/*,.gif,.mp4,.webm') => {
+  const uploadAsset = async (key, accept) => {
+    const resolvedAccept = accept || (key === 'pdfUrl' ? 'application/pdf,.pdf' : 'image/*,.gif,.mp4,.webm');
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = accept;
+    input.accept = resolvedAccept;
     input.onchange = async () => {
       let file = input.files?.[0];
       if (!file) return;
@@ -1267,7 +1302,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
       try {
         const url = await uploadCmsAsset(file, `${section.uploadFolder || 'uploads'}/${docId}`);
         updateField(key, url);
-        setStatus('Media uploaded.');
+        setStatus(file.type === 'application/pdf' ? 'PDF uploaded.' : 'Media uploaded.');
       } finally {
         setBusy(false);
       }
@@ -1302,8 +1337,11 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
 
   const uploadButtons = useMemo(() => {
     return fields
-      .filter((field) => field.type === 'image')
-      .map((field) => ({ key: field.key, accept: 'image/*,.gif,.mp4,.webm' }));
+      .filter((field) => field.type === 'image' || field.type === 'pdf')
+      .map((field) => ({
+        key: field.key,
+        accept: field.type === 'pdf' ? 'application/pdf,.pdf' : 'image/*,.gif,.mp4,.webm',
+      }));
   }, [fields]);
 
   const listEntries = useMemo(() => {
