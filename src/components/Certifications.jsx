@@ -220,7 +220,7 @@ const StatsBar = ({ certs }) => {
           className="flex flex-col items-center justify-center rounded-2xl border border-accent/20 bg-accent/5 py-5 px-4 text-center"
         >
           <span className="text-3xl font-bold text-accent font-display">
-            <AnimatedCounter value={value} suffix={suffix} />
+            <AnimatedCounter value={String(value)} suffix={suffix} />
           </span>
           <span className="text-xs text-text-muted font-mono mt-1">{label}</span>
         </motion.div>
