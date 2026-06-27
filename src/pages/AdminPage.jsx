@@ -334,6 +334,8 @@ const initialCertificate = {
   skills: '',
   image: '',
   pdfUrl: '',
+  category: 'Other',
+  featured: false,
 };
 
 const initialSkillGroup = {
@@ -678,6 +680,9 @@ const certificateFields = [
   { key: 'date', label: 'Date', type: 'text', group: 'identity' },
   { key: 'credential', label: 'Credential', type: 'text', group: 'identity' },
   { key: 'link', label: 'Verification Link', type: 'text', group: 'identity' },
+  { key: 'category', label: 'Category', type: 'select', group: 'identity',
+    options: ['Cloud', 'Data', 'Programming', 'Networking', 'Microsoft', 'AWS', 'Security', 'DevOps', 'AI/ML', 'Other'] },
+  { key: 'featured', label: 'Featured (show on portfolio homepage)', type: 'checkbox', group: 'identity' },
   { key: 'skills', label: 'Skills', type: 'list', placeholder: 'Enter a skill', group: 'identity' },
   { key: 'image', label: 'Badge / Logo Image', type: 'image', group: 'media' },
   { key: 'pdfUrl', label: 'Certificate PDF', type: 'pdf', group: 'media', accept: 'application/pdf,.pdf' },

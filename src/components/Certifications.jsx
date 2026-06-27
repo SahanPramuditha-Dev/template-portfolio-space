@@ -1,175 +1,363 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Award, ExternalLink, Calendar, FileText, X, Download } from 'lucide-react';
+import { Award, ExternalLink, Calendar, FileText, X, Download, Search, Star, ChevronDown } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { CmsSectionSkeleton } from './CmsShapeSkeleton';
+import AnimatedCounter from './AnimatedCounter';
 
-/* ── PDF Lightbox Modal ─────────────────────────────────────── */
-const PdfModal = ({ url, title, onClose }) => {
+/* ─── CONSTANTS ────────────────────────────────────────────── */
+const CATEGORIES = ['All', 'Cloud', 'Data', 'Programming', 'Networking', 'Microsoft', 'AWS', 'Security', 'DevOps', 'AI/ML', 'Other'];
+
+/* ─── PDF Lightbox Modal ────────────────────────────────────── */
+const PdfModal = ({ url, title, onClose }) => (
+  <AnimatePresence>
+    {url && (
+      <motion.div
+        key="pdf-backdrop"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+        style={{ backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}
+        onClick={onClose}
+      >
+        <motion.div
+          key="pdf-panel"
+          initial={{ opacity: 0, scale: 0.92, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.92, y: 20 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+          className="relative w-full max-w-4xl flex flex-col rounded-2xl overflow-hidden border border-accent/30 shadow-2xl"
+          style={{ maxHeight: '92vh', background: 'rgb(var(--color-primary-rgb, 10 10 20))' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between gap-4 px-5 py-3 border-b border-white/10 bg-secondary/40 shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <FileText size={16} className="text-accent shrink-0" />
+              <span className="text-sm font-semibold text-text truncate">{title}</span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <a href={url} target="_blank" rel="noopener noreferrer" download
+                className="inline-flex items-center gap-1.5 rounded-lg border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-mono text-accent hover:bg-accent/20 transition-colors">
+                <Download size={13} /> Download
+              </a>
+              <a href={url} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-mono text-text-muted hover:text-text transition-colors">
+                <ExternalLink size={13} /> Open
+              </a>
+              <button onClick={onClose}
+                className="rounded-lg border border-white/10 bg-white/5 p-1.5 text-text-muted hover:text-text hover:border-white/25 transition-colors"
+                aria-label="Close PDF preview">
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+          <div className="flex-1 overflow-hidden bg-black/60">
+            <iframe src={url} title={`${title} — Certificate PDF`} className="w-full h-full" style={{ height: '78vh', border: 'none' }} />
+          </div>
+        </motion.div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
+
+/* ─── View-All Modal ────────────────────────────────────────── */
+const AllCertsModal = ({ certs, onClose, onViewPdf }) => {
+  const [search, setSearch] = useState('');
+  const [activeFilter, setActiveFilter] = useState('All');
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return certs.filter((c) => {
+      const matchCat = activeFilter === 'All' || c.category === activeFilter;
+      const matchQ = !q || c.title?.toLowerCase().includes(q) || c.issuer?.toLowerCase().includes(q);
+      return matchCat && matchQ;
+    });
+  }, [certs, search, activeFilter]);
+
+  const availableCategories = useMemo(() => {
+    const cats = new Set(certs.map((c) => c.category).filter(Boolean));
+    return ['All', ...CATEGORIES.filter((c) => c !== 'All' && cats.has(c))];
+  }, [certs]);
+
   return (
     <AnimatePresence>
-      {url && (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 z-[9998] flex items-center justify-center p-4"
+        style={{ backgroundColor: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(10px)' }}
+        onClick={onClose}
+      >
         <motion.div
-          key="pdf-modal-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-          style={{ backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}
-          onClick={onClose}
+          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 30, scale: 0.95 }}
+          transition={{ duration: 0.28, ease: 'easeOut' }}
+          className="relative w-full max-w-5xl flex flex-col rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
+          style={{ maxHeight: '90vh', background: 'rgb(var(--color-primary-rgb, 10 10 20))' }}
+          onClick={(e) => e.stopPropagation()}
         >
-          <motion.div
-            key="pdf-modal-panel"
-            initial={{ opacity: 0, scale: 0.92, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.92, y: 20 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="relative w-full max-w-4xl flex flex-col rounded-2xl overflow-hidden border border-accent/30 shadow-2xl"
-            style={{ maxHeight: '92vh', background: 'rgb(var(--color-primary-rgb, 10 10 20))' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between gap-4 px-5 py-3 border-b border-white/10 bg-secondary/40 shrink-0">
-              <div className="flex items-center gap-2 min-w-0">
-                <FileText size={16} className="text-accent shrink-0" />
-                <span className="text-sm font-semibold text-text truncate">{title}</span>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  download
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-mono text-accent hover:bg-accent/20 transition-colors"
-                >
-                  <Download size={13} /> Download
-                </a>
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-mono text-text-muted hover:text-text transition-colors"
-                >
-                  <ExternalLink size={13} /> Open
-                </a>
-                <button
-                  onClick={onClose}
-                  className="rounded-lg border border-white/10 bg-white/5 p-1.5 text-text-muted hover:text-text hover:border-white/25 transition-colors"
-                  aria-label="Close PDF preview"
-                >
-                  <X size={16} />
-                </button>
-              </div>
+          {/* Modal Header */}
+          <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-white/10 bg-secondary/30 shrink-0">
+            <div>
+              <p className="text-xs font-mono uppercase tracking-widest text-accent">Full Archive</p>
+              <h3 className="text-lg font-bold text-text">All Certifications — {certs.length} total</h3>
             </div>
+            <button onClick={onClose}
+              className="rounded-xl border border-white/10 bg-white/5 p-2 text-text-muted hover:text-text hover:border-white/25 transition-colors"
+              aria-label="Close archive">
+              <X size={18} />
+            </button>
+          </div>
 
-            {/* PDF Embed */}
-            <div className="flex-1 overflow-hidden bg-black/60">
-              <iframe
-                src={url}
-                title={`${title} — Certificate PDF`}
-                className="w-full h-full"
-                style={{ height: '78vh', border: 'none' }}
+          {/* Search + Filter */}
+          <div className="px-6 py-4 border-b border-white/5 bg-secondary/10 shrink-0 space-y-3">
+            <div className="relative">
+              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search certifications…"
+                className="w-full rounded-xl border border-white/10 bg-primary/60 py-2.5 pl-9 pr-4 text-sm text-text outline-none placeholder:text-text-muted/50 focus:border-accent focus:ring-1 focus:ring-accent/30"
               />
             </div>
-          </motion.div>
+            <div className="flex flex-wrap gap-2">
+              {availableCategories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveFilter(cat)}
+                  className={`px-3 py-1 rounded-full text-xs font-mono transition-all ${
+                    activeFilter === cat
+                      ? 'bg-accent text-primary font-semibold'
+                      : 'border border-white/10 text-text-muted hover:border-accent/40 hover:text-accent'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Scrollable cert grid */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {filtered.length === 0 ? (
+              <div className="text-center py-16 text-text-muted text-sm font-mono">No certifications match your search.</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filtered.map((cert, i) => (
+                  <motion.div
+                    key={cert.title || i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, delay: i * 0.03 }}
+                    className="flex flex-col gap-3 rounded-xl border border-white/10 bg-secondary/20 p-4 hover:border-accent/30 transition-colors"
+                  >
+                    {cert.image && (
+                      <div className="w-full h-28 rounded-lg overflow-hidden bg-black/30">
+                        <img src={cert.image} alt={cert.title} className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-mono text-accent mb-0.5">{cert.issuer}</p>
+                      <h4 className="font-semibold text-text text-sm leading-snug line-clamp-2">{cert.title}</h4>
+                      <p className="text-xs text-text-muted mt-1">{cert.date}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      {cert.link && (
+                        <a href={cert.link} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-accent hover:underline font-mono">
+                          Verify <ExternalLink size={11} />
+                        </a>
+                      )}
+                      {cert.pdfUrl && (
+                        <button onClick={() => onViewPdf(cert.pdfUrl, cert.title)}
+                          className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-accent font-mono transition-colors">
+                          <FileText size={11} /> PDF
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
         </motion.div>
-      )}
+      </motion.div>
     </AnimatePresence>
   );
 };
 
-/* ── Certificate Card ───────────────────────────────────────── */
-const CertificationCard = ({ cert, index, onViewPdf }) => {
+/* ─── Stats Bar ─────────────────────────────────────────────── */
+const StatsBar = ({ certs }) => {
+  const platforms = useMemo(() => new Set(certs.map((c) => c.issuer).filter(Boolean)).size, [certs]);
+  const allSkills = useMemo(() => {
+    const s = new Set();
+    certs.forEach((c) => { if (Array.isArray(c.skills)) c.skills.forEach((sk) => s.add(sk)); });
+    return s.size;
+  }, [certs]);
+
+  const stats = [
+    { value: certs.length, suffix: '+', label: 'Certificates Earned' },
+    { value: Math.max(certs.length * 8, 1), suffix: '+', label: 'Learning Hours' },
+    { value: platforms, suffix: '', label: 'Learning Platforms' },
+    { value: allSkills, suffix: '+', label: 'Skills Acquired' },
+  ];
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="glass-card p-6 rounded-xl border border-secondary/50 hover:border-accent/50 transition-all duration-300 group bg-secondary/20 hover:bg-secondary/30"
-    >
-      {cert.image && (
-        <div className="w-full h-56 mb-6 rounded-xl overflow-hidden border border-white/10 bg-black/40">
-          <img src={cert.image} alt={`${cert.title} badge`} className="w-full h-full object-cover" />
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+      {stats.map(({ value, suffix, label }) => (
+        <motion.div
+          key={label}
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="flex flex-col items-center justify-center rounded-2xl border border-accent/20 bg-accent/5 py-5 px-4 text-center"
+        >
+          <span className="text-3xl font-bold text-accent font-display">
+            <AnimatedCounter value={value} suffix={suffix} />
+          </span>
+          <span className="text-xs text-text-muted font-mono mt-1">{label}</span>
+        </motion.div>
+      ))}
+    </div>
+  );
+};
+
+/* ─── Filter Tabs ───────────────────────────────────────────── */
+const FilterTabs = ({ certs, active, onChange }) => {
+  const available = useMemo(() => {
+    const cats = new Set(certs.map((c) => c.category).filter(Boolean));
+    return ['All', ...CATEGORIES.filter((c) => c !== 'All' && cats.has(c))];
+  }, [certs]);
+
+  return (
+    <div className="flex flex-wrap gap-2 mb-8">
+      {available.map((cat) => (
+        <button
+          key={cat}
+          onClick={() => onChange(cat)}
+          className={`px-4 py-1.5 rounded-full text-xs font-mono transition-all duration-200 ${
+            active === cat
+              ? 'bg-accent text-primary font-semibold shadow-[0_0_16px_rgb(var(--color-accent-rgb)/0.4)]'
+              : 'border border-white/10 text-text-muted hover:border-accent/40 hover:text-accent'
+          }`}
+        >
+          {cat}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+/* ─── Certificate Card ──────────────────────────────────────── */
+const CertificationCard = ({ cert, index, onViewPdf }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.5, delay: index * 0.08 }}
+    className="glass-card flex flex-col rounded-xl border border-secondary/50 hover:border-accent/50 transition-all duration-300 group bg-secondary/20 hover:bg-secondary/30 overflow-hidden"
+  >
+    {cert.image && (
+      <div className="w-full h-48 overflow-hidden bg-black/40 border-b border-white/5 shrink-0">
+        <img src={cert.image} alt={`${cert.title} badge`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+      </div>
+    )}
+
+    <div className="flex flex-col flex-1 p-5">
+      {/* Category + featured badge */}
+      <div className="flex items-center gap-2 mb-3">
+        {cert.category && cert.category !== 'Other' && (
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono border border-accent/25 text-accent bg-accent/10">{cert.category}</span>
+        )}
+        {cert.featured && (
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono border border-yellow-400/30 text-yellow-300 bg-yellow-400/10">
+            <Star size={9} fill="currentColor" /> Featured
+          </span>
+        )}
+      </div>
+
+      <div className="flex items-start gap-3 mb-3">
+        <div className="p-2.5 bg-accent/20 rounded-lg group-hover:bg-accent/30 transition-colors shrink-0">
+          <Award className="text-accent" size={20} />
         </div>
-      )}
-      <div className="flex items-start gap-4 mb-4">
-        <div className="p-3 bg-accent/20 rounded-lg group-hover:bg-accent/30 transition-colors">
-          <Award className="text-accent" size={24} />
-        </div>
-        <div className="flex-1">
-          <h3 className="text-xl font-bold text-text mb-1">{cert.title}</h3>
-          <p className="text-text-muted text-sm font-mono">{cert.issuer}</p>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base font-bold text-text mb-0.5 leading-snug">{cert.title}</h3>
+          <p className="text-text-muted text-xs font-mono">{cert.issuer}</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-4 mb-4 text-sm text-text-muted">
+      <div className="flex items-center gap-3 mb-3 text-xs text-text-muted">
         <div className="flex items-center gap-1">
-          <Calendar size={14} />
+          <Calendar size={12} />
           <span>{cert.date}</span>
         </div>
         {cert.credential && (
-          <span className="font-mono text-xs bg-primary/50 px-2 py-1 rounded">
-            {cert.credential}
-          </span>
+          <span className="font-mono bg-primary/50 px-2 py-0.5 rounded truncate max-w-[140px]">{cert.credential}</span>
         )}
       </div>
 
       {Array.isArray(cert.skills) && cert.skills.length > 0 && (
         <div className="mb-4">
-          <p className="text-xs text-text-muted mb-2 font-mono">Skills:</p>
-          <div className="flex flex-wrap gap-2">
-            {cert.skills.map((skill) => (
-              <span
-                key={skill}
-                className="px-2 py-1 bg-primary/50 text-accent rounded text-xs font-mono border border-accent/20"
-              >
-                {skill}
-              </span>
+          <div className="flex flex-wrap gap-1.5">
+            {cert.skills.slice(0, 4).map((skill) => (
+              <span key={skill} className="px-2 py-0.5 bg-primary/50 text-accent rounded text-[10px] font-mono border border-accent/20">{skill}</span>
             ))}
+            {cert.skills.length > 4 && (
+              <span className="px-2 py-0.5 text-text-muted text-[10px] font-mono">+{cert.skills.length - 4} more</span>
+            )}
           </div>
         </div>
       )}
 
       {/* Action row */}
-      <div className="flex flex-wrap items-center gap-3 mt-2">
+      <div className="flex flex-wrap items-center gap-3 mt-auto pt-3 border-t border-white/5">
         {cert.link && (
-          <a
-            href={cert.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-accent hover:text-text transition-colors text-sm font-mono group/link"
-          >
-            Verify Certificate
-            <ExternalLink size={14} className="group-hover/link:translate-x-1 transition-transform" />
+          <a href={cert.link} target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-accent hover:text-text transition-colors text-xs font-mono group/link">
+            Verify <ExternalLink size={12} className="group-hover/link:translate-x-0.5 transition-transform" />
           </a>
         )}
-
         {cert.pdfUrl && (
-          <button
-            type="button"
-            onClick={() => onViewPdf(cert.pdfUrl, cert.title)}
-            className="inline-flex items-center gap-2 rounded-lg border border-accent/25 bg-accent/10 px-3 py-1.5 text-sm font-mono text-accent hover:bg-accent/20 transition-colors group/pdf"
-          >
-            <FileText size={14} className="group-hover/pdf:scale-110 transition-transform" />
-            View Certificate PDF
+          <button type="button" onClick={() => onViewPdf(cert.pdfUrl, cert.title)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-accent/25 bg-accent/10 px-2.5 py-1 text-xs font-mono text-accent hover:bg-accent/20 transition-colors group/pdf">
+            <FileText size={12} className="group-hover/pdf:scale-110 transition-transform" />
+            View PDF
           </button>
         )}
       </div>
-    </motion.div>
-  );
-};
+    </div>
+  </motion.div>
+);
 
-/* ── Section ────────────────────────────────────────────────── */
+/* ─── Main Section ──────────────────────────────────────────── */
 const Certifications = () => {
   const { data, loading } = useCmsDoc(CMS_DOCS.certifications, { items: [] });
   const certificationsList = Array.isArray(data?.items) ? data.items : [];
 
+  const [activeFilter, setActiveFilter] = useState('All');
+  const [showAll, setShowAll] = useState(false);
   const [pdfModal, setPdfModal] = useState({ url: '', title: '' });
+
   const openPdf  = (url, title) => setPdfModal({ url, title });
   const closePdf = () => setPdfModal({ url: '', title: '' });
+
+  const filteredCerts = useMemo(() => {
+    const base = activeFilter === 'All' ? certificationsList : certificationsList.filter((c) => c.category === activeFilter);
+    // Always show featured first in the main grid
+    return [...base].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+  }, [certificationsList, activeFilter]);
+
+  // Show max 6 in main grid unless "show all" is toggled
+  const GRID_LIMIT = 6;
+  const visibleCerts = filteredCerts.slice(0, GRID_LIMIT);
+  const hasMore = filteredCerts.length > GRID_LIMIT;
 
   if (loading || data === undefined) {
     return <CmsSectionSkeleton id="certifications" />;
@@ -178,42 +366,74 @@ const Certifications = () => {
   return (
     <SectionWrapper id="certifications">
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold text-text mb-8 sm:mb-12 md:mb-16 font-display gradient-text">
+        <h2 className="flex flex-wrap items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold text-text mb-8 sm:mb-10 font-display gradient-text">
           <span className="text-accent font-mono text-lg sm:text-xl mr-0 sm:mr-2">06.</span>
           <span className="flex-grow min-w-0">Certifications &amp; Achievements</span>
           <span className="h-px bg-secondary flex-grow min-w-[60px] ml-0 sm:ml-4 opacity-50 w-full sm:w-auto order-3 sm:order-none"></span>
         </h2>
 
+        {/* Stats Bar */}
+        {certificationsList.length > 0 && <StatsBar certs={certificationsList} />}
+
+        {/* Filter Tabs */}
+        {certificationsList.length > 0 && (
+          <FilterTabs certs={certificationsList} active={activeFilter} onChange={setActiveFilter} />
+        )}
+
+        {/* Main Grid */}
         {certificationsList.length === 0 ? (
           <div className="rounded-2xl border border-secondary/50 bg-secondary/20 px-6 py-16 text-center text-text-muted">
             No certificates have been added yet. Open the admin panel to publish your first certificate.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {certificationsList.map((cert, index) => (
-              <CertificationCard
-                key={cert.title || index}
-                cert={cert}
-                index={index}
-                onViewPdf={openPdf}
-              />
-            ))}
-          </div>
-        )}
+          <>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeFilter}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              >
+                {visibleCerts.map((cert, index) => (
+                  <CertificationCard key={cert.title || index} cert={cert} index={index} onViewPdf={openPdf} />
+                ))}
+              </motion.div>
+            </AnimatePresence>
 
-        {certificationsList.length > 0 && (
-          <p className="text-center text-text-muted mt-8 text-sm font-mono opacity-50">
-            * Click on any certificate to verify its authenticity
-          </p>
+            {/* Footer actions */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
+              {hasMore && (
+                <p className="text-xs text-text-muted font-mono">
+                  Showing {visibleCerts.length} of {filteredCerts.length} in this category
+                </p>
+              )}
+              {certificationsList.length > GRID_LIMIT && (
+                <button
+                  onClick={() => setShowAll(true)}
+                  className="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-6 py-2.5 text-sm font-semibold text-accent hover:bg-accent/20 transition-all hover:shadow-[0_0_20px_rgb(var(--color-accent-rgb)/0.2)]"
+                >
+                  <ChevronDown size={16} />
+                  View All {certificationsList.length} Certifications
+                </button>
+              )}
+            </div>
+          </>
         )}
       </div>
 
-      {/* PDF Lightbox */}
+      {/* Modals */}
+      {showAll && (
+        <AllCertsModal
+          certs={certificationsList}
+          onClose={() => setShowAll(false)}
+          onViewPdf={(url, title) => { setShowAll(false); openPdf(url, title); }}
+        />
+      )}
       <PdfModal url={pdfModal.url} title={pdfModal.title} onClose={closePdf} />
     </SectionWrapper>
   );
 };
 
 export default Certifications;
-
-
