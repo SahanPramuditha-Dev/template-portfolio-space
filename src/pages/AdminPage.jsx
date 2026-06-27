@@ -1562,7 +1562,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
                   section={section}
                   docId={docId}
                   onUpload={
-                    field.type === 'image' || field.type === 'file'
+                    field.type === 'image' || field.type === 'file' || field.type === 'pdf'
                       ? () => uploadAsset(field.key, field.accept)
                       : undefined
                   }
