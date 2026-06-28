@@ -329,10 +329,12 @@ const Contact = () => {
                         className="w-full appearance-none bg-primary/50 border border-secondary rounded-lg px-4 py-3 pr-10 text-text outline-none focus:border-accent transition-colors cursor-pointer"
                       >
                         <option value="" className="bg-primary text-text">Budget range</option>
-                        <option value="Under $500" className="bg-primary text-text">Under $500</option>
-                        <option value="$500 - $1,500" className="bg-primary text-text">$500 - $1,500</option>
-                        <option value="$1,500 - $5,000" className="bg-primary text-text">$1,500 - $5,000</option>
-                        <option value="$5,000+" className="bg-primary text-text">$5,000+</option>
+                        <option value="Below LKR 5,000" className="bg-primary text-text">Below LKR 5,000</option>
+                        <option value="Below LKR 10,000" className="bg-primary text-text">Below LKR 10,000</option>
+                        <option value="Below LKR 15,000" className="bg-primary text-text">Below LKR 15,000</option>
+                        <option value="Below LKR 25,000" className="bg-primary text-text">Below LKR 25,000</option>
+                        <option value="Below LKR 50,000" className="bg-primary text-text">Below LKR 50,000</option>
+                        <option value="50,000+" className="bg-primary text-text">50,000+</option>
                         <option value="Not sure yet" className="bg-primary text-text">Not sure yet</option>
                       </select>
                       <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted">
