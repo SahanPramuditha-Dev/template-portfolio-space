@@ -34,7 +34,9 @@ const Footer = lazy(() => import('./components/Footer'));
 
 function App() {
   const isBot = isBotUserAgent();
-  const [visualIntroDone, setVisualIntroDone] = useState(() => isBot || shouldDisableHeavyVisuals());
+  const [visualIntroDone, setVisualIntroDone] = useState(
+    () => isBot || shouldDisableHeavyVisuals() || sessionStorage.getItem('intro_done') === '1'
+  );
   const [heavyVisualsEnabled, setHeavyVisualsEnabled] = useState(() => !shouldDisableHeavyVisuals());
   const { data: siteDoc } = useCmsDoc(CMS_DOCS.site);
 
@@ -100,7 +102,10 @@ function App() {
         {!isBot && !visualIntroDone && (
           <Preloader
             brand="Sahan - Space Portfolio"
-            onComplete={() => setVisualIntroDone(true)}
+            onComplete={() => {
+              sessionStorage.setItem('intro_done', '1');
+              setVisualIntroDone(true);
+            }}
           />
         )}
       </AnimatePresence>
