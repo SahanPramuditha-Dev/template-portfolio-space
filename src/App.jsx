@@ -29,6 +29,7 @@ const Certifications = lazy(() => import('./components/Certifications'));
 const Testimonials = lazy(() => import('./components/Testimonials'));
 const Blog = lazy(() => import('./components/Blog'));
 const Contact = lazy(() => import('./components/Contact'));
+const Resources = lazy(() => import('./components/Resources'));
 const Footer = lazy(() => import('./components/Footer'));
 
 function App() {
@@ -145,6 +146,9 @@ function App() {
               </Suspense>
               <Suspense fallback={<CmsSectionSkeleton id="blog" />}>
                 <Blog />
+              </Suspense>
+              <Suspense fallback={<CmsSectionSkeleton id="resources" />}>
+                <Resources />
               </Suspense>
               <Suspense fallback={<CmsSectionSkeleton id="contact" />}>
                 <Contact />
