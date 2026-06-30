@@ -349,9 +349,12 @@ const initialSkillGroup = {
 const initialResource = {
   title: '',
   type: 'Link',
-  url: '',
-  description: '',
   category: '',
+  description: '',
+  url: '',
+  fileUrl: '',
+  thumbnail: '',
+  featured: false,
 };
 
 const initialBlogPost = {
@@ -716,10 +719,15 @@ const skillFields = [
 
 const resourceFields = [
   { key: 'title', label: 'Title', type: 'text', group: 'resourceMeta' },
-  { key: 'type', label: 'Type', type: 'text', group: 'resourceMeta' },
-  { key: 'category', label: 'Category', type: 'text', group: 'resourceMeta' },
-  { key: 'url', label: 'URL', type: 'text', group: 'resourceLink' },
-  { key: 'description', label: 'Description', type: 'textarea', group: 'resourceLink' },
+  { key: 'type', label: 'Resource Type', type: 'select', group: 'resourceMeta',
+    options: ['Link', 'PDF', 'Document', 'Image', 'Video', 'Tool', 'Cheat Sheet', 'Template', 'Other'] },
+  { key: 'category', label: 'Category', type: 'text', placeholder: 'e.g. Design, DevOps, AI…', group: 'resourceMeta' },
+  { key: 'featured', label: 'Featured (pin to top)', type: 'checkbox', group: 'resourceMeta' },
+  { key: 'description', label: 'Description', type: 'textarea', group: 'resourceContent' },
+  { key: 'url', label: 'External URL (for links / references)', type: 'text', placeholder: 'https://…', group: 'resourceContent' },
+  { key: 'fileUrl', label: 'Upload File (PDF, Doc, Image, Video)', type: 'file', group: 'resourceMedia',
+    accept: 'application/pdf,.pdf,.doc,.docx,image/*,video/*' },
+  { key: 'thumbnail', label: 'Thumbnail / Preview Image', type: 'image', group: 'resourceMedia' },
 ];
 
 const blogFields = [
