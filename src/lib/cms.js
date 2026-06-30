@@ -96,11 +96,30 @@ export const uploadCmsAsset = async (file, folder = 'uploads') => {
     'video/mp4',
     'video/webm',
     'application/pdf',
+    // Document types
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'text/plain',
+    'text/csv',
   ];
-  const maxBytes = file.type === 'application/pdf' ? 10 * 1024 * 1024 : 8 * 1024 * 1024;
+  const isDocument = [
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'text/plain',
+    'text/csv',
+  ].includes(file.type);
+  const maxBytes = isDocument || file.type === 'application/pdf' ? 20 * 1024 * 1024 : 8 * 1024 * 1024;
 
   if (!allowedTypes.includes(file.type)) {
-    throw new Error('Unsupported file type.');
+    throw new Error(`Unsupported file type: ${file.type}. Allowed: images, video, PDF, Word, Excel, PowerPoint, text.`);
   }
 
   if (file.size > maxBytes) {

@@ -209,6 +209,7 @@ const ResourceCard = ({ item, index, onPreview }) => {
 /* ── Main Page ────────────────────────────────────────────── */
 const ResourcesPage = () => {
   const { data, loading } = useCmsDoc(CMS_DOCS.resources, { items: [] });
+  // Normalize: handle null doc (not yet created), missing items array, or array with objects
   const items = Array.isArray(data?.items) ? data.items : [];
 
   const [activeFilter, setActiveFilter] = useState('All');
@@ -231,7 +232,7 @@ const ResourcesPage = () => {
   const handlePreview = (item) => setPreview(item);
   const closePreview = () => setPreview(null);
 
-  if (loading || data === undefined) {
+  if (loading) {
     return (
       <>
         <SEO title="Resources | Sahan Pramuditha" description="Curated tools, PDFs, templates, and links." canonicalPath="/resources" />
