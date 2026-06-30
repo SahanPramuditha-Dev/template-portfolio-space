@@ -43,6 +43,8 @@ const NowAvailability = () => {
   const contactEmail = siteDoc?.contactEmail || siteDoc?.footerEmail || 'contact@sahanpramuditha.com';
   const bookingUrl = siteDoc?.bookingUrl || import.meta.env.VITE_BOOKING_URL || '';
   const resumeUrl = siteDoc?.resumeUrl || '/resume.pdf';
+  const baseLocation = siteDoc?.baseLocation || 'Colombo, Sri Lanka';
+  const currentFocus = siteDoc?.currentFocus || 'Building and scaling personal projects.';
 
   const panels = [
     {
@@ -129,7 +131,7 @@ const NowAvailability = () => {
                   <span className="text-text-muted uppercase tracking-wider text-[9px]">Base Location</span>
                   <span className="text-text font-bold mt-1 flex items-center gap-1 text-[11px]">
                     <MapPin size={12} className="text-accent" />
-                    Colombo, Sri Lanka
+                    {baseLocation}
                   </span>
                 </div>
 
@@ -142,7 +144,7 @@ const NowAvailability = () => {
                   <span className="text-text-muted uppercase tracking-wider text-[9px]">Current Focus</span>
                   <span className="text-text font-bold mt-1 flex items-center gap-1.5 text-[11px]">
                     <Globe size={12} className="text-accent" />
-                    Scaling Wybe.lk
+                    {currentFocus}
                   </span>
                 </div>
 

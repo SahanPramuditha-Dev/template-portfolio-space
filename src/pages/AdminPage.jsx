@@ -154,6 +154,8 @@ const initialSiteContent = {
   contactEmail: 'contact@sahanpramuditha.com',
   preferredContact: 'Email is best for detailed project discussions.',
   responseSla: 'Usually replies within 1-2 business days.',
+  baseLocation: 'Colombo, Sri Lanka',
+  currentFocus: 'Building and scaling personal projects.',
   bookingUrl: '',
   cvVersion: 'v1.0',
   cvUpdatedAt: new Date().toISOString().slice(0, 10),
@@ -1648,6 +1650,8 @@ const normalizeSiteDraft = (source = initialSiteContent) => ({
   contactEmail: source.contactEmail ?? initialSiteContent.contactEmail,
   preferredContact: source.preferredContact ?? initialSiteContent.preferredContact,
   responseSla: source.responseSla ?? initialSiteContent.responseSla,
+  baseLocation: source.baseLocation ?? initialSiteContent.baseLocation,
+  currentFocus: source.currentFocus ?? initialSiteContent.currentFocus,
   bookingUrl: source.bookingUrl ?? initialSiteContent.bookingUrl,
   cvVersion: source.cvVersion ?? initialSiteContent.cvVersion,
   cvUpdatedAt: source.cvUpdatedAt ?? initialSiteContent.cvUpdatedAt,
@@ -2317,7 +2321,7 @@ const SiteEditor = () => {
             description="How visitors reach you, response expectations, and résumé / CV links."
           >
             <div className="grid gap-4 md:grid-cols-2">
-              {['availability', 'contactEmail', 'preferredContact', 'responseSla', 'bookingUrl', 'cvVersion', 'cvUpdatedAt', 'githubUsername'].map(
+              {['availability', 'contactEmail', 'preferredContact', 'responseSla', 'baseLocation', 'currentFocus', 'bookingUrl', 'cvVersion', 'cvUpdatedAt', 'githubUsername'].map(
                 (key) => (
                   <FieldEditor
                     key={key}
