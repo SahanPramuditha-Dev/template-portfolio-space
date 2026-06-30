@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Link as LinkIcon, Tag, ExternalLink, FileText, Image as ImageIcon,
   Video, Wrench, BookOpen, Layout, File, Star, Search, Download, X,
+  User, Calendar,
 } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
@@ -153,6 +154,12 @@ const ResourceCard = ({ item, index, onPreview }) => {
                 </span>
               )}
             </div>
+            {/* Author */}
+            {item.author && (
+              <p className="flex items-center gap-1 text-[10px] font-mono text-text-muted mt-1.5">
+                <User size={9} className="shrink-0" /> {item.author}
+              </p>
+            )}
           </div>
         </div>
 
@@ -186,6 +193,12 @@ const ResourceCard = ({ item, index, onPreview }) => {
           )}
           {!effectiveUrl && (
             <span className="text-xs text-text-muted/50 font-mono italic">No file attached</span>
+          )}
+          {/* Date */}
+          {item.date && (
+            <span className="ml-auto flex items-center gap-1 text-[10px] font-mono text-text-muted/50">
+              <Calendar size={9} /> {item.date}
+            </span>
           )}
         </div>
       </div>
