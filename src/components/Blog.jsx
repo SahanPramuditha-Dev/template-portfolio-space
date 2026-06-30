@@ -43,66 +43,73 @@ const Blog = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[320px]">
-            {latestPosts.map((post, index) => (
-              <motion.article
-                key={post.title || index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.05 }}
-                className="glass-card p-6 rounded-xl border border-secondary/50 hover:border-accent/50 transition-all duration-300 group bg-secondary/20 hover:bg-secondary/30 h-full flex flex-col"
-              >
-                {post.featured && (
-                  <span className="inline-block px-2 py-1 bg-accent/20 text-accent text-xs font-mono rounded mb-3 w-fit">
-                    Featured
-                  </span>
-                )}
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="p-2 bg-accent/20 rounded-lg group-hover:bg-accent/30 transition-colors">
-                    <BookOpen className="text-accent" size={20} />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-text mb-2 group-hover:text-accent transition-colors">
-                      {post.title}
-                    </h3>
-                    <p className="text-text-muted text-sm leading-relaxed line-clamp-3">
-                      {post.excerpt}
-                    </p>
-                  </div>
-                </div>
+            {latestPosts.map((post, index) => {
+              // Prefer slug-based route, fall back to post.link
+              const href = post.slug
+                ? `/blog/${post.slug}`
+                : post.link || null;
 
-                <div className="flex items-center gap-4 mb-4 text-xs text-text-muted mt-auto">
-                  <div className="flex items-center gap-1">
-                    <Calendar size={12} />
-                    <span>{post.date || 'Draft'}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock size={12} />
-                    <span>{post.readTime || '5 min read'}</span>
-                  </div>
-                </div>
-
-                <div className="mb-4 flex flex-wrap gap-2">
-                  {splitCsv(post.tags).map((tag) => (
-                    <span key={tag} className="inline-flex items-center gap-1 rounded-full border border-secondary/40 bg-primary/50 px-3 py-1 text-xs text-text-muted">
-                      <Tag size={11} />
-                      {tag}
+              return (
+                <motion.a
+                  key={post.title || index}
+                  href={href || undefined}
+                  onClick={!href ? (e) => e.preventDefault() : undefined}
+                  target={!href || href.startsWith('/') ? '_self' : '_blank'}
+                  rel={!href || href.startsWith('/') ? undefined : 'noreferrer'}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                  className={`glass-card p-6 rounded-xl border border-secondary/50 hover:border-accent/50 transition-all duration-300 group bg-secondary/20 hover:bg-secondary/30 h-full flex flex-col${href ? ' cursor-pointer' : ''}`}
+                >
+                  {post.featured && (
+                    <span className="inline-block px-2 py-1 bg-accent/20 text-accent text-xs font-mono rounded mb-3 w-fit">
+                      Featured
                     </span>
-                  ))}
-                </div>
+                  )}
 
-                {post.link ? (
-                  <a
-                    href={post.link}
-                    target={post.link.startsWith('/') ? '_self' : '_blank'}
-                    rel={post.link.startsWith('/') ? undefined : 'noreferrer'}
-                    className="inline-flex items-center gap-2 text-accent hover:text-text transition-colors text-sm font-mono group/link"
-                  >
-                    Read Article
-                  </a>
-                ) : null}
-              </motion.article>
-            ))}
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="p-2 bg-accent/20 rounded-lg group-hover:bg-accent/30 transition-colors">
+                      <BookOpen className="text-accent" size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-text mb-2 group-hover:text-accent transition-colors">
+                        {post.title}
+                      </h3>
+                      <p className="text-text-muted text-sm leading-relaxed line-clamp-3">
+                        {post.excerpt}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 mb-4 text-xs text-text-muted mt-auto">
+                    <div className="flex items-center gap-1">
+                      <Calendar size={12} />
+                      <span>{post.date || 'Draft'}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock size={12} />
+                      <span>{post.readTime || '5 min read'}</span>
+                    </div>
+                  </div>
+
+                  <div className="mb-4 flex flex-wrap gap-2">
+                    {splitCsv(post.tags).map((tag) => (
+                      <span key={tag} className="inline-flex items-center gap-1 rounded-full border border-secondary/40 bg-primary/50 px-3 py-1 text-xs text-text-muted">
+                        <Tag size={11} />
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  {href && (
+                    <span className="inline-flex items-center gap-1.5 text-accent text-sm font-mono group-hover:gap-3 transition-all duration-200">
+                      Read Article →
+                    </span>
+                  )}
+                </motion.a>
+              );
+            })}
           </div>
         )}
       </div>
