@@ -731,7 +731,7 @@ const resourceFields = [
   { key: 'url', label: 'External URL (for links / references)', type: 'text', placeholder: 'https://…', group: 'resourceContent' },
   { key: 'fileUrl', label: 'Upload File (PDF, Doc, Image, Video)', type: 'file', group: 'resourceMedia',
     accept: 'application/pdf,.pdf,.doc,.docx,image/*,video/*' },
-  { key: 'thumbnail', label: 'Thumbnail / Preview Image', type: 'image', group: 'resourceMedia' },
+  { key: 'thumbnail', label: 'Thumbnail / Preview Image', type: 'image', group: 'resourceMedia', aspect: null },
 ];
 
 const blogFields = [
@@ -1312,7 +1312,8 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
       if (!file) return;
       if (file.type.startsWith('image/') && file.type !== 'image/gif') {
         try {
-          const aspect = key === 'thumbnail' || key === 'image' ? 16/9 : null;
+          const field = fields.find((f) => f.key === key);
+          const aspect = 'aspect' in (field || {}) ? field.aspect : (key === 'thumbnail' || key === 'image' ? 16/9 : null);
           file = await requestImageCrop(file, aspect);
         } catch {
           return;

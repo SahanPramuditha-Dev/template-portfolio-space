@@ -114,7 +114,9 @@ export default function ImageCropperModal({ imageFile, onCropComplete, onCancel,
             </div>
             <div>
               <h3 className="text-text font-bold text-lg leading-tight">Crop Image</h3>
-              <p className="text-text-muted text-xs mt-0.5">Adjust the framing before upload</p>
+              <p className="text-text-muted text-xs mt-0.5">
+                {aspect ? `Locked to ${Math.round(aspect * 100) / 100 === 16/9 ? '16:9' : Math.round(aspect * 100) / 100 === 1 ? '1:1' : 'fixed'} ratio` : 'Free crop — drag to any size'}
+              </p>
             </div>
           </div>
           <button 
