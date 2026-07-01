@@ -28,6 +28,9 @@ Interactive personal portfolio built with React, Vite, Tailwind CSS, Framer Moti
 
 - **Preloader Redesign** (v2): Nebula canvas background with stars, orbiting rocket/planet loader, holographic SVG progress ring, glitch text reveals, particle bursts, enhanced neon glows and space theme (preserves ~2s duration).
 - **Code Quality Clean-up** (v2.0.1): Fixed all 40 ESLint warnings and errors across React files (including conditional hook errors, impure ref state initializations, case declarations leaking variables, and unused imports) to establish a warning-free `npm run lint` pipeline.
+- **Resume Page Immersive Redesign** (v2.1): Integrated animated numerical counters (years of experience, project build counts, skills count), taller PDF preview frames with "Open" and "Download" options, interactive work experience timelines, grouped category skill chips, and a glowing Call-to-Action (CTA) section.
+- **Homepage Services Integration** (v2.2): Integrated scoped service cards on the homepage with custom icons, LKR pricing, typical timelines, turnaround slots, checklists, and dynamic "Select Base Template" options that prefill the Contact Form and auto-scroll to the contact section with automated URL query state cleanups.
+- **Testimonials & OSS Seed** (v2.3): Seeded professional client testimonials and dynamic open-source repository displays. All project card click hooks now direct users to SEO-friendly full-page case studies instead of modals.
 
 ## Tech Stack
 
