@@ -276,17 +276,13 @@ const Hero = () => {
             </motion.a>
             {resumeAvailable && (
               <motion.a
-                href={resumeUrl}
-                onClick={(e) => {
-                  trackDownload('resume');
-                  handleResumeDownload(e);
-                }}
+                href="/resume"
                 className="px-8 py-4 bg-accent text-primary font-bold rounded-lg hover:bg-accent/90 transition-colors inline-flex items-center gap-2 font-mono"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <FileText size={20} />
-                {downloading ? 'Downloading...' : (resumeUrl && resumeUrl.toLowerCase().endsWith('.docx') ? 'CV (DOCX)' : 'Resume')}
+                Resume
               </motion.a>
             )}
           </motion.div>
