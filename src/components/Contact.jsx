@@ -43,6 +43,14 @@ const Contact = () => {
           budget: budget || prev.budget,
           timeline: timeline || prev.timeline
         }));
+
+        // Smooth scroll to the contact form section after state is populated
+        setTimeout(() => {
+          const el = document.getElementById('contact');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 150);
       }
     };
 
