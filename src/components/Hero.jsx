@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Github, Linkedin, Facebook, Mail, FileText } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { trackSocialClick, trackDownload } from '../utils/analytics';
+import { trackSocialClick } from '../utils/analytics';
 import { shouldDisableHeavyVisuals } from '../utils/runtimeGuards';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { HeroCmsSkeleton } from './CmsShapeSkeleton';
@@ -82,7 +82,6 @@ const Hero = () => {
   const { data: projectsDoc, loading: projectsLoading } = useCmsDoc(CMS_DOCS.projects, { items: [] });
   const resumeUrl = siteDoc?.resumeUrl || (import.meta.env.VITE_RESUME_URL || '').trim() || DEFAULT_RESUME_URL;
   const resumeAvailable = Boolean(resumeUrl);
-  const [downloading, setDownloading] = useState(false);
   const [heavyVisualsEnabled, setHeavyVisualsEnabled] = useState(() => !shouldDisableHeavyVisuals());
   const heroWords = Array.isArray(siteDoc?.heroWordsJson) ? siteDoc.heroWordsJson : [];
   const socialLinks = Array.isArray(siteDoc?.socialLinksJson) ? siteDoc.socialLinksJson : [];
@@ -115,30 +114,6 @@ const Hero = () => {
     siteDoc === undefined ||
     projectsDoc === undefined;
 
-  const handleResumeDownload = async (e) => {
-    e.preventDefault();
-    if (!resumeUrl || downloading) return;
-    try {
-      setDownloading(true);
-      const res = await fetch(resumeUrl);
-      if (!res.ok) {
-        setDownloading(false);
-        return;
-      }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = (resumeUrl.split('/').pop()) || 'Sahan_Pramuditha_CV';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      setDownloading(false);
-    } catch {
-      setDownloading(false);
-    }
-  };
 
   if (cmsPending) {
     return <HeroCmsSkeleton />;

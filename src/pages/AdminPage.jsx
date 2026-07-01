@@ -761,15 +761,30 @@ const testimonialFields = [
 ];
 
 const serviceFields = [
-  { key: 'title', label: 'Title', type: 'text', group: 'serviceOffer' },
-  { key: 'status', label: 'Status', type: 'select', options: ['Draft', 'Published'], group: 'serviceOffer' },
-  { key: 'summary', label: 'Summary', type: 'textarea', group: 'serviceOffer' },
-  { key: 'featured', label: 'Featured', type: 'checkbox', group: 'serviceOffer' },
-  { key: 'scope', label: 'Scope', type: 'textarea', group: 'serviceDelivery' },
-  { key: 'timeline', label: 'Timeline', type: 'text', group: 'serviceDelivery' },
-  { key: 'deliverables', label: 'Deliverables', type: 'textarea', group: 'serviceDelivery' },
-  { key: 'cta', label: 'CTA', type: 'text', group: 'serviceDelivery' },
+  // ── Offer headline
+  { key: 'title',    label: 'Title',    type: 'text',   group: 'serviceOffer' },
+  { key: 'status',   label: 'Status',   type: 'select', options: ['Draft', 'Published'], group: 'serviceOffer' },
+  { key: 'category', label: 'Category', type: 'select',
+    options: ['Web Development', 'Mobile Development', 'UI/UX Design', 'API & Backend', 'Consulting', 'Data & Analytics', 'DevOps', 'Other'],
+    group: 'serviceOffer' },
+  { key: 'icon',     label: 'Icon name (Lucide)', type: 'text', placeholder: 'e.g. Globe, Code2, Layers…', group: 'serviceOffer' },
+  { key: 'summary',  label: 'Summary (card pitch)',  type: 'textarea', group: 'serviceOffer' },
+  { key: 'featured', label: 'Featured (show on homepage)', type: 'checkbox', group: 'serviceOffer' },
+  // ── Pricing & timing
+  { key: 'startingPrice', label: 'Starting Price',  type: 'text', placeholder: 'e.g. $500 / From $800', group: 'serviceDelivery' },
+  { key: 'timeline',      label: 'Typical Timeline', type: 'text', placeholder: 'e.g. 2–4 weeks',        group: 'serviceDelivery' },
+  { key: 'turnaround',    label: 'Turnaround',       type: 'text', placeholder: 'e.g. 48 hr first draft', group: 'serviceDelivery' },
+  // ── Scope & deliverables
+  { key: 'scope',        label: 'Scope description', type: 'textarea', group: 'serviceDelivery' },
+  { key: 'deliverables', label: 'Deliverables',       type: 'textarea', group: 'serviceDelivery' },
+  { key: 'features',     label: 'What\'s included',   type: 'list', placeholder: 'Add a feature or bullet point', group: 'serviceDelivery' },
+  // ── CTA & links
+  { key: 'cta',  label: 'CTA button label', type: 'text', placeholder: 'e.g. Book a call, Get a quote', group: 'serviceDelivery' },
+  { key: 'link', label: 'CTA link / Booking URL',   type: 'text', placeholder: 'https://cal.com/… or /#contact', group: 'serviceDelivery' },
+  // ── Tags for filtering
+  { key: 'tags', label: 'Tags', type: 'list', placeholder: 'e.g. React, TypeScript, Firebase', group: 'serviceDelivery' },
 ];
+
 
 const openSourceFields = [
   { key: 'name', label: 'Project Name', type: 'text', group: 'identity' },
