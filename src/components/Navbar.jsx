@@ -115,16 +115,18 @@ const Navbar = () => {
 
   const handleClick = (e, href) => {
     e.preventDefault();
-    const element = document.querySelector(href);
-    if (element) {
-      const offsetTop = element.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({
-        top: offsetTop,
-        behavior: 'smooth'
-      });
-      setIsOpen(false);
-      setMoreOpen(false);
+    setIsOpen(false);
+    setMoreOpen(false);
+
+    if (href.startsWith('#')) {
+      // Anchor link — smooth scroll to section
+      const element = document.querySelector(href);
+      if (element) {
+        const offsetTop = element.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+      }
     } else if (href.startsWith('/')) {
+      // Page link — navigate
       window.location.href = href;
     }
   };
