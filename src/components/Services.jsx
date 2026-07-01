@@ -237,19 +237,26 @@ const Services = () => {
           <p className="text-text-muted text-sm max-w-xl">
             What I build and how I can help. Every service comes with a clear scope, timeline, and LKR pricing.
           </p>
-          {published.length > 3 && (
-            <a href="/services" className="shrink-0 inline-flex items-center gap-1.5 text-sm font-mono text-accent hover:underline">
-              View all services <ArrowRight size={13} />
-            </a>
-          )}
         </div>
 
         {/* Grid */}
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {published.slice(0, 6).map((service, i) => (
+          {published.slice(0, 3).map((service, i) => (
             <ServiceCard key={service.title || i} service={service} index={i} bookingUrl={bookingUrl} />
           ))}
         </div>
+
+        {/* Prominent View All Services Button */}
+        {published.length > 3 && (
+          <div className="mt-8 flex justify-center">
+            <a
+              href="/services"
+              className="inline-flex items-center gap-2 rounded-xl border border-accent/20 bg-accent/5 px-6 py-3.5 text-sm font-mono text-accent hover:bg-accent/10 transition-colors"
+            >
+              View all services ({published.length}) <ArrowRight size={15} />
+            </a>
+          </div>
+        )}
 
         {/* Bottom CTA bar */}
         <motion.div
