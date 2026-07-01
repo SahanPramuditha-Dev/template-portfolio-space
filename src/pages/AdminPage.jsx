@@ -767,23 +767,44 @@ const serviceFields = [
   { key: 'category', label: 'Category', type: 'select',
     options: ['Web Development', 'Mobile Development', 'UI/UX Design', 'API & Backend', 'Consulting', 'Data & Analytics', 'DevOps', 'Other'],
     group: 'serviceOffer' },
-  { key: 'icon',     label: 'Icon name (Lucide)', type: 'text', placeholder: 'e.g. Globe, Code2, Layers…', group: 'serviceOffer' },
+  { key: 'icon',     label: 'Icon name (Lucide)', type: 'text', placeholder: 'e.g. Globe, Code2, Layers, Cpu, BarChart2…', group: 'serviceOffer' },
   { key: 'summary',  label: 'Summary (card pitch)',  type: 'textarea', group: 'serviceOffer' },
   { key: 'featured', label: 'Featured (show on homepage)', type: 'checkbox', group: 'serviceOffer' },
-  // ── Pricing & timing
-  { key: 'startingPrice', label: 'Starting Price',  type: 'text', placeholder: 'e.g. $500 / From $800', group: 'serviceDelivery' },
-  { key: 'timeline',      label: 'Typical Timeline', type: 'text', placeholder: 'e.g. 2–4 weeks',        group: 'serviceDelivery' },
-  { key: 'turnaround',    label: 'Turnaround',       type: 'text', placeholder: 'e.g. 48 hr first draft', group: 'serviceDelivery' },
+  { key: 'availability', label: 'Availability', type: 'select',
+    options: ['Available now', 'Limited availability', 'Booking soon', 'Waitlist only', 'Unavailable'],
+    group: 'serviceOffer' },
+  { key: 'idealFor', label: 'Ideal for (target clients)', type: 'text',
+    placeholder: 'e.g. Startups, E-commerce, SMEs, Agencies', group: 'serviceOffer' },
+  // ── Pricing & timing (LKR)
+  { key: 'startingPrice', label: 'Starting Price (LKR)', type: 'text',
+    placeholder: 'e.g. From Rs. 15,000 / Rs. 8,000–25,000', group: 'serviceDelivery' },
+  { key: 'timeline',   label: 'Typical Timeline', type: 'text', placeholder: 'e.g. 2–4 weeks',         group: 'serviceDelivery' },
+  { key: 'turnaround', label: 'Turnaround',        type: 'text', placeholder: 'e.g. 48 hr first draft', group: 'serviceDelivery' },
   // ── Scope & deliverables
   { key: 'scope',        label: 'Scope description', type: 'textarea', group: 'serviceDelivery' },
   { key: 'deliverables', label: 'Deliverables',       type: 'textarea', group: 'serviceDelivery' },
-  { key: 'features',     label: 'What\'s included',   type: 'list', placeholder: 'Add a feature or bullet point', group: 'serviceDelivery' },
+  { key: 'features',     label: "What's included (checklist)", type: 'list',
+    placeholder: 'e.g. Responsive design, Source code delivery, 2 revisions…', group: 'serviceDelivery' },
+  // ── Process steps
+  {
+    key: 'processSteps',
+    label: 'Process Steps (how you work)',
+    type: 'object-list',
+    group: 'serviceProcess',
+    createItem: () => ({ step: '', description: '' }),
+    fields: [
+      { key: 'step',        label: 'Step name',        type: 'text', placeholder: 'e.g. Discovery' },
+      { key: 'description', label: 'Short description', type: 'text', placeholder: 'e.g. We discuss goals and scope' },
+    ],
+  },
   // ── CTA & links
-  { key: 'cta',  label: 'CTA button label', type: 'text', placeholder: 'e.g. Book a call, Get a quote', group: 'serviceDelivery' },
-  { key: 'link', label: 'CTA link / Booking URL',   type: 'text', placeholder: 'https://cal.com/… or /#contact', group: 'serviceDelivery' },
-  // ── Tags for filtering
-  { key: 'tags', label: 'Tags', type: 'list', placeholder: 'e.g. React, TypeScript, Firebase', group: 'serviceDelivery' },
+  { key: 'cta',            label: 'CTA button label',        type: 'text', placeholder: "e.g. Let's build this, Get a quote", group: 'serviceDelivery' },
+  { key: 'link',           label: 'CTA link / Booking URL',  type: 'text', placeholder: 'https://cal.com/… or /#contact',      group: 'serviceDelivery' },
+  { key: 'relatedProject', label: 'Related project title',   type: 'text', placeholder: 'e.g. StudyOS — links to /projects',    group: 'serviceDelivery' },
+  // ── Tags
+  { key: 'tags', label: 'Tech stack tags', type: 'list', placeholder: 'e.g. React, Firebase, TypeScript', group: 'serviceDelivery' },
 ];
+
 
 
 const openSourceFields = [
@@ -821,8 +842,9 @@ const COLLECTION_FIELD_GROUPS = {
   resourceLink: { label: 'URL & description', hint: 'Link target and optional blurb.' },
   author: { label: 'Author', hint: 'Who the testimonial is from.' },
   testimonialBody: { label: 'Quote & details', hint: 'Quote text, rating, and references.' },
-  serviceOffer: { label: 'Offer headline', hint: 'Title, pitch, and featured flag.' },
-  serviceDelivery: { label: 'Scope & delivery', hint: 'What you deliver and how to engage.' },
+  serviceOffer:    { label: 'Offer headline',     hint: 'Title, category, icon, pitch, and availability.' },
+  serviceDelivery: { label: 'Scope & delivery',   hint: 'Pricing (LKR), timeline, features, CTA, and tech tags.' },
+  serviceProcess:  { label: 'Process steps',      hint: 'Numbered workflow shown on the service card.' },
   role: { label: 'Role & place', hint: 'Title, organization, location, and timeframe.' },
   detail: { label: 'Story & skills', hint: 'Description and skill tags.' },
   general: { label: 'Fields', hint: '' },
