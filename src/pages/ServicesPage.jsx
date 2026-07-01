@@ -220,6 +220,53 @@ const ServiceFullCard = ({ service, index, bookingUrl }) => {
                 See example: {service.relatedProject}
               </a>
             )}
+
+            {/* Templates (Optional) */}
+            {Array.isArray(service.templates) && service.templates.length > 0 && (
+              <div className="border-t border-white/6 pt-4 mt-3">
+                <p className={`text-[10px] font-mono font-semibold uppercase tracking-widest ${colors.accent} mb-3`}>
+                  Available Base Templates
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {service.templates.map((tpl, ti) => {
+                    const contactLink = `/#contact?projectType=${encodeURIComponent(service.category || 'Website')}&message=${encodeURIComponent(`I would like to start a project based on the template: ${tpl.name}`)}`;
+                    return (
+                      <div key={ti} className="rounded-2xl border border-white/8 bg-primary/30 p-4 flex flex-col gap-3 hover:border-white/15 transition-all">
+                        <div>
+                          <div className="flex justify-between items-start gap-2 mb-1">
+                            <h4 className="text-sm font-bold text-text">{tpl.name}</h4>
+                            {tpl.vibe && (
+                              <span className={`rounded px-1.5 py-0.5 text-[9px] font-mono ${colors.border} ${colors.bg} ${colors.accent}`}>
+                                {tpl.vibe}
+                              </span>
+                            )}
+                          </div>
+                          {tpl.description && <p className="text-xs text-text-muted leading-relaxed">{tpl.description}</p>}
+                        </div>
+                        <div className="flex gap-2.5 mt-auto">
+                          {tpl.demoUrl && (
+                            <a
+                              href={tpl.demoUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 text-center py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-text-muted hover:text-text hover:bg-white/10 transition-colors"
+                            >
+                              Live Demo
+                            </a>
+                          )}
+                          <a
+                            href={contactLink}
+                            className={`flex-1 text-center py-2 rounded-xl border ${colors.border} ${colors.bg} text-xs font-bold ${colors.accent} hover:opacity-80 transition-opacity`}
+                          >
+                            Select Base
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

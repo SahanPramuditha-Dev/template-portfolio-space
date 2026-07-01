@@ -194,6 +194,49 @@ const ServiceCard = ({ service, index, bookingUrl }) => {
           </a>
         )}
 
+        {/* Templates (Optional) */}
+        {Array.isArray(service.templates) && service.templates.length > 0 && (
+          <div className="mt-2 border-t border-white/6 pt-3">
+            <p className={`text-[10px] font-mono font-semibold uppercase tracking-wider ${colors.accent} mb-2`}>
+              Available Templates ({service.templates.length})
+            </p>
+            <div className="space-y-2">
+              {service.templates.map((tpl, ti) => {
+                const contactLink = `/#contact?projectType=${encodeURIComponent(service.category || 'Website')}&message=${encodeURIComponent(`I would like to start a project based on the template: ${tpl.name}`)}`;
+                return (
+                  <div key={ti} className="rounded-xl border border-white/6 bg-primary/45 p-2.5 flex flex-col gap-2 hover:border-white/12 transition-colors">
+                    <div className="flex justify-between items-start gap-2">
+                      <div>
+                        <p className="text-xs font-semibold text-text">{tpl.name}</p>
+                        {tpl.vibe && <p className="text-[10px] text-accent/80 font-mono mt-0.5">{tpl.vibe}</p>}
+                      </div>
+                    </div>
+                    {tpl.description && <p className="text-[11px] text-text-muted leading-relaxed">{tpl.description}</p>}
+                    <div className="flex gap-2">
+                      {tpl.demoUrl && (
+                        <a
+                          href={tpl.demoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 text-center py-1 rounded bg-white/5 border border-white/8 text-[10px] font-mono text-text-muted hover:text-text hover:bg-white/10 transition-colors"
+                        >
+                          Live Demo
+                        </a>
+                      )}
+                      <a
+                        href={contactLink}
+                        className={`flex-1 text-center py-1 rounded border ${colors.border} ${colors.bg} text-[10px] font-mono ${colors.accent} hover:opacity-90 transition-opacity`}
+                      >
+                        Select
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* CTA */}
         <a
           href={ctaHref}

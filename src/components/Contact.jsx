@@ -23,6 +23,34 @@ const Contact = () => {
   const prefersReducedMotion = useReducedMotion();
   const { data: siteDoc, loading } = useCmsDoc(CMS_DOCS.site, null);
 
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handlePrefill = () => {
+      const params = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
+      
+      const projectType = params.get('projectType') || hashParams.get('projectType') || '';
+      const message = params.get('message') || hashParams.get('message') || '';
+      const budget = params.get('budget') || hashParams.get('budget') || '';
+      const timeline = params.get('timeline') || hashParams.get('timeline') || '';
+
+      if (projectType || message || budget || timeline) {
+        setFormData(prev => ({
+          ...prev,
+          projectType: projectType || prev.projectType,
+          message: message ? decodeURIComponent(message) : prev.message,
+          budget: budget || prev.budget,
+          timeline: timeline || prev.timeline
+        }));
+      }
+    };
+
+    handlePrefill();
+    window.addEventListener('hashchange', handlePrefill);
+    return () => window.removeEventListener('hashchange', handlePrefill);
+  }, []);
+
   if (loading || siteDoc === undefined) {
     return <CmsSectionSkeleton id="contact" />;
   }

@@ -136,7 +136,27 @@ const servicesSeed = {
       ],
       tags: ['React', 'Framer Motion', 'TailwindCSS', 'Firebase'],
       cta: 'Build my portfolio',
-      link: '/#contact'
+      link: '/#contact',
+      templates: [
+        {
+          name: 'Classic Minimalist',
+          vibe: 'Clean, Typographic',
+          description: 'High-contrast typography, large spacing, and clean layouts. Perfect for writers, product managers, and minimal designers.',
+          demoUrl: 'https://minimalist-portfolio-template.vercel.app'
+        },
+        {
+          name: 'Tech & Console',
+          vibe: 'Dark, Dev-Focused',
+          description: 'Terminal aesthetics, active code snippets, and keyboard shortcut integrations. Ideal for backend engineers and system architects.',
+          demoUrl: 'https://dev-console-portfolio.vercel.app'
+        },
+        {
+          name: 'Stardust Immersive',
+          vibe: 'Interactive 3D Particles',
+          description: 'Particle systems, glassmorphism card blends, and animated mouse tracking fields. Best for creative front-end developers.',
+          demoUrl: 'https://stardust-immersive-portfolio.vercel.app'
+        }
+      ]
     }
   ]
 };

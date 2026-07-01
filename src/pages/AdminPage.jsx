@@ -797,6 +797,21 @@ const serviceFields = [
       { key: 'description', label: 'Short description', type: 'text', placeholder: 'e.g. We discuss goals and scope' },
     ],
   },
+  // ── Service Templates (optional)
+  {
+    key: 'templates',
+    label: 'Service Templates (optional)',
+    type: 'object-list',
+    group: 'serviceProcess',
+    createItem: () => ({ name: '', description: '', demoUrl: '', imageUrl: '', vibe: '' }),
+    fields: [
+      { key: 'name',        label: 'Template Name',     type: 'text', placeholder: 'e.g. Minimal & Clean' },
+      { key: 'vibe',        label: 'Style / Vibe',      type: 'text', placeholder: 'e.g. Clean typography, light mode' },
+      { key: 'description', label: 'Brief description', type: 'text', placeholder: 'e.g. Best for writers and minimal engineers' },
+      { key: 'demoUrl',     label: 'Live Demo URL',     type: 'text', placeholder: 'https://demo-minimal.me' },
+      { key: 'imageUrl',    label: 'Preview Image URL', type: 'image' },
+    ],
+  },
   // ── CTA & links
   { key: 'cta',            label: 'CTA button label',        type: 'text', placeholder: "e.g. Let's build this, Get a quote", group: 'serviceDelivery' },
   { key: 'link',           label: 'CTA link / Booking URL',  type: 'text', placeholder: 'https://cal.com/… or /#contact',      group: 'serviceDelivery' },
