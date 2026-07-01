@@ -16,7 +16,6 @@ import {
   Layers,
   Target,
 } from 'lucide-react';
-import ProjectModal from './ProjectModal';
 import SectionWrapper from './SectionWrapper';
 import { trackProjectView } from '../utils/analytics';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
@@ -33,7 +32,10 @@ import {
 
 const isAnimatedAsset = (src) => /\.(gif|mp4|webm)(\?|#|$)/i.test(src);
 
-const ProjectCard = ({ project, index, onOpenModal, compact = false }) => {
+import { useNavigate } from 'react-router-dom';
+
+const ProjectCard = ({ project, index, compact = false }) => {
+  const navigate = useNavigate();
   const media = getMediaUrlStrings(project);
   const [mediaHover, setMediaHover] = useState(false);
   const coverIndex = media.length > 1 && mediaHover ? 1 : 0;
@@ -47,21 +49,21 @@ const ProjectCard = ({ project, index, onOpenModal, compact = false }) => {
   const statusLabel = getProjectStatusLabel(project);
   const projectSlug = slugify(project.slug || project.id || project.title || project.missionCode);
 
-  const openModal = () => {
+  const navigateToProject = () => {
     trackProjectView(project.title);
-    onOpenModal(project);
+    navigate(`/projects/${projectSlug}`);
   };
 
   const handleCardClick = (e) => {
     if (e.target.closest('a[href]')) return;
-    openModal();
+    navigateToProject();
   };
 
   const handleCardKeyDown = (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     if (e.target !== e.currentTarget) return;
     e.preventDefault();
-    openModal();
+    navigateToProject();
   };
 
   return (
@@ -322,7 +324,6 @@ const ProjectsSkeleton = () => (
 
 const Projects = () => {
   const { data: projectsDoc, loading } = useCmsDoc(CMS_DOCS.projects, { items: [] });
-  const [selectedProject, setSelectedProject] = useState(null);
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedTech, setSelectedTech] = useState([]);
   const [onlyLive, setOnlyLive] = useState(false);
@@ -614,7 +615,6 @@ const Projects = () => {
                       <ProjectCard
                         project={project}
                         index={index}
-                        onOpenModal={setSelectedProject}
                         compact
                       />
                     </div>
@@ -657,7 +657,7 @@ const Projects = () => {
                               document.getElementById(`project-${p.id || p.title}`)?.scrollIntoView({
                                 behavior: 'smooth',
                                 block: 'start',
-                              })
+                                })
                             }
                             className="shrink-0 rounded-full border border-secondary/50 bg-secondary/30 px-3 py-1.5 text-[0.7rem] font-mono text-text-muted hover:border-accent/40 hover:text-text"
                           >
@@ -696,7 +696,6 @@ const Projects = () => {
                               <ProjectCard
                                 project={project}
                                 index={index}
-                                onOpenModal={setSelectedProject}
                               />
                             </div>
                           ))}
@@ -710,13 +709,6 @@ const Projects = () => {
           </>
         )}
       </div>
-
-      <ProjectModal
-        key={selectedProject?.id || 'project-modal-closed'}
-        project={selectedProject}
-        isOpen={!!selectedProject}
-        onClose={() => setSelectedProject(null)}
-      />
     </SectionWrapper>
   );
 };
