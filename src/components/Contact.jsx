@@ -44,6 +44,14 @@ const Contact = () => {
           timeline: timeline || prev.timeline
         }));
 
+        // Clean the URL bar immediately so it looks professional (keeps hash #contact)
+        try {
+          const cleanUrl = window.location.origin + window.location.pathname + '#contact';
+          window.history.replaceState(null, '', cleanUrl);
+        } catch (e) {
+          console.warn('Could not clean URL parameters:', e);
+        }
+
         // Smooth scroll to the contact form section after state is populated
         setTimeout(() => {
           const el = document.getElementById('contact');
