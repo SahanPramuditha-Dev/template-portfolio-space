@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ImageIcon, Trash2, Copy, Loader2, UploadCloud, FileText as FileIcon } from 'lucide-react';
+import { ImageIcon, Trash2, Copy, Loader2, UploadCloud, FileText as FileIcon, Eye, ExternalLink } from 'lucide-react';
 import { listCmsAssets, deleteCmsAsset, uploadCmsAsset } from '../lib/cms';
 
 const MediaLibrary = () => {
@@ -87,7 +87,11 @@ const MediaLibrary = () => {
             const isDoc = /\.(docx|doc|xls|xlsx|ppt|pptx|txt|csv)$/i.test(asset.name);
 
             return (
-              <div key={asset.fullPath} className="group relative rounded-xl overflow-hidden border border-white/10 bg-secondary/30 aspect-square flex flex-col items-center justify-center p-4">
+              <div 
+                key={asset.fullPath} 
+                onClick={() => window.open(asset.url, '_blank')}
+                className="group relative rounded-xl overflow-hidden border border-white/10 bg-secondary/30 aspect-square flex flex-col items-center justify-center p-4 cursor-pointer hover:border-accent/40 transition-colors"
+              >
                 {isPdf || isDoc ? (
                   // Document card preview
                   <div className="w-full h-full flex flex-col items-center justify-center bg-black/40 rounded-lg p-3 text-center border border-white/5">
@@ -101,12 +105,24 @@ const MediaLibrary = () => {
                   </div>
                 )}
                 
-                <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3 backdrop-blur-sm p-4">
+                <div 
+                  className="absolute inset-0 bg-primary/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3 backdrop-blur-sm p-4"
+                  onClick={(e) => e.stopPropagation()} // Prevent double open when copying/deleting
+                >
                   <p className="text-[10px] font-mono text-text text-center break-all line-clamp-2 w-full">{asset.name}</p>
                   <div className="flex gap-2">
+                    <a 
+                      href={asset.url} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="p-2 bg-accent/25 text-accent rounded-lg hover:bg-accent/40 transition-colors"
+                      title="View / Open File"
+                    >
+                      <Eye size={16} />
+                    </a>
                     <button 
                       onClick={() => copyToClipboard(asset.url)}
-                      className="p-2 bg-accent/20 text-accent rounded-lg hover:bg-accent/30 transition-colors"
+                      className="p-2 bg-white/10 text-text rounded-lg hover:bg-white/20 transition-colors"
                       title="Copy URL"
                     >
                       <Copy size={16} />
