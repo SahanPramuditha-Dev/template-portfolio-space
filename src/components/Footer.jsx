@@ -159,7 +159,7 @@ const PageViewsCounter = () => {
     getCount();
   }, []);
 
-  if (views === null || views === 0) return null;
+  if (views === null) return null;
 
   return (
     <span className="inline-flex items-center gap-1 bg-accent/10 border border-accent/20 px-2 py-0.5 rounded text-[11px] font-mono text-accent">
