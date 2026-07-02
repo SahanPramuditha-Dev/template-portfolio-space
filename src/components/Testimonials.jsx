@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Quote, Star } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
@@ -23,7 +23,7 @@ const Testimonials = () => {
     return [...testimonials, ...testimonials, ...testimonials];
   }, [testimonials]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const el = scrollRef.current;
     if (!el || items.length === 0) return;
 
