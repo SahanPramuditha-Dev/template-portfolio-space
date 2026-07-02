@@ -2996,7 +2996,7 @@ const AnalyticsDashboard = () => {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display font-bold text-text text-sm uppercase tracking-wider text-text-muted flex items-center gap-2">
-                <Globe size={14} className="text-emerald-400 animate-spin [animation-duration:10s]" />
+                <Globe size={14} className="text-emerald-400 animate-pulse" />
                 Geographic Activity Radar
               </h3>
               <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/5 px-2 py-0.5 rounded border border-emerald-500/10">
@@ -3004,94 +3004,24 @@ const AnalyticsDashboard = () => {
               </span>
             </div>
 
-            {/* Micro World Map Canvas - Minimalist vector representation highlighting regions */}
+            {/* High-fidelity Google GeoChart Canvas Wrapper */}
             <div className="w-full h-44 bg-primary/25 border border-white/5 rounded-2xl relative overflow-hidden flex items-center justify-center p-2">
-              {/* Radar Sweeper visual effect */}
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.05)_0%,transparent_70%)] animate-pulse" />
-              <div className="absolute top-0 bottom-0 left-0 w-[2px] bg-emerald-400/20 shadow-[0_0_10px_rgba(52,211,153,0.3)] animate-[scan_3s_ease-in-out_infinite]" />
+              <div id="geochart_canvas" className="w-full h-full select-none" />
               
-              {/* Interactive SVG World Map Paths */}
-              <svg viewBox="0 0 1000 500" className="w-full h-full opacity-80 transition-all select-none">
-                {/* World outline paths (simplified) */}
-                {/* North America */}
-                <path 
-                  d="M100,100 L180,90 L220,130 L250,150 L280,180 L200,240 L160,280 L140,240 L120,200 L90,150 Z" 
-                  className={`transition-all duration-300 ${
-                    stats.topCountries.some(c => c.name.includes('United States') || c.name.includes('Canada') || c.name.includes('America'))
-                      ? 'fill-emerald-400/30 stroke-emerald-400/60 shadow-lg'
-                      : 'fill-zinc-700/20 stroke-white/5 hover:fill-zinc-700/40'
-                  }`}
-                  strokeWidth="2"
-                />
-                {/* South America */}
-                <path 
-                  d="M200,250 L250,280 L280,310 L270,360 L240,440 L210,400 L190,320 Z" 
-                  className={`transition-all duration-300 ${
-                    stats.topCountries.some(c => c.name.includes('Brazil') || c.name.includes('Argentina') || c.name.includes('Colombia'))
-                      ? 'fill-emerald-400/30 stroke-emerald-400/60 shadow-lg'
-                      : 'fill-zinc-700/20 stroke-white/5 hover:fill-zinc-700/40'
-                  }`}
-                  strokeWidth="2"
-                />
-                {/* Africa */}
-                <path 
-                  d="M420,220 L480,210 L540,240 L550,290 L520,380 L480,410 L440,320 L410,260 Z" 
-                  className={`transition-all duration-300 ${
-                    stats.topCountries.some(c => c.name.includes('Africa') || c.name.includes('Egypt') || c.name.includes('Nigeria'))
-                      ? 'fill-emerald-400/30 stroke-emerald-400/60 shadow-lg'
-                      : 'fill-zinc-700/20 stroke-white/5 hover:fill-zinc-700/40'
-                  }`}
-                  strokeWidth="2"
-                />
-                {/* Europe */}
-                <path 
-                  d="M440,110 L500,100 L530,130 L520,180 L480,200 L440,180 L430,130 Z" 
-                  className={`transition-all duration-300 ${
-                    stats.topCountries.some(c => c.name.includes('Germany') || c.name.includes('United Kingdom') || c.name.includes('France') || c.name.includes('Italy'))
-                      ? 'fill-emerald-400/30 stroke-emerald-400/60 shadow-lg'
-                      : 'fill-zinc-700/20 stroke-white/5 hover:fill-zinc-700/40'
-                  }`}
-                  strokeWidth="2"
-                />
-                {/* Asia / India / Sri Lanka */}
-                <path 
-                  d="M510,120 L620,100 L740,120 L780,220 L720,290 L640,290 L580,220 L520,190 Z" 
-                  className={`transition-all duration-300 ${
-                    stats.topCountries.some(c => c.name.includes('Sri Lanka') || c.name.includes('India') || c.name.includes('Singapore') || c.name.includes('Bangladesh'))
-                      ? 'fill-emerald-400/40 stroke-emerald-400/80 shadow-lg'
-                      : 'fill-zinc-700/20 stroke-white/5 hover:fill-zinc-700/40'
-                  }`}
-                  strokeWidth="2"
-                />
-                {/* Australia */}
-                <path 
-                  d="M750,330 L810,340 L800,390 L740,370 Z" 
-                  className={`transition-all duration-300 ${
-                    stats.topCountries.some(c => c.name.includes('Australia') || c.name.includes('New Zealand'))
-                      ? 'fill-emerald-400/30 stroke-emerald-400/60 shadow-lg'
-                      : 'fill-zinc-700/20 stroke-white/5 hover:fill-zinc-700/40'
-                  }`}
-                  strokeWidth="2"
-                />
-              </svg>
-              
-              {/* Highlight active indicator ping */}
-              <div className="absolute top-[48%] left-[64%] flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
-              </div>
+              {/* Load geochart library scripts dynamically */}
+              <GeoChartLoader activeCountries={stats.topCountries} />
             </div>
           </div>
 
           {/* Simple Legend */}
           <div className="flex gap-4 mt-3 text-[10px] font-mono text-text-muted justify-between">
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded bg-emerald-500/30 border border-emerald-400/60" />
-              Uplink Region Detected
+              <span className="w-2 h-2 rounded bg-emerald-500" />
+              Active Uplink Sector
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded bg-zinc-700/20 border border-white/5" />
-              Quiet Sector
+              <span className="w-2 h-2 rounded bg-zinc-800 border border-white/5" />
+              No Telemetry Reported
             </span>
           </div>
         </div>
@@ -3330,6 +3260,82 @@ const AnalyticsDashboard = () => {
       )}
     </div>
   );
+};
+
+const GeoChartLoader = ({ activeCountries = [] }) => {
+  useEffect(() => {
+    let active = true;
+
+    const drawChart = () => {
+      if (!active || !window.google || !window.google.visualization) return;
+
+      const container = document.getElementById('geochart_canvas');
+      if (!container) return;
+
+      const dataArray = [['Country', 'Active Sessions']];
+      activeCountries.forEach((c) => {
+        // Exclude Unknown markers from coloring
+        if (c.name !== 'Unknown') {
+          dataArray.push([c.name, c.count]);
+        }
+      });
+
+      // Default to empty marker if no sessions
+      if (dataArray.length === 1) {
+        dataArray.push(['US', 0]);
+      }
+
+      const data = window.google.visualization.arrayToDataTable(dataArray);
+
+      const options = {
+        colorAxis: { colors: ['#0f172a', '#10b981', '#34d399'] }, // Dark bg transition to emerald theme accent color
+        backgroundColor: 'transparent',
+        datalessRegionColor: '#1e293b', // Matches dark secondary background
+        defaultColor: '#1e293b',
+        keepAspectRatio: true,
+        tooltip: { textStyle: { color: '#f8fafc', fontName: 'monospace', fontSize: 11 }, trigger: 'focus' },
+      };
+
+      const chart = new window.google.visualization.GeoChart(container);
+      chart.draw(data, options);
+    };
+
+    const loadGoogleCharts = () => {
+      if (window.google && window.google.charts) {
+        window.google.charts.load('current', {
+          packages: ['geochart'],
+          mapsApiKey: '', // GA Geocharts do not require an active API key for basic loads
+        });
+        window.google.charts.setOnLoadCallback(drawChart);
+      }
+    };
+
+    // Load Google Charts JS Loader if not already in document
+    if (!document.getElementById('google-charts-script')) {
+      const script = document.createElement('script');
+      script.id = 'google-charts-script';
+      script.src = 'https://www.gstatic.com/charts/loader.js';
+      script.onload = loadGoogleCharts;
+      document.body.appendChild(script);
+    } else {
+      loadGoogleCharts();
+    }
+
+    // Handle window resize dynamically to adjust vector map scale
+    const handleResize = () => {
+      if (window.google && window.google.visualization) {
+        drawChart();
+      }
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      active = false;
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [activeCountries]);
+
+  return null;
 };
 
 const AdminPage = () => {
