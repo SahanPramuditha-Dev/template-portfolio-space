@@ -162,7 +162,7 @@ const ProjectPage = () => {
       <PageShell
         backHref="/#projects"
       >
-        <article className="relative z-10 mx-auto w-full max-w-5xl space-y-8 pb-12">
+        <article className="relative z-10 mx-auto w-full max-w-5xl space-y-6 pb-12">
           {/* Hero Section */}
           <div className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-black/40 shadow-2xl h-[25vh] min-h-[220px] md:h-[35vh] md:min-h-[300px]">
             <motion.div style={{ y: heroY }} className="absolute inset-0 w-full h-full">
@@ -218,8 +218,8 @@ const ProjectPage = () => {
           </div>
 
           {/* Header & Quick Facts */}
-          <div className="mx-auto max-w-5xl space-y-10 px-4 sm:px-6">
-            <div className="text-center space-y-4">
+          <div className="mx-auto max-w-5xl space-y-6 px-4 sm:px-6">
+            <div className="text-center space-y-3">
               <h1 className="text-4xl font-extrabold tracking-tight text-text md:text-5xl lg:text-6xl">
                 {project.title}
               </h1>
@@ -231,7 +231,7 @@ const ProjectPage = () => {
               )}
             </div>
 
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap justify-center gap-2">
               {project.year && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-secondary/40 bg-primary/40 px-4 py-2 text-xs text-text-muted font-medium font-mono">
                   <Calendar size={13} />
@@ -281,7 +281,7 @@ const ProjectPage = () => {
               </span>
             </div>
 
-            <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               {hasLive && (
                 <a href={project.external} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-8 py-4 font-bold text-primary transition-transform hover:scale-[1.02]">
                   <ExternalLink size={18} />
@@ -453,7 +453,7 @@ const ProjectPage = () => {
           </div>
 
           {/* Snappy Case Study Tab Selector */}
-          <div className="mx-auto max-w-5xl px-4 sm:px-6 mb-12">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 mb-8">
             <div className="relative flex rounded-full border border-white/10 bg-secondary/15 p-1 backdrop-blur-md">
               {['story', 'technical', 'impact'].map((tab) => {
                 const isActive = activeTab === tab;
@@ -480,7 +480,7 @@ const ProjectPage = () => {
           </div>
 
           {/* Content Wrapper */}
-          <div className="mx-auto max-w-5xl px-4 sm:px-6 min-h-[380px]">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 min-h-[320px]">
             <AnimatePresence mode="wait">
               {activeTab === 'story' && (
                 <motion.div
@@ -489,7 +489,7 @@ const ProjectPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.25 }}
-                  className="space-y-12"
+                  className="space-y-8"
                 >
                   {/* Overview Paragraph */}
                   {(project.description || description) && (
@@ -535,7 +535,7 @@ const ProjectPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.25 }}
-                  className="space-y-10"
+                  className="space-y-6"
                 >
                   {/* Build Notes / Architecture */}
                   {(project.architecture || project.architectureImage || project.learned || project.lessonsLearned) && (
@@ -684,7 +684,7 @@ const ProjectPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.25 }}
-                  className="space-y-10"
+                  className="space-y-6"
                 >
                   {/* Impact Metrics */}
                   {impactMetrics.length > 0 && (
