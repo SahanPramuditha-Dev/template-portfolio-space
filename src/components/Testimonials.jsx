@@ -16,6 +16,7 @@ const Testimonials = () => {
   const requestRef = React.useRef(null);
   const autoScrollActive = React.useRef(true);
   const resumeTimeout = React.useRef(null);
+  const initTimeout = React.useRef(null);
 
   // Triple the list to create a seamless scrolling loop in both directions
   const items = React.useMemo(() => {
@@ -23,16 +24,35 @@ const Testimonials = () => {
     return [...testimonials, ...testimonials, ...testimonials];
   }, [testimonials]);
 
+  // Clean up loops and timeouts on unmount
   React.useEffect(() => {
-    const el = scrollRef.current;
+    return () => {
+      if (requestRef.current) cancelAnimationFrame(requestRef.current);
+      if (resumeTimeout.current) clearTimeout(resumeTimeout.current);
+      if (initTimeout.current) clearTimeout(initTimeout.current);
+    };
+  }, []);
+
+  // Callback Ref executes exactly when the DOM node mounts
+  const setScrollRef = React.useCallback((el) => {
+    if (requestRef.current) {
+      cancelAnimationFrame(requestRef.current);
+      requestRef.current = null;
+    }
+    if (initTimeout.current) {
+      clearTimeout(initTimeout.current);
+      initTimeout.current = null;
+    }
+
+    scrollRef.current = el;
     if (!el || items.length === 0) return;
 
     // Center scroll position with a slight delay to ensure browser layout is painted
-    const initTimeout = setTimeout(() => {
+    initTimeout.current = setTimeout(() => {
       if (el) {
         el.scrollLeft = el.scrollWidth / 3;
       }
-    }, 150);
+    }, 200);
 
     const animate = () => {
       if (el && autoScrollActive.current && !isDragging.current) {
@@ -52,12 +72,6 @@ const Testimonials = () => {
     };
 
     requestRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      clearTimeout(initTimeout);
-      if (requestRef.current) cancelAnimationFrame(requestRef.current);
-      if (resumeTimeout.current) clearTimeout(resumeTimeout.current);
-    };
   }, [items]);
 
   // Dragging event handlers
@@ -140,7 +154,7 @@ const Testimonials = () => {
 
             {/* Scrollable Track container */}
             <div
-              ref={scrollRef}
+              ref={setScrollRef}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUpOrLeave}
