@@ -144,14 +144,14 @@ const PageViewsCounter = () => {
         const { getFirestore, doc, getDoc } = await import('firebase/firestore');
         const { app } = await import('../lib/firebase');
         const db = getFirestore(app);
-        const ref = doc(db, 'site', 'public');
+        const ref = doc(db, 'publicStats', 'views');
         const snapshot = await getDoc(ref);
         if (snapshot.exists()) {
-          const val = snapshot.data().stats?.views || 0;
+          const val = snapshot.data().count || 0;
           console.log('[DEBUG] Public views counter resolved to:', val);
           setViews(val);
         } else {
-          console.log('[DEBUG] Public views document site/public does not exist.');
+          console.log('[DEBUG] Public views document publicStats/views does not exist.');
           setViews(0);
         }
       } catch (err) {

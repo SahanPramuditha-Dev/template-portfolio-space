@@ -68,10 +68,8 @@ export const trackEvent = async (eventName, eventData = {}) => {
 
   // If tracking a page view, increment the public views counter
   if (eventName === 'page_view') {
-    setDoc(doc(db, 'site', 'public'), {
-      stats: {
-        views: increment(1)
-      }
+    setDoc(doc(db, 'publicStats', 'views'), {
+      count: increment(1)
     }, { merge: true }).catch((err) => {
       console.error('Failed to increment public stats views:', err);
     });
