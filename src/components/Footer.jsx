@@ -138,7 +138,6 @@ const PageViewsCounter = () => {
   const [views, setViews] = useState(null);
 
   useEffect(() => {
-    // Import Firestore components dynamically to keep bundle size light
     const getCount = async () => {
       try {
         const { getFirestore, doc, getDoc } = await import('firebase/firestore');
@@ -147,15 +146,12 @@ const PageViewsCounter = () => {
         const ref = doc(db, 'publicStats', 'views');
         const snapshot = await getDoc(ref);
         if (snapshot.exists()) {
-          const val = snapshot.data().count || 0;
-          console.log('[DEBUG] Public views counter resolved to:', val);
-          setViews(val);
+          setViews(snapshot.data().count || 0);
         } else {
-          console.log('[DEBUG] Public views document publicStats/views does not exist.');
           setViews(0);
         }
-      } catch (err) {
-        console.error('[DEBUG] Failed to get public page views count:', err);
+      } catch {
+        // Silently catch errors
       }
     };
     getCount();
@@ -164,9 +160,12 @@ const PageViewsCounter = () => {
   if (views === null) return null;
 
   return (
-    <span className="inline-flex items-center gap-1 bg-accent/10 border border-accent/20 px-2 py-0.5 rounded text-[11px] font-mono text-accent">
-      <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse inline-block" />
-      {views} orbital views
+    <span className="inline-flex items-center gap-2 bg-gradient-to-r from-accent/5 to-accent/15 border border-accent/25 hover:border-accent/40 px-3.5 py-1 rounded-full text-[10px] font-mono tracking-wider text-accent transition-all duration-300 shadow-[0_0_12px_rgba(var(--color-accent-rgb),0.05)] hover:shadow-[0_0_18px_rgba(var(--color-accent-rgb),0.15)] select-none">
+      <span className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
+      </span>
+      <span>{views.toLocaleString()} ORBITAL SESSIONS</span>
     </span>
   );
 };
