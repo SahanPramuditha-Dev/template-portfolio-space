@@ -107,6 +107,9 @@ const ProjectPage = () => {
         ogImage={heroSlide?.kind === 'image' ? heroSlide.url : undefined}
       />
       
+      {/* Dynamic Starfield Particle Background */}
+      <CanvasStarfield />
+
       {/* Top Progress Bar */}
       <motion.div 
         className="fixed top-0 left-0 right-0 h-1 bg-accent origin-left z-50 shadow-[0_0_15px_rgb(var(--color-accent-rgb))]" 
@@ -471,6 +474,29 @@ const ProjectPage = () => {
           </div>
         </article>
 
+        {/* Start a Project Quick-Bridge */}
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 mt-16">
+          <div className="relative overflow-hidden rounded-[2rem] border border-accent/20 bg-gradient-to-r from-accent/5 via-secondary/15 to-primary p-8 md:p-10 text-center shadow-[0_0_40px_rgba(var(--color-accent-rgb),0.05)]">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--color-accent-rgb),0.05),transparent_60%)]" />
+            <div className="relative z-10 space-y-4 max-w-xl mx-auto">
+              <h3 className="font-display text-2xl font-bold text-white tracking-tight md:text-3xl">
+                Inspired by this mission?
+              </h3>
+              <p className="text-sm text-text-muted leading-relaxed">
+                Let's collaborate to build something outstanding for your business or project using a similar tech stack.
+              </p>
+              <div className="pt-2">
+                <a
+                  href={`/#contact?projectType=${encodeURIComponent(project.projectType === 'client' ? 'Client Project' : 'Web App')}&message=${encodeURIComponent(`Hi Sahan, I saw your work on "${project.title}" and would love to collaborate on a similar project!`)}`}
+                  className="inline-flex h-11 items-center justify-center rounded-xl bg-accent px-6 text-xs font-mono font-bold uppercase tracking-wider text-primary transition-transform hover:scale-105"
+                >
+                  Start a project like this
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Next / Previous Project Navigation */}
         <div className="mx-auto max-w-6xl px-4 sm:px-6 mt-20 border-t border-white/10 pt-16">
           <div className="grid sm:grid-cols-2 gap-6">
@@ -524,3 +550,76 @@ const ProjectPage = () => {
 };
 
 export default ProjectPage;
+
+const CanvasStarfield = () => {
+  const canvasRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationFrameId;
+    let particles = [];
+    const particleCount = 45;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Initialize particles
+    for (let i = 0; i < particleCount; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 1.2 + 0.3,
+        vx: (Math.random() - 0.5) * 0.12,
+        vy: (Math.random() - 0.5) * 0.12,
+        alpha: Math.random() * 0.5 + 0.1,
+      });
+    }
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach((p) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(14, 165, 233, ${p.alpha})`; // Light blue star dust
+        ctx.fill();
+
+        // Slow drift
+        p.x += p.vx;
+        p.y += p.vy;
+
+        // Wrap boundaries
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+      });
+
+      animationFrameId = requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 pointer-events-none -z-10 bg-transparent"
+      style={{ mixBlendMode: 'screen' }}
+    />
+  );
+};
