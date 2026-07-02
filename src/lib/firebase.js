@@ -15,6 +15,7 @@ const firebaseConfig = {
 };
 
 import { getFunctions } from 'firebase/functions';
+import { getPerformance } from 'firebase/performance';
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -23,6 +24,8 @@ const storage = getStorage(app);
 const functions = getFunctions(app);
 
 let analytics = null;
+let performance = null;
+
 if (typeof window !== 'undefined') {
   isSupported().then((supported) => {
     if (supported) {
@@ -31,6 +34,13 @@ if (typeof window !== 'undefined') {
   }).catch(() => {
     analytics = null;
   });
+  
+  // Initialize Performance Monitoring
+  try {
+    performance = getPerformance(app);
+  } catch (err) {
+    console.warn('Firebase Performance Monitoring failed to initialize:', err);
+  }
 }
 
-export { app, auth, db, storage, analytics, functions };
+export { app, auth, db, storage, analytics, functions, performance };
