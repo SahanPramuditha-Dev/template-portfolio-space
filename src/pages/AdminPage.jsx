@@ -2860,17 +2860,27 @@ const AnalyticsDashboard = () => {
 
       {/* Daily Traffic Chart */}
       <div className="rounded-2xl border border-white/10 bg-secondary/20 p-6 relative overflow-hidden">
+        {/* Cyberpunk grid background pattern */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(0,0,0,0.4))] pointer-events-none" />
+        <div 
+          className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+          style={{
+            backgroundImage: `radial-gradient(var(--color-accent) 1px, transparent 0)`,
+            backgroundSize: '16px 16px',
+          }}
+        />
         <div className="absolute top-0 right-0 p-3 text-[10px] font-mono text-emerald-400 flex items-center gap-1.5 bg-emerald-500/5 rounded-bl-xl border-l border-b border-white/5">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-          Live Analytics Feed Active
+          Telemetry Link Established
         </div>
-        <h3 className="font-display font-bold text-text mb-4 text-xs tracking-wider flex items-center gap-2 text-text-muted">
+        
+        <h3 className="font-display font-bold text-text mb-4 text-xs tracking-wider flex items-center gap-2 text-text-muted relative z-10">
           <LineChart size={14} className="text-accent animate-pulse" />
-          UPLINK TRAFFIC PROFILE (LAST 7 ACTIVE DAYS)
+          TRAFFIC PROFILE & DATA THROTTLES (7 ACTIVE DAYS)
         </h3>
         
         {/* SVG Chart */}
-        <div className="h-44 w-full flex items-end gap-4 mt-6 border-b border-white/10 pb-2 relative">
+        <div className="h-44 w-full flex items-end gap-4 mt-6 border-b border-white/10 pb-2 relative z-10">
           {stats.dateData.map((val, idx) => {
             const pct = (val / stats.maxDailyView) * 100;
             return (
@@ -2886,7 +2896,7 @@ const AnalyticsDashboard = () => {
                     className="w-full bg-gradient-to-t from-accent/5 to-accent/30 border border-accent/40 rounded-t-lg group-hover:border-accent group-hover:from-accent/10 group-hover:to-accent/50 shadow-[0_0_15px_rgba(var(--color-accent-rgb),0.15)] group-hover:shadow-[0_0_25px_rgba(var(--color-accent-rgb),0.3)] transition-all duration-300 relative overflow-hidden"
                   >
                     {/* Top scanning pulse line */}
-                    <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-accent" />
+                    <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-accent animate-pulse" />
                   </div>
                 </div>
                 <span className="text-[10px] text-text-muted font-mono mt-2 block whitespace-nowrap">
@@ -2981,55 +2991,141 @@ const AnalyticsDashboard = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Geographic Activity card */}
-        <div className="rounded-2xl border border-white/10 bg-secondary/20 p-5">
-          <h3 className="font-display font-bold text-text mb-4 text-sm uppercase tracking-wider text-text-muted flex items-center gap-2">
-            <Globe size={14} className="text-emerald-400" />
-            Active Users by Country
-          </h3>
-          <div className="space-y-3 font-mono text-xs">
-            {stats.topCountries.map((c, idx) => {
-              const maxSessionVal = Math.max(...stats.topCountries.map(o => o.count), 1);
-              const percentageVal = Math.round((c.count / stats.totalSessions) * 100);
-              const progressPct = (c.count / maxSessionVal) * 100;
-              return (
-                <div key={idx} className="space-y-1">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-text font-bold">{c.name}</span>
-                    <span className="text-accent font-bold">{c.count} sessions ({percentageVal}%)</span>
-                  </div>
-                  <div className="h-2 bg-secondary/50 rounded overflow-hidden border border-white/5 relative p-[1px]">
-                    <div 
-                      style={{ width: `${progressPct || 0}%` }}
-                      className="h-full bg-gradient-to-r from-emerald-500/60 to-emerald-400 rounded"
-                    />
-                  </div>
-                </div>
-              );
-            })}
-            {stats.topCountries.length === 0 && (
-              <p className="text-center text-text-muted text-xs py-4">Resolving geo metrics...</p>
-            )}
+        {/* Geographic Activity World Map Card */}
+        <div className="rounded-2xl border border-white/10 bg-secondary/20 p-6 relative overflow-hidden flex flex-col justify-between min-h-[360px]">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display font-bold text-text text-sm uppercase tracking-wider text-text-muted flex items-center gap-2">
+                <Globe size={14} className="text-emerald-400 animate-spin [animation-duration:10s]" />
+                Geographic Activity Radar
+              </h3>
+              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/5 px-2 py-0.5 rounded border border-emerald-500/10">
+                Live Resolution
+              </span>
+            </div>
+
+            {/* Micro World Map Canvas - Minimalist vector representation highlighting regions */}
+            <div className="w-full h-44 bg-primary/25 border border-white/5 rounded-2xl relative overflow-hidden flex items-center justify-center p-2">
+              {/* Radar Sweeper visual effect */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.05)_0%,transparent_70%)] animate-pulse" />
+              <div className="absolute top-0 bottom-0 left-0 w-[2px] bg-emerald-400/20 shadow-[0_0_10px_rgba(52,211,153,0.3)] animate-[scan_3s_ease-in-out_infinite]" />
+              
+              {/* Interactive SVG World Map Paths */}
+              <svg viewBox="0 0 1000 500" className="w-full h-full opacity-80 transition-all select-none">
+                {/* World outline paths (simplified) */}
+                {/* North America */}
+                <path 
+                  d="M100,100 L180,90 L220,130 L250,150 L280,180 L200,240 L160,280 L140,240 L120,200 L90,150 Z" 
+                  className={`transition-all duration-300 ${
+                    stats.topCountries.some(c => c.name.includes('United States') || c.name.includes('Canada') || c.name.includes('America'))
+                      ? 'fill-emerald-400/30 stroke-emerald-400/60 shadow-lg'
+                      : 'fill-zinc-700/20 stroke-white/5 hover:fill-zinc-700/40'
+                  }`}
+                  strokeWidth="2"
+                />
+                {/* South America */}
+                <path 
+                  d="M200,250 L250,280 L280,310 L270,360 L240,440 L210,400 L190,320 Z" 
+                  className={`transition-all duration-300 ${
+                    stats.topCountries.some(c => c.name.includes('Brazil') || c.name.includes('Argentina') || c.name.includes('Colombia'))
+                      ? 'fill-emerald-400/30 stroke-emerald-400/60 shadow-lg'
+                      : 'fill-zinc-700/20 stroke-white/5 hover:fill-zinc-700/40'
+                  }`}
+                  strokeWidth="2"
+                />
+                {/* Africa */}
+                <path 
+                  d="M420,220 L480,210 L540,240 L550,290 L520,380 L480,410 L440,320 L410,260 Z" 
+                  className={`transition-all duration-300 ${
+                    stats.topCountries.some(c => c.name.includes('Africa') || c.name.includes('Egypt') || c.name.includes('Nigeria'))
+                      ? 'fill-emerald-400/30 stroke-emerald-400/60 shadow-lg'
+                      : 'fill-zinc-700/20 stroke-white/5 hover:fill-zinc-700/40'
+                  }`}
+                  strokeWidth="2"
+                />
+                {/* Europe */}
+                <path 
+                  d="M440,110 L500,100 L530,130 L520,180 L480,200 L440,180 L430,130 Z" 
+                  className={`transition-all duration-300 ${
+                    stats.topCountries.some(c => c.name.includes('Germany') || c.name.includes('United Kingdom') || c.name.includes('France') || c.name.includes('Italy'))
+                      ? 'fill-emerald-400/30 stroke-emerald-400/60 shadow-lg'
+                      : 'fill-zinc-700/20 stroke-white/5 hover:fill-zinc-700/40'
+                  }`}
+                  strokeWidth="2"
+                />
+                {/* Asia / India / Sri Lanka */}
+                <path 
+                  d="M510,120 L620,100 L740,120 L780,220 L720,290 L640,290 L580,220 L520,190 Z" 
+                  className={`transition-all duration-300 ${
+                    stats.topCountries.some(c => c.name.includes('Sri Lanka') || c.name.includes('India') || c.name.includes('Singapore') || c.name.includes('Bangladesh'))
+                      ? 'fill-emerald-400/40 stroke-emerald-400/80 shadow-lg'
+                      : 'fill-zinc-700/20 stroke-white/5 hover:fill-zinc-700/40'
+                  }`}
+                  strokeWidth="2"
+                />
+                {/* Australia */}
+                <path 
+                  d="M750,330 L810,340 L800,390 L740,370 Z" 
+                  className={`transition-all duration-300 ${
+                    stats.topCountries.some(c => c.name.includes('Australia') || c.name.includes('New Zealand'))
+                      ? 'fill-emerald-400/30 stroke-emerald-400/60 shadow-lg'
+                      : 'fill-zinc-700/20 stroke-white/5 hover:fill-zinc-700/40'
+                  }`}
+                  strokeWidth="2"
+                />
+              </svg>
+              
+              {/* Highlight active indicator ping */}
+              <div className="absolute top-[48%] left-[64%] flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+              </div>
+            </div>
+          </div>
+
+          {/* Simple Legend */}
+          <div className="flex gap-4 mt-3 text-[10px] font-mono text-text-muted justify-between">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded bg-emerald-500/30 border border-emerald-400/60" />
+              Uplink Region Detected
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded bg-zinc-700/20 border border-white/5" />
+              Quiet Sector
+            </span>
           </div>
         </div>
 
-        {/* Informational Widget detailing active metrics */}
+        {/* Geographic Breakdown Lists */}
         <div className="rounded-2xl border border-white/10 bg-secondary/20 p-5 flex flex-col justify-between">
           <div>
-            <h3 className="font-display font-bold text-text mb-2 text-sm uppercase tracking-wider text-text-muted flex items-center gap-2">
-              <Activity size={14} className="text-accent" />
-              Global Telemetry Specs
+            <h3 className="font-display font-bold text-text mb-4 text-sm uppercase tracking-wider text-text-muted flex items-center gap-2">
+              <Globe size={14} className="text-accent" />
+              Top Active Sectors
             </h3>
-            <p className="text-xs text-text-muted leading-relaxed mt-2">
-              Visitor locations are parsed automatically on the client side using secure, privacy-compliant IP geolocation cache mappings.
-            </p>
-            <p className="text-xs text-text-muted leading-relaxed mt-2">
-              These regions light up live inside your geographic breakdown feed, matching the realtime statistics gathered inside Google Analytics.
-            </p>
-          </div>
-          <div className="mt-4 border-t border-white/5 pt-3 text-[10px] text-text-muted font-mono flex justify-between">
-            <span>Uplink Node: Firebase Blaze v9</span>
-            <span className="text-emerald-400">Security: Encrypted</span>
+            <div className="space-y-3 font-mono text-xs">
+              {stats.topCountries.map((c, idx) => {
+                const maxVal = Math.max(...stats.topCountries.map(o => o.count), 1);
+                const pct = (c.count / maxVal) * 100;
+                return (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-text font-bold">{c.name}</span>
+                      <span className="text-accent font-bold">{c.count} sessions</span>
+                    </div>
+                    <div className="h-2 bg-secondary/50 rounded overflow-hidden border border-white/5 relative p-[1px]">
+                      <div 
+                        style={{ width: `${pct || 0}%` }}
+                        className="h-full bg-gradient-to-r from-accent/60 to-accent rounded"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+              {stats.topCountries.length === 0 && (
+                <p className="text-center text-text-muted text-xs py-4">Resolving geo metrics...</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
