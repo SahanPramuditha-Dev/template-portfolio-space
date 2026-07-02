@@ -27,15 +27,18 @@ const Testimonials = () => {
     const el = scrollRef.current;
     if (!el || items.length === 0) return;
 
-    // Center the scroll position initially so user can drag left and right instantly
-    const oneThirdWidth = el.scrollWidth / 3;
-    el.scrollLeft = oneThirdWidth;
+    // Small delay to ensure browser finishes rendering cards layout
+    const initTimeout = setTimeout(() => {
+      if (el.scrollWidth) {
+        el.scrollLeft = el.scrollWidth / 3;
+      }
+    }, 150);
 
     const animate = () => {
-      if (autoScrollActive.current && !isDragging.current) {
-        el.scrollLeft += 0.35; // Significantly slower, elegant glide speed
+      if (autoScrollActive.current && !isDragging.current && el.scrollWidth) {
+        el.scrollLeft += 0.35; // Seamless glide
 
-        // Infinite boundary check: if scrolled past the 2/3 threshold, reset to 1/3 (loop seamless)
+        const oneThirdWidth = el.scrollWidth / 3;
         const limit = (el.scrollWidth * 2) / 3;
         if (el.scrollLeft >= limit) {
           el.scrollLeft -= oneThirdWidth;
@@ -47,6 +50,7 @@ const Testimonials = () => {
     requestRef.current = requestAnimationFrame(animate);
 
     return () => {
+      clearTimeout(initTimeout);
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
       if (resumeTimeout.current) clearTimeout(resumeTimeout.current);
     };
