@@ -40,7 +40,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { db } from '../lib/firebase';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import {
   CMS_DOCS,
   loginWithEmail,
@@ -2860,13 +2860,25 @@ const AdminPage = () => {
   const [authError, setAuthError] = useState('');
   const [authBusy, setAuthBusy] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Live query listener to update unread badge on message reception
+  useEffect(() => {
+    if (!user) return;
+    const q = query(collection(db, CMS_DOCS.messages));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const unread = snapshot.docs.filter(doc => !doc.data().read).length;
+      setUnreadCount(unread);
+    });
+    return () => unsubscribe();
+  }, [user]);
 
   const tabGroups = [
     {
       label: '⚡ Telemetry & Inbox',
       items: [
         { id: 'analytics', label: 'Analytics Feed', icon: LineChart },
-        { id: CMS_DOCS.messages, label: 'Inbox Messages', icon: Mail },
+        { id: CMS_DOCS.messages, label: 'Inbox Messages', icon: Mail, badge: unreadCount },
       ],
     },
     {
@@ -3091,14 +3103,19 @@ const AdminPage = () => {
                         setIsMobileMenuOpen(false);
                       }}
                       className={clsx(
-                        'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs transition-colors',
+                        'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs transition-colors group/tab',
                         isActive
                           ? 'border border-accent/35 bg-accent/15 font-semibold text-accent shadow-[0_0_0_1px_rgb(var(--color-accent-rgb)/0.08)]'
                           : 'border border-transparent text-text-muted hover:border-white/10 hover:bg-primary/45 hover:text-text'
                       )}
                     >
                       <Icon size={15} strokeWidth={1.75} className={isActive ? 'text-accent' : 'opacity-70'} />
-                      <span className="truncate">{tab.label}</span>
+                      <span className="truncate flex-1">{tab.label}</span>
+                      {tab.badge !== undefined && tab.badge > 0 && (
+                        <span className="shrink-0 flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-accent text-[9px] font-bold text-primary font-mono shadow-[0_0_8px_rgba(var(--color-accent-rgb),0.4)] animate-pulse">
+                          {tab.badge}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
