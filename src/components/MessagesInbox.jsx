@@ -107,10 +107,12 @@ const MessagesInbox = () => {
         attachments: replyAttachments // [{ name: '', url: '' }]
       });
 
-      // Mark the message as read since we replied
-      if (!msg.read) {
-        await markAsRead(msg.id, false);
-      }
+      // Mark the message as read and replied
+      await updateDoc(doc(db, CMS_DOCS.messages, msg.id), { 
+        read: true,
+        replied: true,
+        repliedAt: new Date(),
+      });
 
       setStatusFeedback({ type: 'success', text: `Reply with ${replyAttachments.length} attachments sent to ${msg.email}!` });
       setTimeout(() => {
@@ -162,9 +164,15 @@ const MessagesInbox = () => {
             >
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="font-bold text-lg text-text flex items-center gap-2">
+                  <h3 className="font-bold text-lg text-text flex items-center gap-2 flex-wrap">
                     {msg.name}
                     {!msg.read && <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />}
+                    {msg.replied && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                        <CheckCircle2 size={10} />
+                        Replied
+                      </span>
+                    )}
                   </h3>
                   <a href={`mailto:${msg.email}`} className="text-sm text-accent hover:underline">{msg.email}</a>
                 </div>

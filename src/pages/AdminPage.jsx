@@ -2569,6 +2569,9 @@ const AnalyticsDashboard = () => {
   const [actionFilter, setActionFilter] = useState('all'); // all, page_view, project_view, click, scroll
   const [searchSession, setSearchSession] = useState('');
   
+  // Interactive chart metric range filters
+  const [chartMetricFilter, setChartMetricFilter] = useState('page_view'); // page_view, contact_submit, download
+  
   // Session trace modal states
   const [selectedTraceSession, setSelectedTraceSession] = useState(null);
   const [pruning, setPruning] = useState(false);
@@ -2677,10 +2680,10 @@ const AnalyticsDashboard = () => {
         .filter(Boolean)
     ).size;
 
-    // 1. Page views over time (last 7 active days)
+    // 1. Page views over time (last 7 active days) - filtered by metric choice
     const dailyViews = {};
     events.forEach((e) => {
-      if (e.eventName === 'page_view') {
+      if (e.eventName === chartMetricFilter) {
         const dateStr = formatDate(e.timestamp);
         if (dateStr) dailyViews[dateStr] = (dailyViews[dateStr] || 0) + 1;
       }
@@ -2869,15 +2872,34 @@ const AnalyticsDashboard = () => {
             backgroundSize: '16px 16px',
           }}
         />
-        <div className="absolute top-0 right-0 p-3 text-[10px] font-mono text-emerald-400 flex items-center gap-1.5 bg-emerald-500/5 rounded-bl-xl border-l border-b border-white/5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-          Telemetry Link Established
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/5 pb-4 mb-4 gap-3 relative z-10">
+          <h3 className="font-display font-bold text-text text-xs tracking-wider flex items-center gap-2 text-text-muted">
+            <LineChart size={14} className="text-accent animate-pulse" />
+            TRAFFIC PROFILE & DATA THROTTLES (7 ACTIVE DAYS)
+          </h3>
+          
+          {/* Chart Metric Selectors */}
+          <div className="flex gap-1.5">
+            {[
+              { id: 'page_view', label: 'Views' },
+              { id: 'contact_submit', label: 'Inquiries' },
+              { id: 'download', label: 'Downloads' },
+            ].map((btn) => (
+              <button
+                key={btn.id}
+                type="button"
+                onClick={() => setChartMetricFilter(btn.id)}
+                className={`px-3 py-1 rounded-lg text-[9px] font-mono font-bold transition-all border ${
+                  chartMetricFilter === btn.id
+                    ? 'bg-accent/15 border-accent/35 text-accent'
+                    : 'bg-primary/45 border-white/5 text-text-muted hover:border-white/10 hover:text-text'
+                }`}
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
         </div>
-        
-        <h3 className="font-display font-bold text-text mb-4 text-xs tracking-wider flex items-center gap-2 text-text-muted relative z-10">
-          <LineChart size={14} className="text-accent animate-pulse" />
-          TRAFFIC PROFILE & DATA THROTTLES (7 ACTIVE DAYS)
-        </h3>
         
         {/* SVG Chart */}
         <div className="h-44 w-full flex items-end gap-4 mt-6 border-b border-white/10 pb-2 relative z-10">
@@ -2886,8 +2908,8 @@ const AnalyticsDashboard = () => {
             return (
               <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group relative">
                 {/* Tooltip */}
-                <span className="absolute -top-7 bg-accent text-primary text-[10px] font-bold font-mono px-2 py-0.5 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                  {val} views
+                <span className="absolute -top-7 bg-accent text-primary text-[10px] font-bold font-mono px-2 py-0.5 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
+                  {val} {chartMetricFilter === 'page_view' ? 'views' : chartMetricFilter === 'contact_submit' ? 'inquiries' : 'downloads'}
                 </span>
                 {/* Bar with cyberpunk double accent glow */}
                 <div className="w-full relative flex flex-col justify-end h-full">

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Github, Linkedin, Mail, Facebook, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
@@ -91,9 +91,11 @@ const Footer = () => {
         <div className="mb-8 h-px w-full bg-secondary opacity-50" />
 
         <div className="flex flex-col items-center justify-between gap-4 text-sm text-text-muted md:flex-row">
-          <p className="flex items-center gap-1">
-            © {currentYear} Sahan Pramuditha. All rights reserved.
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-center md:text-left">
+            <p>© {currentYear} Sahan Pramuditha. All rights reserved.</p>
+            <span className="hidden sm:inline-block text-text-muted/40">•</span>
+            <PageViewsCounter />
+          </div>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
             <p className="flex items-center gap-2">
@@ -129,6 +131,39 @@ const Footer = () => {
         </div>
       </div>
     </footer>
+  );
+};
+
+const PageViewsCounter = () => {
+  const [views, setViews] = useState(null);
+
+  useEffect(() => {
+    // Import Firestore components dynamically to keep bundle size light
+    const getCount = async () => {
+      try {
+        const { getFirestore, collection, getCountFromServer, query, where } = await import('firebase/firestore');
+        const { app } = await import('../lib/firebase');
+        const db = getFirestore(app);
+        const q = query(
+          collection(db, 'analyticsEvents'),
+          where('eventName', '==', 'page_view')
+        );
+        const snapshot = await getCountFromServer(q);
+        setViews(snapshot.data().count);
+      } catch (err) {
+        console.error('Failed to get public page views count:', err);
+      }
+    };
+    getCount();
+  }, []);
+
+  if (views === null) return null;
+
+  return (
+    <span className="inline-flex items-center gap-1 bg-accent/10 border border-accent/20 px-2 py-0.5 rounded text-[11px] font-mono text-accent">
+      <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse inline-block" />
+      {views} orbital views
+    </span>
   );
 };
 
