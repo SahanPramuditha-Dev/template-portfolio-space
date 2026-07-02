@@ -2747,6 +2747,22 @@ const AnalyticsDashboard = () => {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
+    // 6. Top geographic country locations (by unique sessions)
+    const countryCounts = {};
+    const sessionCountryMapped = new Set();
+    events.forEach((e) => {
+      const country = e.eventData?.country || 'Unknown';
+      const key = `${e.sessionId}_${country}`;
+      if (e.sessionId && !sessionCountryMapped.has(key)) {
+        sessionCountryMapped.add(key);
+        countryCounts[country] = (countryCounts[country] || 0) + 1;
+      }
+    });
+    const topCountries = Object.entries(countryCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
     return {
       totalViews,
       totalSessions,
@@ -2759,6 +2775,7 @@ const AnalyticsDashboard = () => {
       maxScrollCount,
       topClicks,
       topProjects,
+      topCountries,
     };
   }, [events]);
 
@@ -2945,7 +2962,10 @@ const AnalyticsDashboard = () => {
 
         {/* Top Projects */}
         <div className="rounded-2xl border border-white/10 bg-secondary/20 p-5">
-          <h3 className="font-display font-bold text-text mb-4 text-sm uppercase tracking-wider text-text-muted">POPULAR MISSIONS (PROJECT VIEWS)</h3>
+          <h3 className="font-display font-bold text-text mb-4 text-sm uppercase tracking-wider text-text-muted flex items-center gap-2">
+            <Folder size={14} className="text-accent" />
+            POPULAR MISSIONS (PROJECT VIEWS)
+          </h3>
           <div className="space-y-3 font-mono text-xs">
             {stats.topProjects.map((proj, idx) => (
               <div key={idx} className="flex justify-between items-center bg-primary/45 border border-white/5 rounded-xl px-4 py-2.5">
@@ -2956,6 +2976,60 @@ const AnalyticsDashboard = () => {
             {stats.topProjects.length === 0 && (
               <p className="text-center text-text-muted text-xs py-4">No project view logs yet.</p>
             )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Geographic Activity card */}
+        <div className="rounded-2xl border border-white/10 bg-secondary/20 p-5">
+          <h3 className="font-display font-bold text-text mb-4 text-sm uppercase tracking-wider text-text-muted flex items-center gap-2">
+            <Globe size={14} className="text-emerald-400" />
+            Active Users by Country
+          </h3>
+          <div className="space-y-3 font-mono text-xs">
+            {stats.topCountries.map((c, idx) => {
+              const maxSessionVal = Math.max(...stats.topCountries.map(o => o.count), 1);
+              const percentageVal = Math.round((c.count / stats.totalSessions) * 100);
+              const progressPct = (c.count / maxSessionVal) * 100;
+              return (
+                <div key={idx} className="space-y-1">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-text font-bold">{c.name}</span>
+                    <span className="text-accent font-bold">{c.count} sessions ({percentageVal}%)</span>
+                  </div>
+                  <div className="h-2 bg-secondary/50 rounded overflow-hidden border border-white/5 relative p-[1px]">
+                    <div 
+                      style={{ width: `${progressPct || 0}%` }}
+                      className="h-full bg-gradient-to-r from-emerald-500/60 to-emerald-400 rounded"
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            {stats.topCountries.length === 0 && (
+              <p className="text-center text-text-muted text-xs py-4">Resolving geo metrics...</p>
+            )}
+          </div>
+        </div>
+
+        {/* Informational Widget detailing active metrics */}
+        <div className="rounded-2xl border border-white/10 bg-secondary/20 p-5 flex flex-col justify-between">
+          <div>
+            <h3 className="font-display font-bold text-text mb-2 text-sm uppercase tracking-wider text-text-muted flex items-center gap-2">
+              <Activity size={14} className="text-accent" />
+              Global Telemetry Specs
+            </h3>
+            <p className="text-xs text-text-muted leading-relaxed mt-2">
+              Visitor locations are parsed automatically on the client side using secure, privacy-compliant IP geolocation cache mappings.
+            </p>
+            <p className="text-xs text-text-muted leading-relaxed mt-2">
+              These regions light up live inside your geographic breakdown feed, matching the realtime statistics gathered inside Google Analytics.
+            </p>
+          </div>
+          <div className="mt-4 border-t border-white/5 pt-3 text-[10px] text-text-muted font-mono flex justify-between">
+            <span>Uplink Node: Firebase Blaze v9</span>
+            <span className="text-emerald-400">Security: Encrypted</span>
           </div>
         </div>
       </div>

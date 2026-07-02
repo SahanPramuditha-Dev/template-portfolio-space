@@ -13,24 +13,58 @@ const generateSessionId = () => {
 
 const sessionId = generateSessionId();
 
+// Cache geolocation lookup in sessionStorage to prevent redundant API hits
+let cachedGeo = null;
+if (typeof window !== 'undefined') {
+  try {
+    const saved = window.sessionStorage.getItem('analytics_geo');
+    if (saved) cachedGeo = JSON.parse(saved);
+  } catch {
+    // Ignore cache error
+  }
+}
+
+const getGeoLocation = async () => {
+  if (cachedGeo) return cachedGeo;
+  try {
+    const res = await fetch('https://ipapi.co/json/');
+    if (res.ok) {
+      const data = await res.json();
+      const info = {
+        country: data.country_name || 'Unknown',
+        countryCode: data.country_code || 'UN',
+        city: data.city || 'Unknown',
+      };
+      cachedGeo = info;
+      window.sessionStorage.setItem('analytics_geo', JSON.stringify(info));
+      return info;
+    }
+  } catch {
+    // Ignore API failures
+  }
+  return { country: 'Unknown', countryCode: 'UN', city: 'Unknown' };
+};
+
 // Analytics utility - can be integrated with Google Analytics, Plausible, etc.
-export const trackEvent = (eventName, eventData = {}) => {
-  // Only track in production (or if locally enabled for testing, let's keep VITE_ANALYTICS_ENDPOINT or simple checks)
-  // Let's log in dev if we want to test, but let's keep a toggle or just run in production by default.
-  // Wait, let's allow it in development too if the user wants, or let's run it always so the user can test locally!
-  // Yes! Let's run it always so that local testing writes events and the user can see them in their admin dashboard!
+export const trackEvent = async (eventName, eventData = {}) => {
+  const geo = await getGeoLocation();
 
   // Save to Firebase Firestore collection analyticsEvents
-    addDoc(collection(db, 'analyticsEvents'), {
-      eventName,
-      eventData,
-      timestamp: serverTimestamp(),
-      sessionId,
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
-      referrer: typeof document !== 'undefined' ? document.referrer : '',
-    }).catch(() => {
-      // Fail silently in background
-    });
+  addDoc(collection(db, 'analyticsEvents'), {
+    eventName,
+    eventData: {
+      ...eventData,
+      country: geo.country,
+      countryCode: geo.countryCode,
+      city: geo.city,
+    },
+    timestamp: serverTimestamp(),
+    sessionId,
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+    referrer: typeof document !== 'undefined' ? document.referrer : '',
+  }).catch(() => {
+    // Fail silently in background
+  });
 
   // Google Analytics 4
   if (typeof window !== 'undefined' && window.gtag) {
