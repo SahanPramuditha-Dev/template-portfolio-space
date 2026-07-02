@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Quote, Star } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
@@ -23,22 +23,19 @@ const Testimonials = () => {
     return [...testimonials, ...testimonials, ...testimonials];
   }, [testimonials]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const el = scrollRef.current;
     if (!el || items.length === 0) return;
 
-    // Small delay to ensure browser finishes rendering cards layout
-    const initTimeout = setTimeout(() => {
-      if (el.scrollWidth) {
-        el.scrollLeft = el.scrollWidth / 3;
-      }
-    }, 150);
+    // Center the scroll position initially so user can drag left and right instantly
+    const oneThirdWidth = el.scrollWidth / 3;
+    el.scrollLeft = oneThirdWidth;
 
     const animate = () => {
-      if (autoScrollActive.current && !isDragging.current && el.scrollWidth) {
-        el.scrollLeft += 0.35; // Seamless glide
+      if (autoScrollActive.current && !isDragging.current) {
+        el.scrollLeft += 0.35; // Smooth slow auto-scroll increments
 
-        const oneThirdWidth = el.scrollWidth / 3;
+        // Infinite boundary check: if scrolled past the 2/3 threshold, reset to 1/3 (loop seamless)
         const limit = (el.scrollWidth * 2) / 3;
         if (el.scrollLeft >= limit) {
           el.scrollLeft -= oneThirdWidth;
@@ -50,7 +47,6 @@ const Testimonials = () => {
     requestRef.current = requestAnimationFrame(animate);
 
     return () => {
-      clearTimeout(initTimeout);
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
       if (resumeTimeout.current) clearTimeout(resumeTimeout.current);
     };
@@ -74,17 +70,16 @@ const Testimonials = () => {
     e.preventDefault();
 
     const x = e.pageX - el.offsetLeft;
-    const walk = (x - startX.current) * 1.0; // Perfect 1:1 mouse movement mapping (smooth friction)
+    const walk = (x - startX.current) * 1.5; // Drag sensitivity
     el.scrollLeft = scrollLeftStart.current - walk;
 
     // Loop boundaries check during dragging
     const oneThirdWidth = el.scrollWidth / 3;
-    const limitMax = (el.scrollWidth * 2) / 3;
-    if (el.scrollLeft <= 50) {
+    if (el.scrollLeft <= 10) {
       el.scrollLeft += oneThirdWidth;
       startX.current = x; // Reset start reference on boundary jumps
       scrollLeftStart.current = el.scrollLeft;
-    } else if (el.scrollLeft >= limitMax - 50) {
+    } else if (el.scrollLeft >= (el.scrollWidth * 2) / 3) {
       el.scrollLeft -= oneThirdWidth;
       startX.current = x;
       scrollLeftStart.current = el.scrollLeft;
