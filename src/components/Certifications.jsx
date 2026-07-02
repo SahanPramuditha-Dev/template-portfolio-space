@@ -358,6 +358,36 @@ const Certifications = () => {
   const [activeFilter, setActiveFilter] = useState('All');
   const [showAll, setShowAll] = useState(false);
   const [pdfModal, setPdfModal] = useState({ url: '', title: '' });
+  const scrollRef = React.useRef(null);
+
+  // Mouse drag-to-scroll handler for desktop users
+  const [isDown, setIsDown] = React.useState(false);
+  const [startX, setStartX] = React.useState(0);
+  const [scrollLeft, setScrollLeft] = React.useState(0);
+
+  const handleMouseDown = (e) => {
+    // Avoid triggering drag if clicking on buttons or links directly
+    if (e.target.closest('a') || e.target.closest('button')) return;
+    setIsDown(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDown(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDown(false);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5; // scroll speed multiplier
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
 
   const openPdf  = (url, title) => setPdfModal({ url, title });
   const closePdf = () => setPdfModal({ url: '', title: '' });
@@ -399,15 +429,25 @@ const Certifications = () => {
           </div>
         ) : (
           <>
-            <div className="relative overflow-hidden w-full p-4 select-none">
+            <div className="relative w-full select-none">
               {/* Fade masks */}
-              <div className="absolute top-0 bottom-0 left-0 w-20 bg-gradient-to-r from-primary to-transparent z-10 pointer-events-none" />
-              <div className="absolute top-0 bottom-0 right-0 w-20 bg-gradient-to-l from-primary to-transparent z-10 pointer-events-none" />
+              <div className="absolute top-0 bottom-0 left-0 w-16 bg-gradient-to-r from-primary to-transparent z-10 pointer-events-none" />
+              <div className="absolute top-0 bottom-0 right-0 w-16 bg-gradient-to-l from-primary to-transparent z-10 pointer-events-none" />
 
-              {/* Horizontal Marquee wrapper */}
-              <div className="flex w-max gap-6 animate-[scrollHorizontal_55s_linear_infinite] hover:[animation-play-state:paused] py-2">
-                {[...filteredCerts, ...filteredCerts, ...filteredCerts].map((cert, index) => (
-                  <div key={`${cert.title}-${index}`} className="w-[320px] md:w-[350px] shrink-0">
+              {/* Horizontal scroll wrap */}
+              <div 
+                ref={scrollRef}
+                onMouseDown={handleMouseDown}
+                onMouseLeave={handleMouseLeave}
+                onMouseUp={handleMouseUp}
+                onMouseMove={handleMouseMove}
+                className={`flex gap-6 overflow-x-auto snap-x snap-mandatory py-4 px-8 no-scrollbar scroll-smooth ${
+                  isDown ? 'cursor-grabbing' : 'cursor-grab'
+                }`}
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {filteredCerts.map((cert, index) => (
+                  <div key={`${cert.title}-${index}`} className="w-[320px] md:w-[350px] shrink-0 snap-center select-none">
                     <CertificationCard cert={cert} index={0} onViewPdf={openPdf} />
                   </div>
                 ))}
