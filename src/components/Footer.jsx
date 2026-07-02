@@ -144,12 +144,11 @@ const PageViewsCounter = () => {
         const { getFirestore, doc, getDoc } = await import('firebase/firestore');
         const { app } = await import('../lib/firebase');
         const db = getFirestore(app);
-        const ref = doc(db, 'site', 'public', 'stats', 'viewsCounter');
+        const ref = doc(db, 'site', 'public');
         const snapshot = await getDoc(ref);
         if (snapshot.exists()) {
-          setViews(snapshot.data().views || 0);
+          setViews(snapshot.data().stats?.views || 0);
         } else {
-          // If public views counter document doesn't exist, count all events (fallback/initial)
           setViews(0);
         }
       } catch (err) {
