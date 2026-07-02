@@ -3,7 +3,8 @@ import { collection, query, orderBy, onSnapshot, doc, deleteDoc, updateDoc } fro
 import { Mail, Trash2, CheckCircle2, Clock, Send, Eye, MessageSquare, Terminal, X, RefreshCw } from 'lucide-react';
 import { db, functions } from '../lib/firebase';
 import { httpsCallable } from 'firebase/functions';
-import { CMS_DOCS } from '../lib/cms';
+import { CMS_DOCS, uploadCmsAsset } from '../lib/cms';
+import { Paperclip, FileText as FileIcon } from 'lucide-react';
 
 const MessagesInbox = () => {
   const [messages, setMessages] = useState([]);
@@ -14,6 +15,8 @@ const MessagesInbox = () => {
   const [replyMessage, setReplyMessage] = useState('');
   const [replySubject, setReplySubject] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
+  const [replyAttachments, setReplyAttachments] = useState([]); // [{ name: '', url: '' }]
+  const [uploadingFile, setUploadingFile] = useState(false);
   const [statusFeedback, setStatusFeedback] = useState({ type: '', text: '' }); // type: 'success' | 'error'
 
   useEffect(() => {
@@ -50,6 +53,7 @@ const MessagesInbox = () => {
     setActiveReplyId(msg.id);
     setReplySubject(`Re: Inquiry from ${msg.name} - Sahan Pramuditha Portfolio`);
     setReplyMessage(`Hi ${msg.name},\n\nThank you for reaching out! Regarding your inquiry about "${msg.projectType || 'Project'}" with a budget of "${msg.budget || 'Not Specified'}"...\n\n`);
+    setReplyAttachments([]);
     setStatusFeedback({ type: '', text: '' });
   };
 
@@ -57,7 +61,33 @@ const MessagesInbox = () => {
     setActiveReplyId(null);
     setReplyMessage('');
     setReplySubject('');
+    setReplyAttachments([]);
     setStatusFeedback({ type: '', text: '' });
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingFile(true);
+    setStatusFeedback({ type: '', text: '' });
+
+    try {
+      // Upload via existing CMS asset handler directly to Firebase Storage
+      const url = await uploadCmsAsset(file, 'uploads/replies');
+      setReplyAttachments((prev) => [...prev, { name: file.name, url }]);
+      setStatusFeedback({ type: 'success', text: `Attached ${file.name} successfully.` });
+    } catch (err) {
+      console.error('Failed to attach document:', err);
+      setStatusFeedback({ type: 'error', text: `Upload failed: ${err.message || 'Unknown error'}` });
+    } finally {
+      setUploadingFile(false);
+      event.target.value = ''; // clear input
+    }
+  };
+
+  const removeAttachment = (idxToRemove) => {
+    setReplyAttachments((prev) => prev.filter((_, idx) => idx !== idxToRemove));
   };
 
   const sendInlineReply = async (msg) => {
@@ -73,7 +103,8 @@ const MessagesInbox = () => {
       await sendReplyCallable({
         to: msg.email,
         subject: replySubject,
-        message: replyMessage
+        message: replyMessage,
+        attachments: replyAttachments // [{ name: '', url: '' }]
       });
 
       // Mark the message as read since we replied
@@ -81,7 +112,7 @@ const MessagesInbox = () => {
         await markAsRead(msg.id, false);
       }
 
-      setStatusFeedback({ type: 'success', text: `Reply successfully sent to ${msg.email}!` });
+      setStatusFeedback({ type: 'success', text: `Reply with ${replyAttachments.length} attachments sent to ${msg.email}!` });
       setTimeout(() => {
         cancelInlineReply();
       }, 2000);
@@ -202,7 +233,7 @@ const MessagesInbox = () => {
                     />
                   </div>
 
-                  <div className="space-y-1.5">
+                   <div className="space-y-1.5">
                     <label className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Message Body</label>
                     <textarea 
                       rows={5}
@@ -210,6 +241,46 @@ const MessagesInbox = () => {
                       onChange={(e) => setReplyMessage(e.target.value)}
                       className="w-full bg-primary/50 border border-white/10 rounded-lg p-3 text-sm text-text outline-none focus:border-accent font-sans leading-relaxed"
                     />
+                  </div>
+
+                  {/* Document & Image Attachments Panel */}
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-mono uppercase tracking-wider text-text-muted">Attachments</label>
+                    
+                    {/* Attachments Preview Grid */}
+                    {replyAttachments.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {replyAttachments.map((att, attIdx) => (
+                          <div key={attIdx} className="flex items-center gap-2 bg-primary/55 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-text">
+                            <FileIcon size={12} className="text-accent" />
+                            <span className="max-w-[150px] truncate text-[11px] font-mono">{att.name}</span>
+                            <button 
+                              type="button" 
+                              onClick={() => removeAttachment(attIdx)}
+                              className="text-text-muted hover:text-red-400 p-0.5"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* File Upload Selector Action */}
+                    <div className="flex items-center gap-2">
+                      <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-primary/45 hover:bg-primary/75 text-xs text-text-muted hover:text-text transition-colors">
+                        <Paperclip size={12} />
+                        {uploadingFile ? 'Uploading asset...' : 'Attach Image/Doc'}
+                        <input 
+                          type="file" 
+                          onChange={handleFileUpload} 
+                          disabled={uploadingFile}
+                          className="hidden" 
+                          accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
+                        />
+                      </label>
+                      {uploadingFile && <RefreshCw size={12} className="animate-spin text-accent" />}
+                    </div>
                   </div>
 
                   {statusFeedback.text && (
@@ -227,7 +298,7 @@ const MessagesInbox = () => {
                     </button>
                     <button
                       onClick={() => sendInlineReply(msg)}
-                      disabled={sendingReply}
+                      disabled={sendingReply || uploadingFile}
                       className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold bg-accent text-primary hover:opacity-90 disabled:opacity-50 transition-opacity"
                     >
                       {sendingReply ? <RefreshCw size={12} className="animate-spin" /> : <Send size={12} />}

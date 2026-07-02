@@ -88,7 +88,7 @@ exports.sendReply = functions.https.onCall(async (data, context) => {
     );
   }
 
-  const { to, subject, message } = data;
+  const { to, subject, message, attachments } = data;
   if (!to || !subject || !message) {
     throw new functions.https.HttpsError(
       'invalid-argument',
@@ -96,11 +96,20 @@ exports.sendReply = functions.https.onCall(async (data, context) => {
     );
   }
 
+  // Map files array to Nodemailer attachments schema if present
+  const parsedAttachments = Array.isArray(attachments)
+    ? attachments.map((att) => ({
+        filename: att.name,
+        path: att.url // Nodemailer fetches remote URLs directly
+      }))
+    : [];
+
   const mailOptions = {
     from: `"Sahan Pramuditha" <sahan.pramuditha.dev@gmail.com>`,
     to: to,
     subject: subject,
     text: message,
+    attachments: parsedAttachments,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; color: #1a202c;">
         <div style="font-size: 15px; line-height: 1.6; white-space: pre-wrap; margin-bottom: 25px;">
