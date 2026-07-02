@@ -2831,102 +2831,105 @@ const AnalyticsDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Top HUD Cards */}
-      <div className="grid gap-4 sm:grid-cols-4 font-mono">
-        <div className="rounded-2xl border border-white/5 bg-secondary/20 p-5 shadow-[0_4px_16px_rgba(0,0,0,0.25)]">
-          <span className="text-[9px] uppercase tracking-wider text-text-muted">Total Page Views</span>
-          <h3 className="text-2xl font-bold text-accent mt-1">{stats.totalViews}</h3>
-        </div>
-        <div className="rounded-2xl border border-white/5 bg-secondary/20 p-5 shadow-[0_4px_16px_rgba(0,0,0,0.25)]">
-          <span className="text-[9px] uppercase tracking-wider text-text-muted">Unique Sessions</span>
-          <h3 className="text-2xl font-bold text-accent mt-1">{stats.totalSessions}</h3>
-        </div>
-        <div className="rounded-2xl border border-white/5 bg-secondary/20 p-5 shadow-[0_4px_16px_rgba(0,0,0,0.25)]">
-          <span className="text-[9px] uppercase tracking-wider text-text-muted font-bold text-emerald-400">Live Active Users</span>
-          <h3 className="text-2xl font-bold text-emerald-400 mt-1 flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
-            {stats.liveSessions} active
-          </h3>
-        </div>
-        <div className="rounded-2xl border border-white/5 bg-secondary/20 p-5 shadow-[0_4px_16px_rgba(0,0,0,0.25)] flex flex-col justify-between">
-          <span className="text-[9px] uppercase tracking-wider text-text-muted">Database Maintenance</span>
-          <button
-            onClick={handlePruneLogs}
-            disabled={pruning}
-            className="w-full mt-2 inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-red-500/20 hover:border-red-500/40 bg-red-500/10 hover:bg-red-500/20 text-[10px] font-bold text-red-400 transition-colors"
-          >
-            {pruning ? <RefreshCw size={11} className="animate-spin" /> : <Trash size={11} />}
-            Prune Database Logs
-          </button>
-        </div>
-      </div>
-
-      {/* Daily Traffic Chart */}
-      <div className="rounded-2xl border border-white/10 bg-secondary/20 p-6 relative overflow-hidden">
-        {/* Cyberpunk grid background pattern */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(0,0,0,0.4))] pointer-events-none" />
-        <div 
-          className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-          style={{
-            backgroundImage: `radial-gradient(var(--color-accent) 1px, transparent 0)`,
-            backgroundSize: '16px 16px',
-          }}
-        />
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/5 pb-4 mb-4 gap-3 relative z-10">
-          <h3 className="font-display font-bold text-text text-xs tracking-wider flex items-center gap-2 text-text-muted">
-            <LineChart size={14} className="text-accent animate-pulse" />
-            TRAFFIC PROFILE & DATA THROTTLES (7 ACTIVE DAYS)
-          </h3>
-          
-          {/* Chart Metric Selectors */}
-          <div className="flex gap-1.5">
-            {[
-              { id: 'page_view', label: 'Views' },
-              { id: 'contact_submit', label: 'Inquiries' },
-              { id: 'download', label: 'Downloads' },
-            ].map((btn) => (
-              <button
-                key={btn.id}
-                type="button"
-                onClick={() => setChartMetricFilter(btn.id)}
-                className={`px-3 py-1 rounded-lg text-[9px] font-mono font-bold transition-all border ${
-                  chartMetricFilter === btn.id
-                    ? 'bg-accent/15 border-accent/35 text-accent'
-                    : 'bg-primary/45 border-white/5 text-text-muted hover:border-white/10 hover:text-text'
-                }`}
-              >
-                {btn.label}
-              </button>
-            ))}
+      {/* Telemetry Status Column & Daily Chart Row Grid */}
+      <div className="grid gap-6 md:grid-cols-4">
+        {/* Left Telemetry Sidebar - Stacked Vertically */}
+        <div className="flex flex-col gap-4 font-mono md:col-span-1">
+          <div className="rounded-2xl border border-white/5 bg-secondary/20 p-5 shadow-[0_4px_16px_rgba(0,0,0,0.25)] flex flex-col justify-between h-24">
+            <span className="text-[9px] uppercase tracking-wider text-text-muted">Total Page Views</span>
+            <h3 className="text-2xl font-bold text-accent mt-1">{stats.totalViews}</h3>
+          </div>
+          <div className="rounded-2xl border border-white/5 bg-secondary/20 p-5 shadow-[0_4px_16px_rgba(0,0,0,0.25)] flex flex-col justify-between h-24">
+            <span className="text-[9px] uppercase tracking-wider text-text-muted">Unique Sessions</span>
+            <h3 className="text-2xl font-bold text-accent mt-1">{stats.totalSessions}</h3>
+          </div>
+          <div className="rounded-2xl border border-white/5 bg-secondary/20 p-5 shadow-[0_4px_16px_rgba(0,0,0,0.25)] flex flex-col justify-between h-24">
+            <span className="text-[9px] uppercase tracking-wider text-text-muted font-bold text-emerald-400">Live Active Users</span>
+            <h3 className="text-2xl font-bold text-emerald-400 mt-1 flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
+              {stats.liveSessions} active
+            </h3>
+          </div>
+          <div className="rounded-2xl border border-white/5 bg-secondary/20 p-5 shadow-[0_4px_16px_rgba(0,0,0,0.25)] flex flex-col justify-between h-24">
+            <span className="text-[9px] uppercase tracking-wider text-text-muted">Pruning HUD</span>
+            <button
+              onClick={handlePruneLogs}
+              disabled={pruning}
+              className="w-full mt-2 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-500/20 hover:border-red-500/40 bg-red-500/10 hover:bg-red-500/20 text-[9px] font-bold text-red-400 transition-colors"
+            >
+              {pruning ? <RefreshCw size={11} className="animate-spin" /> : <Trash size={11} />}
+              Prune Logs
+            </button>
           </div>
         </div>
-        
-        {/* SVG Chart */}
-        <div className="h-44 w-full flex items-end gap-4 mt-6 border-b border-white/10 pb-2 relative z-10">
-          {stats.dateData.map((val, idx) => {
-            const pct = (val / stats.maxDailyView) * 100;
-            return (
-              <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group relative">
-                {/* Tooltip */}
-                <span className="absolute -top-7 bg-accent text-primary text-[10px] font-bold font-mono px-2 py-0.5 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
-                  {val} {chartMetricFilter === 'page_view' ? 'views' : chartMetricFilter === 'contact_submit' ? 'inquiries' : 'downloads'}
-                </span>
-                {/* Bar with cyberpunk double accent glow */}
-                <div className="w-full relative flex flex-col justify-end h-full">
-                  <div 
-                    style={{ height: `${pct || 4}%` }} 
-                    className="w-full bg-gradient-to-t from-accent/5 to-accent/30 border border-accent/40 rounded-t-lg group-hover:border-accent group-hover:from-accent/10 group-hover:to-accent/50 shadow-[0_0_15px_rgba(var(--color-accent-rgb),0.15)] group-hover:shadow-[0_0_25px_rgba(var(--color-accent-rgb),0.3)] transition-all duration-300 relative overflow-hidden"
-                  >
-                    {/* Top scanning pulse line */}
-                    <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-accent animate-pulse" />
+
+        {/* Right - Large Daily Traffic Chart */}
+        <div className="rounded-2xl border border-white/10 bg-secondary/20 p-6 relative overflow-hidden md:col-span-3 flex flex-col justify-between">
+          {/* Cyberpunk grid background pattern */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(0,0,0,0.4))] pointer-events-none" />
+          <div 
+            className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+            style={{
+              backgroundImage: `radial-gradient(var(--color-accent) 1px, transparent 0)`,
+              backgroundSize: '16px 16px',
+            }}
+          />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/5 pb-4 mb-4 gap-3 relative z-10">
+            <h3 className="font-display font-bold text-text text-xs tracking-wider flex items-center gap-2 text-text-muted">
+              <LineChart size={14} className="text-accent animate-pulse" />
+              TRAFFIC PROFILE & DATA THROTTLES (7 ACTIVE DAYS)
+            </h3>
+            
+            {/* Chart Metric Selectors */}
+            <div className="flex gap-1.5">
+              {[
+                { id: 'page_view', label: 'Views' },
+                { id: 'contact_submit', label: 'Inquiries' },
+                { id: 'download', label: 'Downloads' },
+              ].map((btn) => (
+                <button
+                  key={btn.id}
+                  type="button"
+                  onClick={() => setChartMetricFilter(btn.id)}
+                  className={`px-3 py-1 rounded-lg text-[9px] font-mono font-bold transition-all border ${
+                    chartMetricFilter === btn.id
+                      ? 'bg-accent/15 border-accent/35 text-accent'
+                      : 'bg-primary/45 border-white/5 text-text-muted hover:border-white/10 hover:text-text'
+                  }`}
+                >
+                  {btn.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* SVG Chart */}
+          <div className="h-44 w-full flex items-end gap-4 mt-6 border-b border-white/10 pb-2 relative z-10">
+            {stats.dateData.map((val, idx) => {
+              const pct = (val / stats.maxDailyView) * 100;
+              return (
+                <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group relative">
+                  {/* Tooltip */}
+                  <span className="absolute -top-7 bg-accent text-primary text-[10px] font-bold font-mono px-2 py-0.5 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
+                    {val} {chartMetricFilter === 'page_view' ? 'views' : chartMetricFilter === 'contact_submit' ? 'inquiries' : 'downloads'}
+                  </span>
+                  {/* Bar with cyberpunk double accent glow */}
+                  <div className="w-full relative flex flex-col justify-end h-full">
+                    <div 
+                      style={{ height: `${pct || 4}%` }} 
+                      className="w-full bg-gradient-to-t from-accent/5 to-accent/30 border border-accent/40 rounded-t-lg group-hover:border-accent group-hover:from-accent/10 group-hover:to-accent/50 shadow-[0_0_15px_rgba(var(--color-accent-rgb),0.15)] group-hover:shadow-[0_0_25px_rgba(var(--color-accent-rgb),0.3)] transition-all duration-300 relative overflow-hidden"
+                    >
+                      {/* Top scanning pulse line */}
+                      <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-accent animate-pulse" />
+                    </div>
                   </div>
+                  <span className="text-[10px] text-text-muted font-mono mt-2 block whitespace-nowrap">
+                    {stats.dateLabels[idx]}
+                  </span>
                 </div>
-                <span className="text-[10px] text-text-muted font-mono mt-2 block whitespace-nowrap">
-                  {stats.dateLabels[idx]}
-                </span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
 
