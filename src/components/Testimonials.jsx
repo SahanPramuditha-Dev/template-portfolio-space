@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Quote, Star } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
@@ -8,6 +8,67 @@ import { CmsSectionSkeleton } from './CmsShapeSkeleton';
 const Testimonials = () => {
   const { data, loading } = useCmsDoc(CMS_DOCS.testimonials, { items: [] });
   const testimonials = Array.isArray(data?.items) ? data.items : [];
+  
+  const scrollContainerRef = useRef(null);
+  const isInteractingRef = useRef(false);
+
+  // Mouse Drag to Scroll states
+  const dragStartRef = useRef({ x: 0, scrollLeft: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    if (testimonials.length === 0) return undefined;
+
+    const container = scrollContainerRef.current;
+    if (!container) return undefined;
+
+    let frameId;
+    const speed = 0.6; // Scroll speed in pixels per frame
+
+    const step = () => {
+      if (!isInteractingRef.current && container) {
+        container.scrollLeft += speed;
+        
+        // Loop back seamlessly when scrolling past one complete set of cards
+        const maxScroll = container.scrollWidth / 3;
+        if (container.scrollLeft >= maxScroll) {
+          container.scrollLeft = 0;
+        }
+      }
+      frameId = requestAnimationFrame(step);
+    };
+
+    frameId = requestAnimationFrame(step);
+
+    return () => cancelAnimationFrame(frameId);
+  }, [testimonials]);
+
+  // Mouse Drag Events Handler
+  const handleMouseDown = (e) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    isInteractingRef.current = true;
+    setIsDragging(true);
+    dragStartRef.current = {
+      x: e.pageX - container.offsetLeft,
+      scrollLeft: container.scrollLeft,
+    };
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const x = e.pageX - container.offsetLeft;
+    const walk = (x - dragStartRef.current.x) * 1.5; // Drag sensitivity multiplier
+    container.scrollLeft = dragStartRef.current.scrollLeft - walk;
+  };
+
+  const handleMouseUpOrLeave = () => {
+    setIsDragging(false);
+    isInteractingRef.current = false;
+  };
 
   if (loading || data === undefined) {
     return <CmsSectionSkeleton id="testimonials" />;
@@ -38,47 +99,31 @@ const Testimonials = () => {
             </a>
           </div>
         ) : (
-          <div className="relative w-full p-4 group/carousel">
-            {/* Top Right Navigation Controls */}
-            <div className="absolute -top-16 right-4 flex items-center gap-2 z-20">
-              <button
-                type="button"
-                onClick={() => {
-                  const el = document.getElementById('testimonials_scroller');
-                  if (el) el.scrollBy({ left: -360, behavior: 'smooth' });
-                }}
-                className="p-2.5 rounded-full border border-white/5 bg-secondary/35 text-text-muted hover:border-accent/40 hover:text-accent transition-colors"
-                aria-label="Scroll left"
-              >
-                <span className="block transform rotate-180">➜</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const el = document.getElementById('testimonials_scroller');
-                  if (el) el.scrollBy({ left: 360, behavior: 'smooth' });
-                }}
-                className="p-2.5 rounded-full border border-white/5 bg-secondary/35 text-text-muted hover:border-accent/40 hover:text-accent transition-colors"
-                aria-label="Scroll right"
-              >
-                <span>➜</span>
-              </button>
-            </div>
-
+          <div className="relative w-full p-4">
             {/* Left and Right gradient mask for smooth side fade out */}
-            <div className="absolute top-0 bottom-0 left-0 w-16 bg-gradient-to-r from-primary to-transparent z-10 pointer-events-none" />
-            <div className="absolute top-0 bottom-0 right-0 w-16 bg-gradient-to-l from-primary to-transparent z-10 pointer-events-none" />
+            <div className="absolute top-0 bottom-0 left-0 w-24 bg-gradient-to-r from-primary to-transparent z-10 pointer-events-none" />
+            <div className="absolute top-0 bottom-0 right-0 w-24 bg-gradient-to-l from-primary to-transparent z-10 pointer-events-none" />
 
-            {/* Native scrollable track with drag-to-scroll configuration */}
-            <div 
-              id="testimonials_scroller"
-              className="flex gap-6 overflow-x-auto scrollbar-none snap-x snap-mandatory py-4 relative scroll-smooth cursor-grab active:cursor-grabbing select-none"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            {/* Scrollable Container with Grab cursor */}
+            <div
+              ref={scrollContainerRef}
+              className={`flex gap-6 overflow-x-auto scrollbar-none select-none ${
+                isDragging ? 'cursor-grabbing' : 'cursor-grab'
+              }`}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUpOrLeave}
+              onMouseLeave={handleMouseUpOrLeave}
+              onTouchStart={() => { isInteractingRef.current = true; }}
+              onTouchEnd={() => { isInteractingRef.current = false; }}
+              style={{
+                scrollBehavior: isDragging ? 'auto' : 'smooth'
+              }}
             >
-              {testimonials.map((item, idx) => (
+              {[...testimonials, ...testimonials, ...testimonials].map((item, idx) => (
                 <article
                   key={`${item.name}-${idx}`}
-                  className="rounded-3xl border border-white/5 hover:border-accent/30 bg-secondary/15 hover:bg-secondary/30 p-6 backdrop-blur-md transition-all duration-300 transform hover:scale-[1.01] flex flex-col justify-between w-[300px] md:w-[360px] shrink-0 min-h-[220px] snap-start"
+                  className="rounded-3xl border border-white/5 hover:border-accent/30 bg-secondary/15 hover:bg-secondary/30 p-6 backdrop-blur-md transition-all duration-300 transform hover:scale-[1.01] flex flex-col justify-between w-[320px] md:w-[380px] shrink-0 min-h-[220px]"
                 >
                   <div>
                     <Quote className="mb-3 text-accent/80" size={24} />
