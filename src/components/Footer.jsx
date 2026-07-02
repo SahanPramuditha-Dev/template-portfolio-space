@@ -147,12 +147,15 @@ const PageViewsCounter = () => {
         const ref = doc(db, 'site', 'public');
         const snapshot = await getDoc(ref);
         if (snapshot.exists()) {
-          setViews(snapshot.data().stats?.views || 0);
+          const val = snapshot.data().stats?.views || 0;
+          console.log('[DEBUG] Public views counter resolved to:', val);
+          setViews(val);
         } else {
+          console.log('[DEBUG] Public views document site/public does not exist.');
           setViews(0);
         }
       } catch (err) {
-        console.error('Failed to get public page views count:', err);
+        console.error('[DEBUG] Failed to get public page views count:', err);
       }
     };
     getCount();
