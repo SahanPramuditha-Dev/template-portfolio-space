@@ -111,12 +111,25 @@ const About = () => {
         .filter(Boolean)
     : [];
 
-  const projectCount = Array.isArray(projectsDoc?.items) ? projectsDoc.items.length : 0;
+  const projectItems = Array.isArray(projectsDoc?.items) ? projectsDoc.items : [];
   
+  // Calculate completed projects
+  const completedCount = projectItems.filter(p => p.completed === true || p.completed === 'true').length;
+  
+  // Calculate happy clients (projectType is client, completed, and not private)
+  const happyClientsCount = projectItems.filter(p => 
+    (p.projectType === 'client') &&
+    (p.completed === true || p.completed === 'true') &&
+    (p.isPrivate !== true && p.isPrivate !== 'true')
+  ).length;
+
   const aboutStats = Array.isArray(siteDoc?.aboutStatsJson) ? siteDoc.aboutStatsJson.map(stat => {
     const labelLower = stat.label?.toLowerCase() || '';
     if (labelLower.includes('projects completed')) {
-      return { ...stat, value: projectCount > 0 ? projectCount : stat.value };
+      return { ...stat, value: completedCount > 0 ? completedCount : stat.value };
+    }
+    if (labelLower.includes('happy clients')) {
+      return { ...stat, value: happyClientsCount > 0 ? happyClientsCount : stat.value };
     }
     if (labelLower.includes('lines of code') && githubData.loc > 0) {
       const kLines = Math.floor(githubData.loc / 1000);
