@@ -133,10 +133,47 @@ export const uploadCmsAsset = async (file, folder = 'uploads') => {
 };
 
 export const listCmsAssets = async (folder = 'uploads') => {
+  // If listing root library, explicitly query all expected upload folders
+  if (folder === 'uploads') {
+    const foldersToFetch = [
+      'uploads',
+      'uploads/projects',
+      'uploads/certifications',
+      'uploads/resources',
+      'uploads/replies',
+      'uploads/skills',
+      'uploads/experience',
+      'uploads/blog',
+      'uploads/services'
+    ];
+    
+    const results = await Promise.all(
+      foldersToFetch.map(async (folderPath) => {
+        try {
+          const folderRef = ref(storage, folderPath);
+          const res = await listAll(folderRef);
+          return await Promise.all(
+            res.items.map(async (itemRef) => {
+              const url = await getDownloadURL(itemRef);
+              return {
+                name: itemRef.name,
+                fullPath: itemRef.fullPath,
+                url,
+              };
+            })
+          );
+        } catch {
+          // Ignore folders that haven't been created/uploaded to yet
+          return [];
+        }
+      })
+    );
+    return results.flat();
+  }
+
+  // Fallback direct folder resolution for specific recursive queries
   const folderRef = ref(storage, folder);
   const res = await listAll(folderRef);
-
-  // 1. Resolve files in the current folder path
   const currentFolderFiles = await Promise.all(
     res.items.map(async (itemRef) => {
       const url = await getDownloadURL(itemRef);
@@ -147,14 +184,7 @@ export const listCmsAssets = async (folder = 'uploads') => {
       };
     })
   );
-
-  // 2. Recursively resolve files in sub-folders (like projects/, blog/, etc.)
-  const subFolderFilesArrays = await Promise.all(
-    res.prefixes.map((subFolderRef) => listCmsAssets(subFolderRef.fullPath))
-  );
-
-  // 3. Combine and return all assets
-  return [...currentFolderFiles, ...subFolderFilesArrays.flat()];
+  return currentFolderFiles;
 };
 
 export const deleteCmsAsset = async (fullPath) => {
