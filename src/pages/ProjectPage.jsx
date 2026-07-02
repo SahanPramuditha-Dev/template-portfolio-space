@@ -344,10 +344,22 @@ const ProjectPage = () => {
                   className="space-y-10"
                 >
                   {/* Build Notes / Architecture */}
-                  {(project.architecture || project.learned || project.lessonsLearned) && (
+                  {(project.architecture || project.architectureImage || project.learned || project.lessonsLearned) && (
                     <section id="build-notes" className="rounded-3xl border border-white/10 bg-secondary/20 p-6 md:p-10 backdrop-blur-md">
                       <h2 className="mb-6 text-2xl font-bold text-text border-b border-white/10 pb-4">Build Notes & Architecture</h2>
                       <div className="space-y-8">
+                        {project.architectureImage && (
+                          <div className="w-full overflow-hidden rounded-2xl border border-white/10 bg-black/40 p-4 flex justify-center shadow-inner group">
+                            <a href={project.architectureImage} target="_blank" rel="noreferrer" title="Click to view full architecture diagram" className="relative block w-full max-w-4xl cursor-zoom-in">
+                              <img
+                                src={project.architectureImage}
+                                alt="System Architecture Diagram"
+                                className="w-full h-auto max-h-[420px] object-contain rounded-xl transition-transform duration-500 group-hover:scale-[1.01]"
+                                loading="lazy"
+                              />
+                            </a>
+                          </div>
+                        )}
                         {project.architecture && (
                           <div className="font-sans text-sm text-text-muted leading-relaxed">
                             {renderSimpleMarkdown(project.architecture)}

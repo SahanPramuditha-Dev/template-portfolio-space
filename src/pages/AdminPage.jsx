@@ -299,6 +299,7 @@ const initialProject = {
   shortDescription: '',
   description: '',
   architecture: '',
+  architectureImage: '',
   features: [],
   learned: '',
   impactMetricsJson: [],
@@ -667,6 +668,7 @@ const projectFields = [
   { key: 'videoUrl', label: 'Video preview URL (mp4/webm)', type: 'text', group: 'media' },
   { key: 'videoCaption', label: 'Video caption', type: 'text', group: 'media' },
   { key: 'thumbnail', label: 'Thumbnail URL', type: 'image', group: 'media' },
+  { key: 'architectureImage', label: 'Architecture Diagram Image', type: 'image', group: 'media' },
   {
     key: 'documents',
     label: 'Documents & Presentations',
