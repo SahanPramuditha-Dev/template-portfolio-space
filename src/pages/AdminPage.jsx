@@ -40,7 +40,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { db } from '../lib/firebase';
-import { collection, getDocs, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import {
   CMS_DOCS,
   loginWithEmail,
@@ -2559,50 +2559,48 @@ const AnalyticsDashboard = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchAnalytics = async () => {
-      try {
-        setLoading(true);
-        // Query up to 2000 events sorted by timestamp
-        const q = query(
-          collection(db, 'analyticsEvents'),
-          orderBy('timestamp', 'desc'),
-          limit(2000)
-        );
-        const snapshot = await getDocs(q);
-        const docs = [];
-        snapshot.forEach((doc) => {
-          docs.push({ id: doc.id, ...doc.data() });
-        });
+    // Realtime query listener streaming up to 300 telemetry events
+    const q = query(
+      collection(db, 'analyticsEvents'),
+      orderBy('timestamp', 'desc'),
+      limit(300)
+    );
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const docs = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
         setEvents(docs);
         setError(null);
-      } catch (err) {
-        console.error('Failed to query telemetry database:', err);
-        setError(`Uplink failed. Could not read telemetry events database. (${err.message || err.code})`);
-      } finally {
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Failed to stream telemetry logs:', err);
+        setError(`Uplink stream failed: ${err.message}`);
         setLoading(false);
       }
-    };
-    fetchAnalytics();
+    );
+    return () => unsubscribe();
   }, []);
 
   // Aggregations
   const stats = useMemo(() => {
     if (events.length === 0) return null;
 
-    // Helper: Format timestamp to YYYY-MM-DD
     const formatDate = (ts) => {
       if (!ts) return '';
       const date = ts.toDate ? ts.toDate() : new Date(ts);
       return date.toISOString().split('T')[0];
     };
 
-    const totalViews = events.filter(e => e.eventName === 'page_view').length;
-    const totalSessions = new Set(events.map(e => e.sessionId).filter(Boolean)).size;
-    const totalContacts = events.filter(e => e.eventName === 'contact_submit').length;
+    const totalViews = events.filter((e) => e.eventName === 'page_view').length;
+    const totalSessions = new Set(events.map((e) => e.sessionId).filter(Boolean)).size;
 
     // 1. Page views over time (last 7 active days)
     const dailyViews = {};
-    events.forEach(e => {
+    events.forEach((e) => {
       if (e.eventName === 'page_view') {
         const dateStr = formatDate(e.timestamp);
         if (dateStr) dailyViews[dateStr] = (dailyViews[dateStr] || 0) + 1;
@@ -2611,13 +2609,13 @@ const AnalyticsDashboard = () => {
 
     // Sort dates
     const sortedDates = Object.keys(dailyViews).sort().slice(-7);
-    const dateLabels = sortedDates.map(d => d.slice(5)); // MM-DD
-    const dateData = sortedDates.map(d => dailyViews[d]);
+    const dateLabels = sortedDates.map((d) => d.slice(5)); // MM-DD
+    const dateData = sortedDates.map((d) => dailyViews[d]);
     const maxDailyView = Math.max(...dateData, 1);
 
     // 2. Top pages
     const pageCounts = {};
-    events.forEach(e => {
+    events.forEach((e) => {
       if (e.eventName === 'page_view' && e.eventData?.path) {
         const p = e.eventData.path;
         pageCounts[p] = (pageCounts[p] || 0) + 1;
@@ -2628,9 +2626,9 @@ const AnalyticsDashboard = () => {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
-    // 3. Scroll depth (funnel for '/')
+    // 3. Scroll depth (funnel)
     const scrollCounts = { '25%': 0, '50%': 0, '75%': 0, '100%': 0 };
-    events.forEach(e => {
+    events.forEach((e) => {
       if (e.eventName === 'scroll_depth' && e.eventData?.depth) {
         const depthKey = `${e.eventData.depth}%`;
         if (scrollCounts[depthKey] !== undefined) {
@@ -2642,7 +2640,7 @@ const AnalyticsDashboard = () => {
 
     // 4. Click events (clicks on social networks + resume)
     const clickCounts = {};
-    events.forEach(e => {
+    events.forEach((e) => {
       if (e.eventName === 'social_click' && e.eventData?.platform) {
         const p = e.eventData.platform;
         clickCounts[p] = (clickCounts[p] || 0) + 1;
@@ -2659,7 +2657,7 @@ const AnalyticsDashboard = () => {
 
     // 5. Top Projects Viewed
     const projectCounts = {};
-    events.forEach(e => {
+    events.forEach((e) => {
       if (e.eventName === 'project_view' && e.eventData?.project_title) {
         const title = e.eventData.project_title;
         projectCounts[title] = (projectCounts[title] || 0) + 1;
@@ -2673,7 +2671,6 @@ const AnalyticsDashboard = () => {
     return {
       totalViews,
       totalSessions,
-      totalContacts,
       dateLabels,
       dateData,
       maxDailyView,
@@ -2726,8 +2723,8 @@ const AnalyticsDashboard = () => {
           <h3 className="text-2xl font-bold text-accent mt-1">{stats.totalSessions}</h3>
         </div>
         <div className="rounded-2xl border border-white/5 bg-secondary/20 p-5">
-          <span className="text-[9px] uppercase tracking-wider text-text-muted font-bold text-emerald-400">Telemetry Uplinks</span>
-          <h3 className="text-2xl font-bold text-emerald-400 mt-1">{events.length} logs</h3>
+          <span className="text-[9px] uppercase tracking-wider text-text-muted font-bold text-emerald-400 font-mono">Telemetry Logs</span>
+          <h3 className="text-2xl font-bold text-emerald-400 mt-1">{events.length} docs</h3>
         </div>
       </div>
 
@@ -2839,6 +2836,50 @@ const AnalyticsDashboard = () => {
               <p className="text-center text-text-muted text-xs py-4">No project view logs yet.</p>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Live Stream Recent Activity Log Feed Terminal */}
+      <div className="rounded-2xl border border-white/10 bg-secondary/20 p-6">
+        <h3 className="font-display font-bold text-text mb-4 text-xs tracking-wider flex items-center gap-2 text-text-muted">
+          <Terminal size={14} className="text-accent" />
+          REALTIME TELEMETRY LOGS (RECENT ACTIVITY)
+        </h3>
+        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 [scrollbar-width:thin] font-mono text-[11px] text-text-muted">
+          {events.slice(0, 50).map((log) => {
+            const time = log.timestamp?.toDate ? log.timestamp.toDate().toLocaleTimeString() : 'Recent';
+            let eventText = '';
+            
+            if (log.eventName === 'page_view') {
+              eventText = `Page View: "${log.eventData?.path || '/'}"`;
+            } else if (log.eventName === 'project_view') {
+              eventText = `Viewed Project: "${log.eventData?.project_title || 'N/A'}"`;
+            } else if (log.eventName === 'social_click') {
+              eventText = `Clicked Social Link: "${log.eventData?.platform || 'N/A'}"`;
+            } else if (log.eventName === 'download') {
+              eventText = `Downloaded Resume: [${log.eventData?.file_type?.toUpperCase() || 'PDF'}]`;
+            } else if (log.eventName === 'scroll_depth') {
+              eventText = `Scrolled through ${log.eventData?.depth || '0'}% of Homepage`;
+            } else if (log.eventName === 'contact_submit') {
+              eventText = `Submitted Inquiry Form`;
+            } else {
+              eventText = `Triggered Event: ${log.eventName}`;
+            }
+
+            return (
+              <div key={log.id} className="flex justify-between items-center gap-4 bg-primary/35 border border-white/5 rounded-lg px-3 py-2 hover:bg-primary/50 transition-colors">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-[10px] text-accent font-bold">[{time}]</span>
+                  <span className="text-text truncate">{eventText}</span>
+                </div>
+                <div className="shrink-0 flex items-center gap-2 text-[10px] text-text-muted/60">
+                  <span>Session: {log.sessionId?.substring(0, 6) || 'Guest'}</span>
+                  <span>•</span>
+                  <span>{log.eventData?.device || 'Desktop'}</span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
