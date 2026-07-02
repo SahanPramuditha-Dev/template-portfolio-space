@@ -33,7 +33,7 @@ const Testimonials = () => {
 
     const animate = () => {
       if (autoScrollActive.current && !isDragging.current) {
-        el.scrollLeft += 0.8; // Smooth auto-scroll increments
+        el.scrollLeft += 0.35; // Significantly slower, elegant glide speed
 
         // Infinite boundary check: if scrolled past the 2/3 threshold, reset to 1/3 (loop seamless)
         const limit = (el.scrollWidth * 2) / 3;
@@ -70,16 +70,17 @@ const Testimonials = () => {
     e.preventDefault();
 
     const x = e.pageX - el.offsetLeft;
-    const walk = (x - startX.current) * 1.5; // Drag sensitivity
+    const walk = (x - startX.current) * 1.0; // Perfect 1:1 mouse movement mapping (smooth friction)
     el.scrollLeft = scrollLeftStart.current - walk;
 
     // Loop boundaries check during dragging
     const oneThirdWidth = el.scrollWidth / 3;
-    if (el.scrollLeft <= 10) {
+    const limitMax = (el.scrollWidth * 2) / 3;
+    if (el.scrollLeft <= 50) {
       el.scrollLeft += oneThirdWidth;
       startX.current = x; // Reset start reference on boundary jumps
       scrollLeftStart.current = el.scrollLeft;
-    } else if (el.scrollLeft >= (el.scrollWidth * 2) / 3) {
+    } else if (el.scrollLeft >= limitMax - 50) {
       el.scrollLeft -= oneThirdWidth;
       startX.current = x;
       scrollLeftStart.current = el.scrollLeft;
