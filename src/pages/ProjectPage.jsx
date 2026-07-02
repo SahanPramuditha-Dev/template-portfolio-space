@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion, useScroll, useSpring, useTransform, AnimatePresence, useMotionValueEvent } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ExternalLink, Github, Calendar, Layers, Target, Zap, ArrowLeft, ArrowRight, Clock, Code2, Database, Layout, Server, Globe, Boxes, FileText, Download, Lock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ExternalLink, Github, Calendar, Layers, Target, Zap, ArrowLeft, ArrowRight, Clock, Code2, Database, Layout, Server, Globe, Boxes, FileText, Download, Lock, Users } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import AnimatedCounter from '../components/AnimatedCounter';
@@ -116,9 +116,9 @@ const ProjectPage = () => {
       <PageShell
         backHref="/#projects"
       >
-        <article className="mx-auto w-full max-w-5xl space-y-12 lg:space-y-16 pb-20">
+        <article className="mx-auto w-full max-w-5xl space-y-8 pb-12">
           {/* Hero Section */}
-          <div className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-black/40 shadow-2xl h-[40vh] min-h-[300px] md:h-[60vh] md:min-h-[500px]">
+          <div className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-black/40 shadow-2xl h-[25vh] min-h-[220px] md:h-[35vh] md:min-h-[300px]">
             <motion.div style={{ y: heroY }} className="absolute inset-0 w-full h-full">
               {heroSlide?.kind === 'video' ? (
                 <div className="relative h-full w-full flex items-center justify-center bg-black">
@@ -187,12 +187,30 @@ const ProjectPage = () => {
                   {project.year}
                 </span>
               )}
+              {project.projectTimeline && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-secondary/40 bg-primary/40 px-4 py-2 text-xs text-text-muted font-medium font-mono">
+                  <Clock size={13} />
+                  {project.projectTimeline}
+                </span>
+              )}
+              {project.teamSize && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-secondary/40 bg-primary/40 px-4 py-2 text-xs text-text-muted font-medium font-mono">
+                  <Users size={13} className="text-accent" />
+                  Team: {project.teamSize}
+                </span>
+              )}
+              {project.client && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-secondary/40 bg-primary/40 px-4 py-2 text-xs text-text-muted font-medium font-mono">
+                  <Target size={13} className="text-accent" />
+                  Client: {project.client}
+                </span>
+              )}
               <span className={`rounded-full px-4 py-2 text-xs font-mono border ${
                 project.projectType === 'client'
                   ? 'border-blue-400/25 bg-blue-500/10 text-blue-300'
                   : 'border-cyan-400/25 bg-cyan-500/10 text-cyan-300'
               }`}>
-                {project.projectType === 'client' ? 'Client Project' : 'Personal Project'}
+                {project.projectType === 'client' ? 'Client' : 'Personal'}
               </span>
               {project.category && (
                 <span className="rounded-full border border-accent/20 bg-accent/10 px-4 py-2 text-xs font-mono text-accent">
@@ -207,7 +225,7 @@ const ProjectPage = () => {
                 {project.completed === true || project.completed === 'true' ? 'Completed' : 'In Progress'}
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-text-muted font-medium font-mono">
-                <Clock size={13} />
+                <FileText size={13} />
                 {readTime} min read
               </span>
             </div>
@@ -234,35 +252,7 @@ const ProjectPage = () => {
               )}
             </div>
 
-            {(() => {
-              const metaItems = [
-                ['Client', project.client || project.company, <Target size={16} />],
-                ['Industry', project.industry, <Layers size={16} />],
-                ['Timeline', project.projectTimeline, <Calendar size={16} />],
-                ['Team', project.teamSize, <Zap size={16} />],
-              ].filter(([, value]) => value);
-
-              if (metaItems.length === 0) return null;
-
-              let gridCols = 'grid-cols-2 lg:grid-cols-4';
-              if (metaItems.length === 1) gridCols = 'grid-cols-1';
-              if (metaItems.length === 2) gridCols = 'grid-cols-1 sm:grid-cols-2';
-              if (metaItems.length === 3) gridCols = 'grid-cols-1 sm:grid-cols-3';
-
-              return (
-                <dl className={`grid ${gridCols} gap-4 p-4 rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-xl shadow-2xl`}>
-                  {metaItems.map(([label, value, icon]) => (
-                    <div key={label} className="group flex flex-col justify-center rounded-2xl border border-white/5 bg-white/5 p-6 transition-colors hover:bg-accent/10 hover:border-accent/30">
-                      <dt className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted transition-colors group-hover:text-accent">
-                        {icon}
-                        {label}
-                      </dt>
-                      <dd className="text-lg font-black tracking-tight text-white">{value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              );
-            })()}
+            {/* Dynamic metadata cards are removed as they are displayed inline above */}
           </div>
 
           {/* Snappy Case Study Tab Selector */}
