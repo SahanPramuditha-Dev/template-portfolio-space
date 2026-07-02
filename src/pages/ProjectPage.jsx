@@ -119,7 +119,7 @@ const ProjectPage = () => {
       <PageShell
         backHref="/#projects"
       >
-        <article className="mx-auto w-full max-w-5xl space-y-8 pb-12">
+        <article className="relative z-10 mx-auto w-full max-w-5xl space-y-8 pb-12">
           {/* Hero Section */}
           <div className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-black/40 shadow-2xl h-[25vh] min-h-[220px] md:h-[35vh] md:min-h-[300px]">
             <motion.div style={{ y: heroY }} className="absolute inset-0 w-full h-full">
@@ -577,10 +577,10 @@ const CanvasStarfield = () => {
       particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        radius: Math.random() * 1.2 + 0.3,
-        vx: (Math.random() - 0.5) * 0.12,
-        vy: (Math.random() - 0.5) * 0.12,
-        alpha: Math.random() * 0.5 + 0.1,
+        radius: Math.random() * 1.8 + 0.6, // Slightly larger particles
+        vx: (Math.random() - 0.5) * 0.22,  // Drifts slightly faster
+        vy: (Math.random() - 0.5) * 0.22,
+        alpha: Math.random() * 0.65 + 0.25, // Higher opacity range for visibility
       });
     }
 
@@ -590,7 +590,7 @@ const CanvasStarfield = () => {
       particles.forEach((p) => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(14, 165, 233, ${p.alpha})`; // Light blue star dust
+        ctx.fillStyle = `rgba(56, 189, 248, ${p.alpha})`; // Glowing cyan stardust
         ctx.fill();
 
         // Slow drift
@@ -618,7 +618,7 @@ const CanvasStarfield = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none -z-10 bg-transparent"
+      className="fixed inset-0 pointer-events-none z-0 bg-transparent"
       style={{ mixBlendMode: 'screen' }}
     />
   );
