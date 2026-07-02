@@ -2305,7 +2305,7 @@ const SiteEditor = () => {
         <SectionBanner
           icon={Settings2}
           title="Website Content"
-          help="Switch tabs to focus on one area at a time. Saving writes all sections to Firestore."
+          help="Configure general website metadata, sections bio text, career statistics, and social handles."
           onSave={save}
           onReset={() => setDraft(normalizeSiteDraft(initialSiteContent))}
           hidePrimarySave
@@ -2313,9 +2313,10 @@ const SiteEditor = () => {
 
         <AdminStatus message={status} />
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-          <p className="text-xs font-mono uppercase tracking-[0.14em] text-text-muted">Section</p>
-          <div className="flex flex-wrap gap-2">
+        <div className="grid gap-6 md:grid-cols-[200px_1fr] items-start pt-2">
+          {/* Internal Section Index Navigation Menu */}
+          <div className="flex flex-col gap-1.5 border-r border-white/5 pr-4 sticky top-6">
+            <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-2 px-2">Config Areas</p>
             {SITE_CONTENT_TABS.map((tab) => {
               const active = siteTab === tab.id;
               return (
@@ -2324,141 +2325,53 @@ const SiteEditor = () => {
                   type="button"
                   onClick={() => setSiteTab(tab.id)}
                   className={clsx(
-                    'rounded-xl border px-3.5 py-2 text-left text-sm transition-colors',
+                    'w-full text-left rounded-xl border px-3.5 py-3 transition-colors outline-none focus-visible:ring-1 focus-visible:ring-accent/40',
                     active
-                      ? 'border-accent/40 bg-accent/15 font-semibold text-accent shadow-[0_0_0_1px_rgb(var(--color-accent-rgb)/0.12)]'
-                      : 'border-white/10 bg-primary/30 text-text-muted hover:border-accent/25 hover:text-text'
+                      ? 'border-accent/35 bg-accent/15 font-semibold text-accent'
+                      : 'border-transparent text-text-muted hover:border-white/10 hover:bg-primary/30 hover:text-text'
                   )}
                 >
-                  <span className="block">{tab.label}</span>
-                  <span className="mt-0.5 block text-[11px] font-normal text-text-muted">{tab.hint}</span>
+                  <span className="block text-xs font-mono">{tab.label}</span>
+                  <span className="mt-0.5 block text-[10px] font-normal opacity-85">{tab.hint}</span>
                 </button>
               );
             })}
           </div>
-        </div>
 
-        {siteTab === 'hero' && (
-          <SiteSection
-            title="Hero & intro"
-            description="Headline, intro paragraph, rotating phrases, and hero artwork shown on the homepage."
-          >
-            <div className="grid gap-4 md:grid-cols-2">
-              {['heroTitle', 'heroSubtitle'].map((key) => (
+          {/* Configuration Form Pane */}
+          <div className="space-y-6">
+            {siteTab === 'hero' && (
+              <SiteSection
+                title="Hero & intro"
+                description="Headline, intro paragraph, rotating phrases, and hero artwork shown on the homepage."
+              >
+                <div className="grid gap-4 md:grid-cols-2">
+                  {['heroTitle', 'heroSubtitle'].map((key) => (
+                    <FieldEditor
+                      key={key}
+                      field={{ key, label: labelFromKey(key), type: 'text' }}
+                      value={draft[key]}
+                      onChange={(value) => updateField(key, value)}
+                    />
+                  ))}
+                </div>
                 <FieldEditor
-                  key={key}
-                  field={{ key, label: labelFromKey(key), type: 'text' }}
-                  value={draft[key]}
-                  onChange={(value) => updateField(key, value)}
+                  field={{ key: 'heroIntro', label: 'Hero Intro', type: 'textarea' }}
+                  value={draft.heroIntro}
+                  onChange={(value) => updateField('heroIntro', value)}
                 />
-              ))}
-            </div>
-            <FieldEditor
-              field={{ key: 'heroIntro', label: 'Hero Intro', type: 'textarea' }}
-              value={draft.heroIntro}
-              onChange={(value) => updateField('heroIntro', value)}
-            />
-            <div className="grid gap-4 md:grid-cols-2">
-              <FieldEditor
-                field={{ key: 'heroArtworkUrl', label: 'Hero Artwork URL', type: 'image' }}
-                value={draft.heroArtworkUrl}
-                onChange={(value) => updateField('heroArtworkUrl', value)}
-                onUpload={() => uploadAsset('heroArtworkUrl')}
-              />
-            </div>
-            {Object.entries(stringListConfig)
-              .filter(([k]) => k === 'heroWordsJson')
-              .map(([key, config]) => (
-                <HeroWordsEditor
-                  key={key}
-                  label={config.label}
-                  helper={config.helper}
-                  placeholder={config.placeholder}
-                  value={draft[key]}
-                  onChange={(value) => updateField(key, value)}
-                />
-              ))}
-          </SiteSection>
-        )}
-
-        {siteTab === 'contact' && (
-          <SiteSection
-            title="Contact & availability"
-            description="How visitors reach you, response expectations, and résumé / CV links."
-          >
-            <div className="grid gap-4 md:grid-cols-2">
-              {['availability', 'contactEmail', 'preferredContact', 'responseSla', 'baseLocation', 'currentFocus', 'bookingUrl', 'cvVersion', 'cvUpdatedAt', 'githubUsername'].map(
-                (key) => (
+                <div className="grid gap-4 md:grid-cols-2">
                   <FieldEditor
-                    key={key}
-                    field={{ key, label: labelFromKey(key), type: 'text' }}
-                    value={draft[key]}
-                    onChange={(value) => updateField(key, value)}
+                    field={{ key: 'heroArtworkUrl', label: 'Hero Artwork URL', type: 'image' }}
+                    value={draft.heroArtworkUrl}
+                    onChange={(value) => updateField('heroArtworkUrl', value)}
+                    onUpload={() => uploadAsset('heroArtworkUrl')}
                   />
-                )
-              )}
-            </div>
-            <FieldEditor
-              field={{ key: 'resumeUrl', label: 'Resume PDF URL', type: 'file' }}
-              value={draft.resumeUrl}
-              onChange={(value) => updateField('resumeUrl', value)}
-              onUpload={() => uploadAsset('resumeUrl', 'application/pdf')}
-            />
-          </SiteSection>
-        )}
-
-        {siteTab === 'about' && (
-          <SiteSection
-            title="About & profile"
-            description="Use the subtabs to switch between bio, line-item lists, and structured cards—less scrolling, same data."
-          >
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-              <p className="text-xs font-mono uppercase tracking-[0.14em] text-text-muted">About section</p>
-              <div className="flex flex-wrap gap-2">
-                {ABOUT_SUB_TABS.map((tab) => {
-                  const active = aboutSubTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setAboutSubTab(tab.id)}
-                      className={clsx(
-                        'rounded-xl border px-3 py-2 text-left text-sm transition-colors',
-                        active
-                          ? 'border-accent/40 bg-accent/15 font-semibold text-accent shadow-[0_0_0_1px_rgb(var(--color-accent-rgb)/0.12)]'
-                          : 'border-white/10 bg-primary/30 text-text-muted hover:border-accent/25 hover:text-text'
-                      )}
-                    >
-                      <span className="block">{tab.label}</span>
-                      <span className="mt-0.5 block text-[11px] font-normal text-text-muted">{tab.hint}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {aboutSubTab === 'bio' && (
-              <div className="space-y-4 pt-2">
-                <FieldEditor
-                  field={{ key: 'aboutParagraphs', label: 'About Paragraphs', type: 'textarea' }}
-                  value={draft.aboutParagraphs}
-                  onChange={(value) => updateField('aboutParagraphs', value)}
-                />
-                <FieldEditor
-                  field={{ key: 'profilePhotoUrl', label: 'Profile Photo URL', type: 'image' }}
-                  value={draft.profilePhotoUrl}
-                  onChange={(value) => updateField('profilePhotoUrl', value)}
-                  onUpload={() => uploadAsset('profilePhotoUrl')}
-                />
-              </div>
-            )}
-
-            {aboutSubTab === 'lists' && (
-              <div className="grid gap-4 pt-2">
+                </div>
                 {Object.entries(stringListConfig)
-                  .filter(([k]) => k !== 'heroWordsJson')
+                  .filter(([k]) => k === 'heroWordsJson')
                   .map(([key, config]) => (
-                    <RepeatableTextEditor
+                    <HeroWordsEditor
                       key={key}
                       label={config.label}
                       helper={config.helper}
@@ -2467,74 +2380,165 @@ const SiteEditor = () => {
                       onChange={(value) => updateField(key, value)}
                     />
                   ))}
-              </div>
+              </SiteSection>
             )}
 
-            {aboutSubTab === 'cards' && (
-              <div className="grid gap-4 pt-2">
-                {Object.entries(objectEditorConfigs)
-                  .filter(([key]) => key !== 'socialLinksJson')
-                  .map(([key, config]) => (
-                    <RepeatableObjectEditor
+            {siteTab === 'contact' && (
+              <SiteSection
+                title="Contact & availability"
+                description="How visitors reach you, response expectations, and résumé / CV links."
+              >
+                <div className="grid gap-4 md:grid-cols-2">
+                  {['availability', 'contactEmail', 'preferredContact', 'responseSla', 'baseLocation', 'currentFocus', 'bookingUrl', 'cvVersion', 'cvUpdatedAt', 'githubUsername'].map(
+                    (key) => (
+                      <FieldEditor
+                        key={key}
+                        field={{ key, label: labelFromKey(key), type: 'text' }}
+                        value={draft[key]}
+                        onChange={(value) => updateField(key, value)}
+                      />
+                    )
+                  )}
+                </div>
+                <FieldEditor
+                  field={{ key: 'resumeUrl', label: 'Resume PDF URL', type: 'file' }}
+                  value={draft.resumeUrl}
+                  onChange={(value) => updateField('resumeUrl', value)}
+                  onUpload={() => uploadAsset('resumeUrl', 'application/pdf')}
+                />
+              </SiteSection>
+            )}
+
+            {siteTab === 'about' && (
+              <SiteSection
+                title="About & profile"
+                description="Use the subtabs to switch between bio, line-item lists, and structured cards—less scrolling, same data."
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                  <p className="text-xs font-mono uppercase tracking-[0.14em] text-text-muted">About section</p>
+                  <div className="flex flex-wrap gap-2">
+                    {ABOUT_SUB_TABS.map((tab) => {
+                      const active = aboutSubTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => setAboutSubTab(tab.id)}
+                          className={clsx(
+                            'rounded-xl border px-3 py-2 text-left text-sm transition-colors',
+                            active
+                              ? 'border-accent/40 bg-accent/15 font-semibold text-accent shadow-[0_0_0_1px_rgb(var(--color-accent-rgb)/0.12)]'
+                              : 'border-white/10 bg-primary/30 text-text-muted hover:border-accent/25 hover:text-text'
+                          )}
+                        >
+                          <span className="block">{tab.label}</span>
+                          <span className="mt-0.5 block text-[11px] font-normal text-text-muted">{tab.hint}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {aboutSubTab === 'bio' && (
+                  <div className="space-y-4 pt-2">
+                    <FieldEditor
+                      field={{ key: 'aboutParagraphs', label: 'About Paragraphs', type: 'textarea' }}
+                      value={draft.aboutParagraphs}
+                      onChange={(value) => updateField('aboutParagraphs', value)}
+                    />
+                    <FieldEditor
+                      field={{ key: 'profilePhotoUrl', label: 'Profile Photo URL', type: 'image' }}
+                      value={draft.profilePhotoUrl}
+                      onChange={(value) => updateField('profilePhotoUrl', value)}
+                      onUpload={() => uploadAsset('profilePhotoUrl')}
+                    />
+                  </div>
+                )}
+
+                {aboutSubTab === 'lists' && (
+                  <div className="grid gap-4 pt-2">
+                    {Object.entries(stringListConfig)
+                      .filter(([k]) => k !== 'heroWordsJson')
+                      .map(([key, config]) => (
+                        <RepeatableTextEditor
+                          key={key}
+                          label={config.label}
+                          helper={config.helper}
+                          placeholder={config.placeholder}
+                          value={draft[key]}
+                          onChange={(value) => updateField(key, value)}
+                        />
+                      ))}
+                  </div>
+                )}
+
+                {aboutSubTab === 'cards' && (
+                  <div className="grid gap-4 pt-2">
+                    {Object.entries(objectEditorConfigs)
+                      .filter(([key]) => key !== 'socialLinksJson')
+                      .map(([key, config]) => (
+                        <RepeatableObjectEditor
+                          key={key}
+                          label={config.label}
+                          helper={config.helper}
+                          value={draft[key]}
+                          onChange={(value) => updateField(key, value)}
+                          createItem={config.createItem}
+                          fields={config.fields}
+                        />
+                      ))}
+                  </div>
+                )}
+              </SiteSection>
+            )}
+
+            {siteTab === 'footer' && (
+              <SiteSection title="Footer & social" description="Footer copy and outbound social links.">
+                <div className="grid gap-4 md:grid-cols-2">
+                  {['footerTagline', 'footerEmail'].map((key) => (
+                    <FieldEditor
                       key={key}
-                      label={config.label}
-                      helper={config.helper}
+                      field={{ key, label: labelFromKey(key), type: 'text' }}
                       value={draft[key]}
                       onChange={(value) => updateField(key, value)}
-                      createItem={config.createItem}
-                      fields={config.fields}
                     />
                   ))}
-              </div>
+                </div>
+                {objectEditorConfigs.socialLinksJson && (
+                  <RepeatableObjectEditor
+                    label={objectEditorConfigs.socialLinksJson.label}
+                    helper={objectEditorConfigs.socialLinksJson.helper}
+                    value={draft.socialLinksJson}
+                    onChange={(value) => updateField('socialLinksJson', value)}
+                    createItem={objectEditorConfigs.socialLinksJson.createItem}
+                    fields={objectEditorConfigs.socialLinksJson.fields}
+                  />
+                )}
+              </SiteSection>
             )}
-          </SiteSection>
-        )}
 
-        {siteTab === 'footer' && (
-          <SiteSection title="Footer & social" description="Footer copy and outbound social links.">
-            <div className="grid gap-4 md:grid-cols-2">
-              {['footerTagline', 'footerEmail'].map((key) => (
+            {siteTab === 'seo' && (
+              <SiteSection title="SEO & Metadata" description="Manage global title tags, descriptions, and social sharing imagery.">
                 <FieldEditor
-                  key={key}
-                  field={{ key, label: labelFromKey(key), type: 'text' }}
-                  value={draft[key]}
-                  onChange={(value) => updateField(key, value)}
+                  field={{ key: 'seoTitle', label: 'Global Title Tag', type: 'text' }}
+                  value={draft.seoTitle}
+                  onChange={(value) => updateField('seoTitle', value)}
                 />
-              ))}
-            </div>
-            {objectEditorConfigs.socialLinksJson && (
-              <RepeatableObjectEditor
-                label={objectEditorConfigs.socialLinksJson.label}
-                helper={objectEditorConfigs.socialLinksJson.helper}
-                value={draft.socialLinksJson}
-                onChange={(value) => updateField('socialLinksJson', value)}
-                createItem={objectEditorConfigs.socialLinksJson.createItem}
-                fields={objectEditorConfigs.socialLinksJson.fields}
-              />
+                <FieldEditor
+                  field={{ key: 'seoDescription', label: 'Global Meta Description', type: 'textarea' }}
+                  value={draft.seoDescription}
+                  onChange={(value) => updateField('seoDescription', value)}
+                />
+                <FieldEditor
+                  field={{ key: 'seoImage', label: 'Global OG Image URL', type: 'image' }}
+                  value={draft.seoImage}
+                  onChange={(value) => updateField('seoImage', value)}
+                  onUpload={() => uploadAsset('seoImage')}
+                />
+              </SiteSection>
             )}
-          </SiteSection>
-        )}
-
-        {siteTab === 'seo' && (
-          <SiteSection title="SEO & Metadata" description="Manage global title tags, descriptions, and social sharing imagery.">
-            <FieldEditor
-              field={{ key: 'seoTitle', label: 'Global Title Tag', type: 'text' }}
-              value={draft.seoTitle}
-              onChange={(value) => updateField('seoTitle', value)}
-            />
-            <FieldEditor
-              field={{ key: 'seoDescription', label: 'Global Meta Description', type: 'textarea' }}
-              value={draft.seoDescription}
-              onChange={(value) => updateField('seoDescription', value)}
-            />
-            <FieldEditor
-              field={{ key: 'seoImage', label: 'Global OG Image URL', type: 'image' }}
-              value={draft.seoImage}
-              onChange={(value) => updateField('seoImage', value)}
-              onUpload={() => uploadAsset('seoImage')}
-            />
-          </SiteSection>
-        )}
+          </div>
+        </div>
       </div>
 
       <div className="sticky bottom-0 z-10 border-t border-white/10 bg-primary/85 px-4 py-4 backdrop-blur-md sm:px-8">
@@ -2850,26 +2854,31 @@ const AdminPage = () => {
 
   const tabGroups = [
     {
-      label: 'Overview',
+      label: '⚡ Telemetry & Inbox',
       items: [
-        { id: 'site', label: 'Website Content', icon: Settings2 },
-        { id: 'media', label: 'Media Library', icon: ImageIcon },
-        { id: CMS_DOCS.messages, label: 'Inbox', icon: Mail },
         { id: 'analytics', label: 'Analytics Feed', icon: LineChart },
+        { id: CMS_DOCS.messages, label: 'Inbox Messages', icon: Mail },
       ],
     },
     {
-      label: 'Collections',
+      label: '⚙️ Global Configuration',
       items: [
-        { id: CMS_DOCS.projects, label: 'Projects', icon: Folder },
+        { id: 'site', label: 'Website Content', icon: Settings2 },
+        { id: 'media', label: 'Media Library', icon: ImageIcon },
+      ],
+    },
+    {
+      label: '📁 Content Collections',
+      items: [
+        { id: CMS_DOCS.projects, label: 'Projects List', icon: Folder },
+        { id: CMS_DOCS.services, label: 'Services Config', icon: Briefcase },
         { id: CMS_DOCS.certifications, label: 'Certificates', icon: Award },
-        { id: CMS_DOCS.skills, label: 'Skills', icon: Wrench },
-        { id: CMS_DOCS.experience, label: 'Experience', icon: Sparkles },
-        { id: CMS_DOCS.blog, label: 'Blog', icon: BookOpen },
+        { id: CMS_DOCS.skills, label: 'Skills Layout', icon: Wrench },
+        { id: CMS_DOCS.experience, label: 'Work Experience', icon: Sparkles },
+        { id: CMS_DOCS.blog, label: 'Blog Posts', icon: BookOpen },
         { id: CMS_DOCS.testimonials, label: 'Testimonials', icon: Quote },
-        { id: CMS_DOCS.services, label: 'Services', icon: Briefcase },
         { id: CMS_DOCS.openSource, label: 'Open Source', icon: Github },
-        { id: CMS_DOCS.resources, label: 'Resources', icon: LinkIcon },
+        { id: CMS_DOCS.resources, label: 'Resources Archive', icon: LinkIcon },
       ],
     },
   ];
