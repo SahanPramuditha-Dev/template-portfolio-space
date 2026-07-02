@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Quote, Star } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
@@ -8,67 +8,37 @@ import { CmsSectionSkeleton } from './CmsShapeSkeleton';
 const Testimonials = () => {
   const { data, loading } = useCmsDoc(CMS_DOCS.testimonials, { items: [] });
   const testimonials = Array.isArray(data?.items) ? data.items : [];
-  
-  const scrollContainerRef = useRef(null);
-  const isInteractingRef = useRef(false);
+  const scrollContainerRef = React.useRef(null);
+  const [isInteracting, setIsInteracting] = React.useState(false);
 
-  // Mouse Drag to Scroll states
-  const dragStartRef = useRef({ x: 0, scrollLeft: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-
-  useEffect(() => {
-    if (testimonials.length === 0) return undefined;
+  React.useEffect(() => {
+    if (testimonials.length === 0) return;
 
     const container = scrollContainerRef.current;
-    if (!container) return undefined;
+    if (!container) return;
 
-    let frameId;
-    const speed = 0.6; // Scroll speed in pixels per frame
+    let animationFrameId;
+    let lastTime = performance.now();
+    const speed = 0.05; // Scroll speed in pixels per millisecond
 
-    const step = () => {
-      if (!isInteractingRef.current && container) {
-        container.scrollLeft += speed;
-        
-        // Loop back seamlessly when scrolling past one complete set of cards
-        const maxScroll = container.scrollWidth / 3;
-        if (container.scrollLeft >= maxScroll) {
-          container.scrollLeft = 0;
+    const step = (time) => {
+      if (!isInteracting && container) {
+        const delta = time - lastTime;
+        container.scrollLeft += speed * delta;
+
+        // Reset scroll position to 0 once we reach the length of one full track to loop infinitely
+        const halfScrollWidth = container.scrollWidth / 3;
+        if (container.scrollLeft >= halfScrollWidth) {
+          container.scrollLeft -= halfScrollWidth;
         }
       }
-      frameId = requestAnimationFrame(step);
+      lastTime = time;
+      animationFrameId = requestAnimationFrame(step);
     };
 
-    frameId = requestAnimationFrame(step);
-
-    return () => cancelAnimationFrame(frameId);
-  }, [testimonials]);
-
-  // Mouse Drag Events Handler
-  const handleMouseDown = (e) => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    isInteractingRef.current = true;
-    setIsDragging(true);
-    dragStartRef.current = {
-      x: e.pageX - container.offsetLeft,
-      scrollLeft: container.scrollLeft,
-    };
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    const x = e.pageX - container.offsetLeft;
-    const walk = (x - dragStartRef.current.x) * 1.5; // Drag sensitivity multiplier
-    container.scrollLeft = dragStartRef.current.scrollLeft - walk;
-  };
-
-  const handleMouseUpOrLeave = () => {
-    setIsDragging(false);
-    isInteractingRef.current = false;
-  };
+    animationFrameId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [testimonials, isInteracting]);
 
   if (loading || data === undefined) {
     return <CmsSectionSkeleton id="testimonials" />;
@@ -99,27 +69,25 @@ const Testimonials = () => {
             </a>
           </div>
         ) : (
-          <div className="relative w-full p-4">
+          <div className="relative w-full select-none">
             {/* Left and Right gradient mask for smooth side fade out */}
-            <div className="absolute top-0 bottom-0 left-0 w-24 bg-gradient-to-r from-primary to-transparent z-10 pointer-events-none" />
-            <div className="absolute top-0 bottom-0 right-0 w-24 bg-gradient-to-l from-primary to-transparent z-10 pointer-events-none" />
+            <div className="absolute top-0 bottom-0 left-0 w-20 bg-gradient-to-r from-primary to-transparent z-10 pointer-events-none" />
+            <div className="absolute top-0 bottom-0 right-0 w-20 bg-gradient-to-l from-primary to-transparent z-10 pointer-events-none" />
 
-            {/* Scrollable Container with Grab cursor */}
-            <div
+            {/* Scrolling container supporting manual overflow-x scroll */}
+            <div 
               ref={scrollContainerRef}
-              className={`flex gap-6 overflow-x-auto scrollbar-none select-none ${
-                isDragging ? 'cursor-grabbing' : 'cursor-grab'
-              }`}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUpOrLeave}
-              onMouseLeave={handleMouseUpOrLeave}
-              onTouchStart={() => { isInteractingRef.current = true; }}
-              onTouchEnd={() => { isInteractingRef.current = false; }}
+              onMouseEnter={() => setIsInteracting(true)}
+              onMouseLeave={() => setIsInteracting(false)}
+              onTouchStart={() => setIsInteracting(true)}
+              onTouchEnd={() => setIsInteracting(false)}
+              className="flex overflow-x-auto gap-6 p-4 scrollbar-none scroll-smooth cursor-grab active:cursor-grabbing"
               style={{
-                scrollBehavior: isDragging ? 'auto' : 'smooth'
+                msOverflowStyle: 'none',
+                scrollbarWidth: 'none',
               }}
             >
+              {/* Render testimonials duplicated three times to ensure seamless infinite loop */}
               {[...testimonials, ...testimonials, ...testimonials].map((item, idx) => (
                 <article
                   key={`${item.name}-${idx}`}
