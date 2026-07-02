@@ -38,11 +38,11 @@ const MiniCard = ({ item, index }) => {
     >
       {/* Thumbnail */}
       {item.thumbnail && (
-        <div className="w-full h-32 overflow-hidden border-b border-white/5 bg-black/20 shrink-0">
+        <div className="w-full h-32 overflow-hidden border-b border-white/5 bg-black/45 shrink-0 flex items-center justify-center p-3">
           <img
             src={item.thumbnail}
             alt={item.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
           />
         </div>
       )}

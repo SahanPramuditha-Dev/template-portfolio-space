@@ -119,8 +119,8 @@ const ResourceCard = ({ item, index, onPreview }) => {
     >
       {/* Thumbnail / Video Preview */}
       {item.thumbnail && (
-        <div className="w-full h-40 overflow-hidden border-b border-white/5 bg-black/30 shrink-0">
-          <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        <div className="w-full h-40 overflow-hidden border-b border-white/5 bg-black/45 shrink-0 flex items-center justify-center p-4">
+          <img src={item.thumbnail} alt={item.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
         </div>
       )}
       {isVideo && !item.thumbnail && (
