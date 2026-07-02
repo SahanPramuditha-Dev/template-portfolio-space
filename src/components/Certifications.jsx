@@ -159,8 +159,8 @@ const AllCertsModal = ({ certs, onClose, onViewPdf }) => {
                     className="flex flex-col gap-3 rounded-xl border border-white/10 bg-secondary/20 p-4 hover:border-accent/30 transition-colors"
                   >
                     {cert.image && (
-                      <div className="w-full h-28 rounded-lg overflow-hidden bg-black/30">
-                        <img src={cert.image} alt={cert.title} className="w-full h-full object-cover" />
+                      <div className="w-full h-28 rounded-lg overflow-hidden bg-black/45 flex items-center justify-center p-2">
+                        <img src={cert.image} alt={cert.title} className="w-full h-full object-contain" />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
@@ -265,8 +265,8 @@ const CertificationCard = ({ cert, index, onViewPdf }) => (
     className="glass-card flex flex-col rounded-xl border border-secondary/50 hover:border-accent/50 transition-all duration-300 group bg-secondary/20 hover:bg-secondary/30 overflow-hidden"
   >
     {cert.image && (
-      <div className="w-full h-48 overflow-hidden bg-black/40 border-b border-white/5 shrink-0">
-        <img src={cert.image} alt={`${cert.title} badge`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+      <div className="w-full h-48 overflow-hidden bg-black/45 border-b border-white/5 shrink-0 flex items-center justify-center p-4">
+        <img src={cert.image} alt={`${cert.title} badge`} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
       </div>
     )}
 
