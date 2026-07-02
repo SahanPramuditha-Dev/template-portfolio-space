@@ -1202,9 +1202,8 @@ const DraftPreview = ({ draft, fields, title }) => {
   const tags = ['tech', 'tags', 'skills']
     .flatMap((key) => (Array.isArray(draft[key]) ? draft[key] : []))
     .slice(0, 8);
-  const hasImageFieldInSchema = fields.some((field) => field.type === 'image' || field.type === 'pdf');
-  const imageFieldWithValue = fields.find((field) => field.type === 'image' && draft[field.key]);
-  const imageUrl = imageFieldWithValue ? draft[imageFieldWithValue.key] : '';
+  const imageUrl = draft.thumbnail || (Array.isArray(draft.screenshots) && draft.screenshots[0]?.url) || draft.architectureImage || '';
+  const hasImageFieldInSchema = fields.some((field) => field.type === 'image' || field.key === 'screenshots') || imageUrl;
   const pdfFieldWithValue = fields.find((field) => field.type === 'pdf' && draft[field.key]);
   const pdfUrl = pdfFieldWithValue ? draft[pdfFieldWithValue.key] : '';
 
@@ -1218,15 +1217,17 @@ const DraftPreview = ({ draft, fields, title }) => {
         <Eye size={18} className="text-accent" aria-hidden />
       </div>
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-primary/40">
-        {hasImageFieldInSchema && (
+        {hasImageFieldInSchema ? (
           imageUrl ? (
-            <img src={imageUrl} alt="" className="h-36 w-full object-cover" />
+            <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-white/5 bg-black/40">
+              <img src={imageUrl} alt="" className="h-full w-full object-cover object-top" />
+            </div>
           ) : (
-            <div className="flex h-28 items-center justify-center bg-secondary/30 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
+            <div className="flex h-32 items-center justify-center bg-secondary/30 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
               No media selected
             </div>
           )
-        )}
+        ) : null}
         {pdfUrl && (
           <div className="flex items-center gap-2 px-4 py-2 bg-accent/10 border-t border-accent/15">
             <FileText size={14} className="text-accent shrink-0" />
