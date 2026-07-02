@@ -691,6 +691,7 @@ const certificateFields = [
     options: ['Cloud', 'Data', 'Programming', 'Networking', 'Microsoft', 'AWS', 'Security', 'DevOps', 'AI/ML', 'Other'] },
   { key: 'featured', label: 'Featured (show on portfolio homepage)', type: 'checkbox', group: 'identity' },
   { key: 'skills', label: 'Skills', type: 'list', placeholder: 'Enter a skill', group: 'identity' },
+  { key: 'durationHours', label: 'Course Duration (Hours)', type: 'number', group: 'identity' },
   { key: 'image', label: 'Badge / Logo Image', type: 'image', group: 'media', aspect: null },
   { key: 'pdfUrl', label: 'Certificate PDF', type: 'pdf', group: 'media', accept: 'application/pdf,.pdf' },
 ];

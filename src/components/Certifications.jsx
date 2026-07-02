@@ -202,9 +202,23 @@ const StatsBar = ({ certs }) => {
     return s.size;
   }, [certs]);
 
+  const totalHours = useMemo(() => {
+    let sum = 0;
+    let hasDurations = false;
+    certs.forEach((c) => {
+      const h = Number(c.durationHours);
+      if (!isNaN(h) && h > 0) {
+        sum += h;
+        hasDurations = true;
+      }
+    });
+    // Fallback to estimation multiplier if no certificates have hours entered
+    return hasDurations ? sum : Math.max(certs.length * 8, 1);
+  }, [certs]);
+
   const stats = [
     { value: certs.length, suffix: '+', label: 'Certificates Earned' },
-    { value: Math.max(certs.length * 8, 1), suffix: '+', label: 'Learning Hours' },
+    { value: totalHours, suffix: '+', label: 'Learning Hours' },
     { value: platforms, suffix: '', label: 'Learning Platforms' },
     { value: allSkills, suffix: '+', label: 'Skills Acquired' },
   ];
