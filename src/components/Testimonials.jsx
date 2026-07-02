@@ -38,37 +38,71 @@ const Testimonials = () => {
             </a>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 min-h-[320px]">
-            {testimonials.map((item, index) => (
-              <motion.article
-                key={item.name || index}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.05 }}
-                className="rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md"
-              >
-                <Quote className="mb-4 text-accent" size={28} />
-                <p className="text-lg leading-relaxed text-text">"{item.content}"</p>
-                <div className="mt-6 flex items-center justify-between gap-4">
+          <div className="relative h-[500px] overflow-hidden flex flex-col md:flex-row gap-6 p-4">
+            {/* Top and Bottom gradient mask for smooth fade out */}
+            <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-primary to-transparent z-10 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-primary to-transparent z-10 pointer-events-none" />
+
+            {(() => {
+              const col1 = testimonials.filter((_, idx) => idx % 2 === 0);
+              const col2 = testimonials.filter((_, idx) => idx % 2 !== 0);
+              
+              const items1 = [...col1, ...col1, ...col1];
+              const items2 = col2.length > 0 ? [...col2, ...col2, ...col2] : items1;
+
+              const renderCard = (item, idx) => (
+                <article
+                  key={`${item.name}-${idx}`}
+                  className="rounded-3xl border border-white/5 hover:border-accent/30 bg-secondary/15 hover:bg-secondary/30 p-6 backdrop-blur-md transition-all duration-300 transform hover:scale-[1.01] flex flex-col justify-between min-h-[200px]"
+                >
                   <div>
-                    <h3 className="text-xl font-bold text-text">{item.name}</h3>
-                    <p className="text-sm text-text-muted">
-                      {item.role}{item.company ? `, ${item.company}` : ''}
-                    </p>
-                    {item.context ? <p className="mt-2 text-xs text-text-muted">{item.context}</p> : null}
+                    <Quote className="mb-3 text-accent/80" size={24} />
+                    <p className="text-sm leading-relaxed text-slate-300">"{item.content}"</p>
                   </div>
-                  <div className="flex items-center gap-1 text-yellow-400">
-                    {[...Array(Number(item.rating || 5))].map((_, starIndex) => (
-                      <Star key={starIndex} size={14} className="fill-yellow-400" />
-                    ))}
+                  <div className="mt-5 flex items-center justify-between gap-4 border-t border-white/5 pt-4">
+                    <div>
+                      <h3 className="text-sm font-bold text-white">{item.name}</h3>
+                      <p className="text-[11px] text-text-muted mt-0.5">
+                        {item.role}{item.company ? `, ${item.company}` : ''}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-0.5 text-yellow-400 shrink-0">
+                      {[...Array(Number(item.rating || 5))].map((_, starIndex) => (
+                        <Star key={starIndex} size={10} className="fill-yellow-400" />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </motion.article>
-            ))}
+                </article>
+              );
+
+              return (
+                <>
+                  {/* Column 1 (Left / Upwards Track) */}
+                  <div className="flex-1 overflow-hidden h-full relative">
+                    <div className="space-y-6 animate-[scrollVertical_35s_linear_infinite] hover:[animation-play-state:paused] flex flex-col">
+                      {items1.map((item, idx) => renderCard(item, idx))}
+                    </div>
+                  </div>
+
+                  {/* Column 2 (Right / Slower Upwards Track) */}
+                  <div className="flex-1 overflow-hidden h-full relative hidden md:block">
+                    <div className="space-y-6 animate-[scrollVertical_45s_linear_infinite] hover:[animation-play-state:paused] flex flex-col">
+                      {items2.map((item, idx) => renderCard(item, idx))}
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         )}
       </div>
+
+      <style>{`
+        @keyframes scrollVertical {
+          0% { transform: translateY(0); }
+          100% { transform: translateY(-50%); }
+        }
+      `}</style>
     </SectionWrapper>
   );
 };
