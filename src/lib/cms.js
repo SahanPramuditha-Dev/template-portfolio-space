@@ -144,7 +144,14 @@ export const listCmsAssets = async (folder = 'uploads') => {
       'uploads/skills',
       'uploads/experience',
       'uploads/blog',
-      'uploads/services'
+      'uploads/services',
+      // Root-level directories defined in sectionConfig
+      'projects',
+      'projects/projects',
+      'certificates',
+      'certificates/certifications',
+      'resources',
+      'resources/resources'
     ];
     
     const results = await Promise.all(
