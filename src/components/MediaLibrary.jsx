@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ImageIcon, Trash2, Copy, Loader2, UploadCloud } from 'lucide-react';
+import { ImageIcon, Trash2, Copy, Loader2, UploadCloud, FileText as FileIcon } from 'lucide-react';
 import { listCmsAssets, deleteCmsAsset, uploadCmsAsset } from '../lib/cms';
 
 const MediaLibrary = () => {
@@ -82,31 +82,47 @@ const MediaLibrary = () => {
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {assets.map((asset) => (
-            <div key={asset.fullPath} className="group relative rounded-xl overflow-hidden border border-white/10 bg-secondary/30 aspect-square">
-              <img src={asset.url} alt={asset.name} className="w-full h-full object-cover" />
-              
-              <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3 backdrop-blur-sm">
-                <p className="text-xs text-text px-2 text-center truncate w-full">{asset.name}</p>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => copyToClipboard(asset.url)}
-                    className="p-2 bg-accent/20 text-accent rounded-lg hover:bg-accent/30 transition-colors"
-                    title="Copy URL"
-                  >
-                    <Copy size={16} />
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(asset.fullPath)}
-                    className="p-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-colors"
-                    title="Delete Image"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+          {assets.map((asset) => {
+            const isPdf = asset.name.toLowerCase().endsWith('.pdf');
+            const isDoc = /\.(docx|doc|xls|xlsx|ppt|pptx|txt|csv)$/i.test(asset.name);
+
+            return (
+              <div key={asset.fullPath} className="group relative rounded-xl overflow-hidden border border-white/10 bg-secondary/30 aspect-square flex flex-col items-center justify-center p-4">
+                {isPdf || isDoc ? (
+                  // Document card preview
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-black/40 rounded-lg p-3 text-center border border-white/5">
+                    <FileIcon size={40} className="text-accent mb-2" />
+                    <p className="text-[10px] font-mono text-text-muted break-all line-clamp-3">{asset.name}</p>
+                  </div>
+                ) : (
+                  // Full view Image block using object-contain to avoid crops
+                  <div className="w-full h-full relative bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:16px_16px] flex items-center justify-center rounded-lg overflow-hidden">
+                    <img src={asset.url} alt={asset.name} className="max-w-full max-h-full object-contain" />
+                  </div>
+                )}
+                
+                <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3 backdrop-blur-sm p-4">
+                  <p className="text-[10px] font-mono text-text text-center break-all line-clamp-2 w-full">{asset.name}</p>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => copyToClipboard(asset.url)}
+                      className="p-2 bg-accent/20 text-accent rounded-lg hover:bg-accent/30 transition-colors"
+                      title="Copy URL"
+                    >
+                      <Copy size={16} />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(asset.fullPath)}
+                      className="p-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-colors"
+                      title="Delete Image"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
