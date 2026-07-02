@@ -38,22 +38,18 @@ const Testimonials = () => {
             </a>
           </div>
         ) : (
-          <div className="relative h-[500px] overflow-hidden flex flex-col md:flex-row gap-6 p-4">
-            {/* Top and Bottom gradient mask for smooth fade out */}
-            <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-primary to-transparent z-10 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-primary to-transparent z-10 pointer-events-none" />
+          <div className="relative overflow-hidden w-full p-4 select-none">
+            {/* Left and Right gradient mask for smooth side fade out */}
+            <div className="absolute top-0 bottom-0 left-0 w-24 bg-gradient-to-r from-primary to-transparent z-10 pointer-events-none" />
+            <div className="absolute top-0 bottom-0 right-0 w-24 bg-gradient-to-l from-primary to-transparent z-10 pointer-events-none" />
 
-            {(() => {
-              const col1 = testimonials.filter((_, idx) => idx % 2 === 0);
-              const col2 = testimonials.filter((_, idx) => idx % 2 !== 0);
-              
-              const items1 = [...col1, ...col1, ...col1];
-              const items2 = col2.length > 0 ? [...col2, ...col2, ...col2] : items1;
-
-              const renderCard = (item, idx) => (
+            {/* Infinite Horizontal Scrolling container */}
+            <div className="flex w-max gap-6 animate-[scrollHorizontal_40s_linear_infinite] hover:[animation-play-state:paused]">
+              {/* Render testimonials duplicated three times to ensure seamless infinite loop */}
+              {[...testimonials, ...testimonials, ...testimonials].map((item, idx) => (
                 <article
                   key={`${item.name}-${idx}`}
-                  className="rounded-3xl border border-white/5 hover:border-accent/30 bg-secondary/15 hover:bg-secondary/30 p-6 backdrop-blur-md transition-all duration-300 transform hover:scale-[1.01] flex flex-col justify-between min-h-[200px]"
+                  className="rounded-3xl border border-white/5 hover:border-accent/30 bg-secondary/15 hover:bg-secondary/30 p-6 backdrop-blur-md transition-all duration-300 transform hover:scale-[1.01] flex flex-col justify-between w-[320px] md:w-[380px] shrink-0 min-h-[220px]"
                 >
                   <div>
                     <Quote className="mb-3 text-accent/80" size={24} />
@@ -73,34 +69,16 @@ const Testimonials = () => {
                     </div>
                   </div>
                 </article>
-              );
-
-              return (
-                <>
-                  {/* Column 1 (Left / Upwards Track) */}
-                  <div className="flex-1 overflow-hidden h-full relative">
-                    <div className="space-y-6 animate-[scrollVertical_35s_linear_infinite] hover:[animation-play-state:paused] flex flex-col">
-                      {items1.map((item, idx) => renderCard(item, idx))}
-                    </div>
-                  </div>
-
-                  {/* Column 2 (Right / Slower Upwards Track) */}
-                  <div className="flex-1 overflow-hidden h-full relative hidden md:block">
-                    <div className="space-y-6 animate-[scrollVertical_45s_linear_infinite] hover:[animation-play-state:paused] flex flex-col">
-                      {items2.map((item, idx) => renderCard(item, idx))}
-                    </div>
-                  </div>
-                </>
-              );
-            })()}
+              ))}
+            </div>
           </div>
         )}
       </div>
 
       <style>{`
-        @keyframes scrollVertical {
-          0% { transform: translateY(0); }
-          100% { transform: translateY(-50%); }
+        @keyframes scrollHorizontal {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-33.333%); }
         }
       `}</style>
     </SectionWrapper>
