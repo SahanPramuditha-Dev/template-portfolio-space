@@ -137,7 +137,7 @@ const Testimonials = () => {
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUpOrLeave}
               onMouseLeave={handleMouseUpOrLeave}
-              className="flex gap-6 overflow-x-hidden select-none cursor-grab active:cursor-grabbing py-2 scroll-smooth"
+              className="flex gap-6 overflow-x-hidden select-none cursor-grab active:cursor-grabbing py-2"
             >
               {items.map((item, idx) => (
                 <article
