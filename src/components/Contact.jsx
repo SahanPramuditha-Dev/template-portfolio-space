@@ -30,7 +30,16 @@ const Contact = () => {
       const params = new URLSearchParams(window.location.search);
       const hashParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
       
-      const projectType = params.get('projectType') || hashParams.get('projectType') || '';
+      let projectType = params.get('projectType') || hashParams.get('projectType') || '';
+      if (projectType) {
+        const lower = projectType.toLowerCase();
+        if (lower.includes('website') || lower.includes('web design')) projectType = 'Website';
+        else if (lower.includes('app') || lower.includes('software') || lower.includes('saas') || lower.includes('system')) projectType = 'Web app';
+        else if (lower.includes('commerce') || lower.includes('shop')) projectType = 'E-commerce';
+        else if (lower.includes('api') || lower.includes('backend') || lower.includes('database')) projectType = 'API / backend';
+        else if (lower.includes('ui') || lower.includes('polish') || lower.includes('design')) projectType = 'UI polish';
+        else projectType = 'Other';
+      }
       const message = params.get('message') || hashParams.get('message') || '';
       const budget = params.get('budget') || hashParams.get('budget') || '';
       const timeline = params.get('timeline') || hashParams.get('timeline') || '';
