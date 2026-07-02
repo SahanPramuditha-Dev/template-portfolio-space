@@ -77,3 +77,49 @@ exports.onNewMessage = functions.firestore
       console.error('Failed to send mail notification:', error);
     }
   });
+
+// HTTPS Callable function for sending mail replies directly from Dashboard
+exports.sendReply = functions.https.onCall(async (data, context) => {
+  // Validate admin token
+  if (!context.auth || !context.auth.token.email) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'The function must be called while authenticated.'
+    );
+  }
+
+  const { to, subject, message } = data;
+  if (!to || !subject || !message) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Missing recipient, subject, or message body.'
+    );
+  }
+
+  const mailOptions = {
+    from: `"Sahan Pramuditha" <sahan.pramuditha.dev@gmail.com>`,
+    to: to,
+    subject: subject,
+    text: message,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; color: #1a202c;">
+        <div style="font-size: 15px; line-height: 1.6; white-space: pre-wrap; margin-bottom: 25px;">
+          ${message}
+        </div>
+        <div style="border-top: 1px solid #edf2f7; padding-top: 15px; font-size: 12px; color: #718096; line-height: 1.5;">
+          <strong>Sahan Pramuditha</strong><br/>
+          Software Engineer & Creative Developer<br/>
+          <a href="https://www.sahanpramuditha.me" style="color: #0ea5e9; text-decoration: none;">www.sahanpramuditha.me</a>
+        </div>
+      </div>
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to send reply:', error);
+    throw new functions.https.HttpsError('internal', `Failed to send email: ${error.message}`);
+  }
+});

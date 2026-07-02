@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { collection, query, orderBy, onSnapshot, doc, deleteDoc, updateDoc } from 'firebase/firestore';
-import { Mail, Trash2, CheckCircle2, Clock, Send, Eye, MessageSquare, Terminal } from 'lucide-react';
-import { db } from '../lib/firebase';
+import { Mail, Trash2, CheckCircle2, Clock, Send, Eye, MessageSquare, Terminal, X, RefreshCw } from 'lucide-react';
+import { db, functions } from '../lib/firebase';
+import { httpsCallable } from 'firebase/functions';
 import { CMS_DOCS } from '../lib/cms';
 
 const MessagesInbox = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // State for managing inline replies
+  const [activeReplyId, setActiveReplyId] = useState(null);
+  const [replyMessage, setReplyMessage] = useState('');
+  const [replySubject, setReplySubject] = useState('');
+  const [sendingReply, setSendingReply] = useState(false);
+  const [statusFeedback, setStatusFeedback] = useState({ type: '', text: '' }); // type: 'success' | 'error'
 
   useEffect(() => {
     const q = query(collection(db, CMS_DOCS.messages), orderBy('createdAt', 'desc'));
@@ -38,14 +46,51 @@ const MessagesInbox = () => {
     }
   };
 
-  const handleReplyMailto = (msg) => {
-    const subject = encodeURIComponent(`Re: Inquiry from ${msg.name} - Sahan Pramuditha Portfolio`);
-    const body = encodeURIComponent(
-      `Hi ${msg.name},\n\nThank you for reaching out! Regarding your inquiry about "${msg.projectType || 'Project'}" with a budget of "${msg.budget || 'Not Specified'}"...\n\n---\nOriginal Message:\n"${msg.message}"`
-    );
-    const link = document.createElement('a');
-    link.href = `mailto:${msg.email}?subject=${subject}&body=${body}`;
-    link.click();
+  const startInlineReply = (msg) => {
+    setActiveReplyId(msg.id);
+    setReplySubject(`Re: Inquiry from ${msg.name} - Sahan Pramuditha Portfolio`);
+    setReplyMessage(`Hi ${msg.name},\n\nThank you for reaching out! Regarding your inquiry about "${msg.projectType || 'Project'}" with a budget of "${msg.budget || 'Not Specified'}"...\n\n`);
+    setStatusFeedback({ type: '', text: '' });
+  };
+
+  const cancelInlineReply = () => {
+    setActiveReplyId(null);
+    setReplyMessage('');
+    setReplySubject('');
+    setStatusFeedback({ type: '', text: '' });
+  };
+
+  const sendInlineReply = async (msg) => {
+    if (!replyMessage.trim()) {
+      setStatusFeedback({ type: 'error', text: 'Reply content cannot be empty.' });
+      return;
+    }
+    setSendingReply(true);
+    setStatusFeedback({ type: '', text: '' });
+    
+    try {
+      const sendReplyCallable = httpsCallable(functions, 'sendReply');
+      await sendReplyCallable({
+        to: msg.email,
+        subject: replySubject,
+        message: replyMessage
+      });
+
+      // Mark the message as read since we replied
+      if (!msg.read) {
+        await markAsRead(msg.id, false);
+      }
+
+      setStatusFeedback({ type: 'success', text: `Reply successfully sent to ${msg.email}!` });
+      setTimeout(() => {
+        cancelInlineReply();
+      }, 2000);
+    } catch (err) {
+      console.error('Error executing sendReply Callable:', err);
+      setStatusFeedback({ type: 'error', text: `Failed to dispatch reply: ${err.message || 'Unknown error'}` });
+    } finally {
+      setSendingReply(false);
+    }
   };
 
   if (loading) {
@@ -77,6 +122,8 @@ const MessagesInbox = () => {
       <div className="grid gap-4">
         {messages.map((msg) => {
           const telemetry = msg.telemetry || null;
+          const isReplying = activeReplyId === msg.id;
+
           return (
             <div 
               key={msg.id} 
@@ -135,13 +182,68 @@ const MessagesInbox = () => {
                 {msg.message}
               </div>
 
+              {/* INLINE REPLY WRAPPER PANEL */}
+              {isReplying && (
+                <div className="my-4 p-5 rounded-xl border border-accent/25 bg-accent/5 space-y-4">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                    <span className="text-xs font-mono font-bold text-accent uppercase tracking-widest">Compose Reply</span>
+                    <button onClick={cancelInlineReply} className="p-1 rounded text-text-muted hover:text-text hover:bg-white/5">
+                      <X size={14} />
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Subject</label>
+                    <input 
+                      type="text" 
+                      value={replySubject}
+                      onChange={(e) => setReplySubject(e.target.value)}
+                      className="w-full bg-primary/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-text outline-none focus:border-accent"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Message Body</label>
+                    <textarea 
+                      rows={5}
+                      value={replyMessage}
+                      onChange={(e) => setReplyMessage(e.target.value)}
+                      className="w-full bg-primary/50 border border-white/10 rounded-lg p-3 text-sm text-text outline-none focus:border-accent font-sans leading-relaxed"
+                    />
+                  </div>
+
+                  {statusFeedback.text && (
+                    <div className={`text-xs px-3.5 py-2 rounded-lg border font-mono ${statusFeedback.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/35 text-emerald-400' : 'bg-red-500/10 border-red-500/35 text-red-400'}`}>
+                      {statusFeedback.text}
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={cancelInlineReply}
+                      className="px-3.5 py-2 rounded-lg text-xs font-mono font-bold border border-white/10 hover:bg-white/5 text-text transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => sendInlineReply(msg)}
+                      disabled={sendingReply}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold bg-accent text-primary hover:opacity-90 disabled:opacity-50 transition-opacity"
+                    >
+                      {sendingReply ? <RefreshCw size={12} className="animate-spin" /> : <Send size={12} />}
+                      {sendingReply ? 'Sending...' : 'Send Reply'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-between items-center border-t border-white/5 pt-4">
                 <span className="text-[10px] font-mono text-text-muted flex items-center gap-1">
                   <MessageSquare size={10} /> ID: {msg.id.substring(0, 8)}...
                 </span>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handleReplyMailto(msg)}
+                    onClick={() => startInlineReply(msg)}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-accent text-primary hover:opacity-90 transition-opacity"
                   >
                     <Send size={14} />

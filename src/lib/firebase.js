@@ -14,10 +14,13 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-EQFV12BE5K',
 };
 
+import { getFunctions } from 'firebase/functions';
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+const functions = getFunctions(app);
 
 let analytics = null;
 if (typeof window !== 'undefined') {
@@ -30,4 +33,4 @@ if (typeof window !== 'undefined') {
   });
 }
 
-export { app, auth, db, storage, analytics };
+export { app, auth, db, storage, analytics, functions };
