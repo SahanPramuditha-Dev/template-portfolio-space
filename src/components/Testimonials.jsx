@@ -27,18 +27,25 @@ const Testimonials = () => {
     const el = scrollRef.current;
     if (!el || items.length === 0) return;
 
-    // Center the scroll position initially so user can drag left and right instantly
-    const oneThirdWidth = el.scrollWidth / 3;
-    el.scrollLeft = oneThirdWidth;
+    // Center scroll position with a slight delay to ensure browser layout is painted
+    const initTimeout = setTimeout(() => {
+      if (el) {
+        el.scrollLeft = el.scrollWidth / 3;
+      }
+    }, 150);
 
     const animate = () => {
-      if (autoScrollActive.current && !isDragging.current) {
-        el.scrollLeft += 0.35; // Smooth slow auto-scroll increments
+      if (el && autoScrollActive.current && !isDragging.current) {
+        const oneThirdWidth = el.scrollWidth / 3;
+        
+        if (oneThirdWidth > 0) {
+          el.scrollLeft += 0.35; // Smooth slow auto-scroll increments
 
-        // Infinite boundary check: if scrolled past the 2/3 threshold, reset to 1/3 (loop seamless)
-        const limit = (el.scrollWidth * 2) / 3;
-        if (el.scrollLeft >= limit) {
-          el.scrollLeft -= oneThirdWidth;
+          // Infinite boundary check: if scrolled past 2/3, reset to 1/3
+          const limit = (el.scrollWidth * 2) / 3;
+          if (el.scrollLeft >= limit) {
+            el.scrollLeft -= oneThirdWidth;
+          }
         }
       }
       requestRef.current = requestAnimationFrame(animate);
@@ -47,6 +54,7 @@ const Testimonials = () => {
     requestRef.current = requestAnimationFrame(animate);
 
     return () => {
+      clearTimeout(initTimeout);
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
       if (resumeTimeout.current) clearTimeout(resumeTimeout.current);
     };
