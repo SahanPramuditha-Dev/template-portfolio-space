@@ -106,33 +106,35 @@ const MediaLibrary = () => {
                 )}
                 
                 <div 
-                  className="absolute inset-0 bg-primary/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3 backdrop-blur-sm p-4"
+                  className="absolute inset-0 bg-black/85 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3 backdrop-blur-md p-4"
                   onClick={(e) => e.stopPropagation()} // Prevent double open when copying/deleting
                 >
-                  <p className="text-[10px] font-mono text-text text-center break-all line-clamp-2 w-full">{asset.name}</p>
+                  <p className="text-[10px] font-mono text-text font-semibold text-center break-all line-clamp-2 w-full mb-1">
+                    {asset.name}
+                  </p>
                   <div className="flex gap-2">
                     <a 
                       href={asset.url} 
                       target="_blank" 
                       rel="noreferrer"
-                      className="p-2 bg-accent/25 text-accent rounded-lg hover:bg-accent/40 transition-colors"
+                      className="p-2.5 bg-accent/20 hover:bg-accent text-accent hover:text-primary rounded-xl transition-all border border-accent/30 shadow-lg"
                       title="View / Open File"
                     >
-                      <Eye size={16} />
+                      <Eye size={15} />
                     </a>
                     <button 
                       onClick={() => copyToClipboard(asset.url)}
-                      className="p-2 bg-white/10 text-text rounded-lg hover:bg-white/20 transition-colors"
+                      className="p-2.5 bg-white/5 hover:bg-white text-text-muted hover:text-primary rounded-xl transition-all border border-white/10 shadow-lg"
                       title="Copy URL"
                     >
-                      <Copy size={16} />
+                      <Copy size={15} />
                     </button>
                     <button 
                       onClick={() => handleDelete(asset.fullPath)}
-                      className="p-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500/30 transition-colors"
+                      className="p-2.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-xl transition-all border border-red-500/20 shadow-lg"
                       title="Delete Image"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 </div>
