@@ -42,6 +42,9 @@ import {
   Globe,
   Filter,
   Laptop,
+  Activity,
+  Clock,
+  Trash,
 } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
@@ -2565,6 +2568,10 @@ const AnalyticsDashboard = () => {
   // Interactive search & filter states
   const [actionFilter, setActionFilter] = useState('all'); // all, page_view, project_view, click, scroll
   const [searchSession, setSearchSession] = useState('');
+  
+  // Session trace modal states
+  const [selectedTraceSession, setSelectedTraceSession] = useState(null);
+  const [pruning, setPruning] = useState(false);
 
   useEffect(() => {
     const q = query(
@@ -2592,6 +2599,26 @@ const AnalyticsDashboard = () => {
     return () => unsubscribe();
   }, []);
 
+  // Pruning handler to wipe out/reset telemetry collection
+  const handlePruneLogs = async () => {
+    if (!window.confirm('WARNING: Are you sure you want to prune and clear all telemetry data logs? This action is irreversible.')) return;
+    setPruning(true);
+    try {
+      const { writeBatch, doc } = await import('firebase/firestore');
+      const batch = writeBatch(db);
+      events.forEach((ev) => {
+        batch.delete(doc(db, 'analyticsEvents', ev.id));
+      });
+      await batch.commit();
+      alert('Logs successfully pruned.');
+    } catch (err) {
+      console.error('Pruning failed:', err);
+      alert('Failed to clear logs: ' + err.message);
+    } finally {
+      setPruning(false);
+    }
+  };
+
   // Filtered log events computed property
   const filteredEvents = useMemo(() => {
     return events.filter((e) => {
@@ -2613,6 +2640,18 @@ const AnalyticsDashboard = () => {
     });
   }, [events, actionFilter, searchSession]);
 
+  // Compiled trace timeline steps for the modal
+  const sessionTraceTimeline = useMemo(() => {
+    if (!selectedTraceSession) return [];
+    return events
+      .filter((e) => e.sessionId === selectedTraceSession)
+      .sort((a, b) => {
+        const tA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
+        const tB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+        return tA - tB; // oldest first
+      });
+  }, [events, selectedTraceSession]);
+
   // Aggregations
   const stats = useMemo(() => {
     if (events.length === 0) return null;
@@ -2625,6 +2664,18 @@ const AnalyticsDashboard = () => {
 
     const totalViews = events.filter((e) => e.eventName === 'page_view').length;
     const totalSessions = new Set(events.map((e) => e.sessionId).filter(Boolean)).size;
+
+    // Estimate live sessions (active within last 5 minutes)
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+    const liveSessions = new Set(
+      events
+        .filter((e) => {
+          const t = e.timestamp?.toDate ? e.timestamp.toDate().getTime() : new Date(e.timestamp).getTime();
+          return t > fiveMinutesAgo;
+        })
+        .map((e) => e.sessionId)
+        .filter(Boolean)
+    ).size;
 
     // 1. Page views over time (last 7 active days)
     const dailyViews = {};
@@ -2699,6 +2750,7 @@ const AnalyticsDashboard = () => {
     return {
       totalViews,
       totalSessions,
+      liveSessions,
       dateLabels,
       dateData,
       maxDailyView,
@@ -2760,7 +2812,7 @@ const AnalyticsDashboard = () => {
   return (
     <div className="space-y-6">
       {/* Top HUD Cards */}
-      <div className="grid gap-4 sm:grid-cols-3 font-mono">
+      <div className="grid gap-4 sm:grid-cols-4 font-mono">
         <div className="rounded-2xl border border-white/5 bg-secondary/20 p-5 shadow-[0_4px_16px_rgba(0,0,0,0.25)]">
           <span className="text-[9px] uppercase tracking-wider text-text-muted">Total Page Views</span>
           <h3 className="text-2xl font-bold text-accent mt-1">{stats.totalViews}</h3>
@@ -2770,8 +2822,22 @@ const AnalyticsDashboard = () => {
           <h3 className="text-2xl font-bold text-accent mt-1">{stats.totalSessions}</h3>
         </div>
         <div className="rounded-2xl border border-white/5 bg-secondary/20 p-5 shadow-[0_4px_16px_rgba(0,0,0,0.25)]">
-          <span className="text-[9px] uppercase tracking-wider text-text-muted font-bold text-emerald-400 font-mono">Telemetry Logs</span>
-          <h3 className="text-2xl font-bold text-emerald-400 mt-1">{events.length} docs</h3>
+          <span className="text-[9px] uppercase tracking-wider text-text-muted font-bold text-emerald-400">Live Active Users</span>
+          <h3 className="text-2xl font-bold text-emerald-400 mt-1 flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
+            {stats.liveSessions} active
+          </h3>
+        </div>
+        <div className="rounded-2xl border border-white/5 bg-secondary/20 p-5 shadow-[0_4px_16px_rgba(0,0,0,0.25)] flex flex-col justify-between">
+          <span className="text-[9px] uppercase tracking-wider text-text-muted">Database Maintenance</span>
+          <button
+            onClick={handlePruneLogs}
+            disabled={pruning}
+            className="w-full mt-2 inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-red-500/20 hover:border-red-500/40 bg-red-500/10 hover:bg-red-500/20 text-[10px] font-bold text-red-400 transition-colors"
+          >
+            {pruning ? <RefreshCw size={11} className="animate-spin" /> : <Trash size={11} />}
+            Prune Database Logs
+          </button>
         </div>
       </div>
 
@@ -2969,10 +3035,14 @@ const AnalyticsDashboard = () => {
             const referrerPill = getReferrerPill(log.eventData?.referrer);
 
             return (
-              <div key={log.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-primary/35 border border-white/5 rounded-xl px-4 py-3 hover:bg-primary/50 transition-colors">
+              <div 
+                key={log.id} 
+                onClick={() => setSelectedTraceSession(log.sessionId)}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-primary/35 border border-white/5 rounded-xl px-4 py-3 hover:bg-primary/50 hover:border-accent/25 transition-all cursor-pointer group"
+              >
                 <div className="flex items-start sm:items-center gap-2.5 min-w-0">
                   <span className="text-[10px] text-accent font-bold shrink-0">[{time}]</span>
-                  <span className="text-text truncate font-semibold">{eventText}</span>
+                  <span className="text-text truncate font-semibold group-hover:text-accent transition-colors">{eventText}</span>
                 </div>
                 
                 <div className="flex items-center flex-wrap gap-2.5 text-[10px] text-text-muted/65 self-end sm:self-center">
@@ -2988,8 +3058,8 @@ const AnalyticsDashboard = () => {
                   </span>
                   <span>•</span>
                   {/* Short Session footprint */}
-                  <span className="bg-white/5 px-1.5 py-0.5 rounded">
-                    Sess: {log.sessionId?.substring(0, 6) || 'Guest'}
+                  <span className="bg-white/5 px-1.5 py-0.5 rounded group-hover:bg-accent/15 group-hover:text-accent transition-colors font-bold">
+                    Trace: {log.sessionId?.substring(0, 6) || 'Guest'}
                   </span>
                 </div>
               </div>
@@ -3000,6 +3070,94 @@ const AnalyticsDashboard = () => {
           )}
         </div>
       </div>
+
+      {/* SESSION TRACE WORKSPACE TIMELINE MODAL */}
+      {selectedTraceSession && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-xl rounded-2xl border border-white/10 bg-secondary p-6 shadow-[0_24px_80px_rgba(0,0,0,0.6)] flex flex-col max-h-[85vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-4">
+              <div>
+                <h4 className="text-sm font-display font-bold text-text uppercase tracking-wider flex items-center gap-1.5">
+                  <Activity size={14} className="text-accent animate-pulse" />
+                  User Session Trace
+                </h4>
+                <p className="text-[10px] font-mono text-text-muted mt-1 break-all select-all">
+                  Session ID: {selectedTraceSession}
+                </p>
+              </div>
+              <button 
+                onClick={() => setSelectedTraceSession(null)}
+                className="p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-white/5 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Trace Steps Scroll Timeline */}
+            <div className="flex-1 overflow-y-auto pr-1 space-y-4 [scrollbar-width:thin] py-2">
+              {sessionTraceTimeline.map((step) => {
+                const stepTime = step.timestamp?.toDate ? step.timestamp.toDate().toLocaleTimeString() : 'Recent';
+                let stepAction = '';
+                let details = null;
+
+                if (step.eventName === 'page_view') {
+                  stepAction = `Opened Page "${step.eventData?.path || '/'}"`;
+                  details = step.eventData?.referrer ? `Referrer: ${step.eventData.referrer}` : null;
+                } else if (step.eventName === 'project_view') {
+                  stepAction = `Opened Project Modal`;
+                  details = `Project: ${step.eventData?.project_title || 'Unknown'}`;
+                } else if (step.eventName === 'social_click') {
+                  stepAction = `Clicked Social Link`;
+                  details = `Platform: ${step.eventData?.platform || 'Unknown'}`;
+                } else if (step.eventName === 'download') {
+                  stepAction = `Downloaded Resume`;
+                  details = `File Type: ${step.eventData?.file_type?.toUpperCase() || 'N/A'}`;
+                } else if (step.eventName === 'scroll_depth') {
+                  stepAction = `Scrolled Page`;
+                  details = `Depth reached: ${step.eventData?.depth || '0'}%`;
+                } else if (step.eventName === 'contact_submit') {
+                  stepAction = `Sent Contact Inquiry Form`;
+                } else {
+                  stepAction = `Triggered: ${step.eventName}`;
+                }
+
+                return (
+                  <div key={step.id} className="relative pl-6 border-l border-white/10 last:border-transparent pb-1">
+                    {/* Circle Node Indicator */}
+                    <div className="absolute -left-[6px] top-1.5 w-3 h-3 rounded-full bg-primary border-2 border-accent shadow-[0_0_8px_rgba(var(--color-accent-rgb),0.5)]" />
+                    
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-accent font-bold">[{stepTime}]</span>
+                        <span className="text-xs text-text font-semibold">{stepAction}</span>
+                      </div>
+                      {details && (
+                        <p className="text-[10px] font-mono text-text-muted mt-0.5 leading-relaxed bg-primary/25 border border-white/5 rounded px-2 py-1 select-all">
+                          {details}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="border-t border-white/5 pt-4 mt-4 flex justify-between items-center text-[10px] font-mono text-text-muted">
+              <span className="flex items-center gap-1">
+                <Clock size={11} /> Total Actions: {sessionTraceTimeline.length}
+              </span>
+              <button
+                onClick={() => setSelectedTraceSession(null)}
+                className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/80 border border-white/10 text-xs font-bold text-text transition-colors"
+              >
+                Close Trace
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
