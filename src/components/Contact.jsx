@@ -156,41 +156,9 @@ const Contact = () => {
       };
 
       // 1. Save directly to Firestore Admin Inbox
-      try {
-        const { saveContactMessage } = await import('../lib/cms');
-        await saveContactMessage(payload);
-      } catch (dbErr) {
-        console.error('Failed to save to Firestore inbox:', dbErr);
-      }
+      const { saveContactMessage } = await import('../lib/cms');
+      await saveContactMessage(payload);
 
-      // 2. Send via Formspree / API endpoint for email notification
-      const endpoint =
-        import.meta.env.VITE_CONTACT_ENDPOINT ||
-        (import.meta.env.VITE_FORMSPREE_ID
-          ? `https://formspree.io/f/${import.meta.env.VITE_FORMSPREE_ID}`
-          : import.meta.env.PROD ? '/api/contact' : null);
-      
-      if (endpoint) {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
-        if (!res.ok) throw new Error('Failed to submit to endpoint');
-      } else {
-        const mailto = `mailto:${contactEmail}?subject=${encodeURIComponent(
-          'Portfolio Contact'
-        )}&body=${encodeURIComponent(
-          `Name: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`
-          + `\n\nProject type: ${formData.projectType || 'Not specified'}`
-          + `\nBudget: ${formData.budget || 'Not specified'}`
-          + `\nTimeline: ${formData.timeline || 'Not specified'}`
-        )}`;
-        window.location.href = mailto;
-      }
       setFormState('success');
       setFormData({ name: '', email: '', projectType: '', budget: '', timeline: '', message: '', website: '' });
       triggerConfetti();
