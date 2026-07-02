@@ -171,7 +171,7 @@ const ProjectPage = () => {
           </div>
 
           {/* Header & Quick Facts */}
-          <div className="mx-auto max-w-4xl space-y-10 px-4 sm:px-6">
+          <div className="mx-auto max-w-5xl space-y-10 px-4 sm:px-6">
             <div className="text-center space-y-4">
               <h1 className="text-4xl font-extrabold tracking-tight text-text md:text-5xl lg:text-6xl">
                 {project.title}
@@ -265,7 +265,7 @@ const ProjectPage = () => {
           </div>
 
           {/* Snappy Case Study Tab Selector */}
-          <div className="mx-auto max-w-4xl px-4 sm:px-6 mb-12">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 mb-12">
             <div className="relative flex rounded-full border border-white/10 bg-secondary/15 p-1 backdrop-blur-md">
               {['story', 'technical', 'impact'].map((tab) => {
                 const isActive = activeTab === tab;
@@ -292,7 +292,7 @@ const ProjectPage = () => {
           </div>
 
           {/* Content Wrapper */}
-          <div className="mx-auto max-w-4xl px-4 sm:px-6 min-h-[380px]">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 min-h-[380px]">
             <AnimatePresence mode="wait">
               {activeTab === 'story' && (
                 <motion.div
