@@ -358,36 +358,6 @@ const Certifications = () => {
   const [activeFilter, setActiveFilter] = useState('All');
   const [showAll, setShowAll] = useState(false);
   const [pdfModal, setPdfModal] = useState({ url: '', title: '' });
-  const scrollRef = React.useRef(null);
-
-  // Mouse drag-to-scroll handler for desktop users
-  const [isDown, setIsDown] = React.useState(false);
-  const [startX, setStartX] = React.useState(0);
-  const [scrollLeft, setScrollLeft] = React.useState(0);
-
-  const handleMouseDown = (e) => {
-    // Avoid triggering drag if clicking on buttons or links directly
-    if (e.target.closest('a') || e.target.closest('button')) return;
-    setIsDown(true);
-    setStartX(e.pageX - scrollRef.current.offsetLeft);
-    setScrollLeft(scrollRef.current.scrollLeft);
-  };
-
-  const handleMouseLeave = () => {
-    setIsDown(false);
-  };
-
-  const handleMouseUp = () => {
-    setIsDown(false);
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDown) return;
-    e.preventDefault();
-    const x = e.pageX - scrollRef.current.offsetLeft;
-    const walk = (x - startX) * 1.5; // scroll speed multiplier
-    scrollRef.current.scrollLeft = scrollLeft - walk;
-  };
 
   const openPdf  = (url, title) => setPdfModal({ url, title });
   const closePdf = () => setPdfModal({ url: '', title: '' });
@@ -400,6 +370,8 @@ const Certifications = () => {
 
   // Show max 6 in main grid unless "show all" is toggled
   const GRID_LIMIT = 6;
+  const visibleCerts = filteredCerts.slice(0, GRID_LIMIT);
+  const hasMore = filteredCerts.length > GRID_LIMIT;
 
   if (loading || data === undefined) {
     return <CmsSectionSkeleton id="certifications" />;
@@ -422,40 +394,35 @@ const Certifications = () => {
           <FilterTabs certs={certificationsList} active={activeFilter} onChange={setActiveFilter} />
         )}
 
-        {/* Main Horizontal Ticker */}
+        {/* Main Grid */}
         {certificationsList.length === 0 ? (
           <div className="rounded-2xl border border-secondary/50 bg-secondary/20 px-6 py-16 text-center text-text-muted">
             No certificates have been added yet. Open the admin panel to publish your first certificate.
           </div>
         ) : (
           <>
-            <div className="relative w-full select-none">
-              {/* Fade masks */}
-              <div className="absolute top-0 bottom-0 left-0 w-16 bg-gradient-to-r from-primary to-transparent z-10 pointer-events-none" />
-              <div className="absolute top-0 bottom-0 right-0 w-16 bg-gradient-to-l from-primary to-transparent z-10 pointer-events-none" />
-
-              {/* Horizontal scroll wrap */}
-              <div 
-                ref={scrollRef}
-                onMouseDown={handleMouseDown}
-                onMouseLeave={handleMouseLeave}
-                onMouseUp={handleMouseUp}
-                onMouseMove={handleMouseMove}
-                className={`flex gap-6 overflow-x-auto snap-x snap-mandatory py-4 px-8 no-scrollbar scroll-smooth ${
-                  isDown ? 'cursor-grabbing' : 'cursor-grab'
-                }`}
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeFilter}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               >
-                {filteredCerts.map((cert, index) => (
-                  <div key={`${cert.title}-${index}`} className="w-[320px] md:w-[350px] shrink-0 snap-center select-none">
-                    <CertificationCard cert={cert} index={0} onViewPdf={openPdf} />
-                  </div>
+                {visibleCerts.map((cert, index) => (
+                  <CertificationCard key={cert.title || index} cert={cert} index={index} onViewPdf={openPdf} />
                 ))}
-              </div>
-            </div>
+              </motion.div>
+            </AnimatePresence>
 
             {/* Footer actions */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
+              {hasMore && (
+                <p className="text-xs text-text-muted font-mono">
+                  Showing {visibleCerts.length} of {filteredCerts.length} in this category
+                </p>
+              )}
               {certificationsList.length > GRID_LIMIT && (
                 <button
                   onClick={() => setShowAll(true)}

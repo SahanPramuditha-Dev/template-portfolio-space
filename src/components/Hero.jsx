@@ -87,7 +87,6 @@ const Hero = () => {
   const socialLinks = Array.isArray(siteDoc?.socialLinksJson) ? siteDoc.socialLinksJson : [];
   const heroArtworkUrl = siteDoc?.heroArtworkUrl || '';
   const projectCount = Array.isArray(projectsDoc?.items) ? projectsDoc.items.length : 0;
-  const featuredProjects = Array.isArray(projectsDoc?.items) ? projectsDoc.items.filter((project) => project.featured).slice(0, 3) : [];
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
@@ -338,20 +337,7 @@ const Hero = () => {
               </div>
             </div>
 
-            {featuredProjects.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {featuredProjects.map((project) => (
-                  <a
-                    key={project.id || project.title}
-                    href="#projects"
-                    className="inline-flex max-w-full items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-3 py-1.5 text-xs font-mono uppercase tracking-[0.12em] text-accent"
-                  >
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-                    <span className="max-w-[18rem] truncate">{project.title}</span>
-                  </a>
-                ))}
-              </div>
-            )}
+            {/* Projects list pill badge is removed per user request */}
           </div>
         </motion.div>
       </div>

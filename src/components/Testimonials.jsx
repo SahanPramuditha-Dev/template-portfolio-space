@@ -8,34 +8,6 @@ import { CmsSectionSkeleton } from './CmsShapeSkeleton';
 const Testimonials = () => {
   const { data, loading } = useCmsDoc(CMS_DOCS.testimonials, { items: [] });
   const testimonials = Array.isArray(data?.items) ? data.items : [];
-  const scrollRef = React.useRef(null);
-  
-  // Mouse drag-to-scroll handler for desktop users
-  const [isDown, setIsDown] = React.useState(false);
-  const [startX, setStartX] = React.useState(0);
-  const [scrollLeft, setScrollLeft] = React.useState(0);
-
-  const handleMouseDown = (e) => {
-    setIsDown(true);
-    setStartX(e.pageX - scrollRef.current.offsetLeft);
-    setScrollLeft(scrollRef.current.scrollLeft);
-  };
-
-  const handleMouseLeave = () => {
-    setIsDown(false);
-  };
-
-  const handleMouseUp = () => {
-    setIsDown(false);
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDown) return;
-    e.preventDefault();
-    const x = e.pageX - scrollRef.current.offsetLeft;
-    const walk = (x - startX) * 1.5; // scroll speed multiplier
-    scrollRef.current.scrollLeft = scrollLeft - walk;
-  };
 
   if (loading || data === undefined) {
     return <CmsSectionSkeleton id="testimonials" />;
@@ -66,33 +38,24 @@ const Testimonials = () => {
             </a>
           </div>
         ) : (
-          <div className="relative w-full select-none">
+          <div className="relative overflow-hidden w-full p-4 select-none">
             {/* Left and Right gradient mask for smooth side fade out */}
-            <div className="absolute top-0 bottom-0 left-0 w-16 bg-gradient-to-r from-primary to-transparent z-10 pointer-events-none" />
-            <div className="absolute top-0 bottom-0 right-0 w-16 bg-gradient-to-l from-primary to-transparent z-10 pointer-events-none" />
+            <div className="absolute top-0 bottom-0 left-0 w-24 bg-gradient-to-r from-primary to-transparent z-10 pointer-events-none" />
+            <div className="absolute top-0 bottom-0 right-0 w-24 bg-gradient-to-l from-primary to-transparent z-10 pointer-events-none" />
 
-            {/* Draggable grab-to-scroll container */}
-            <div 
-              ref={scrollRef}
-              onMouseDown={handleMouseDown}
-              onMouseLeave={handleMouseLeave}
-              onMouseUp={handleMouseUp}
-              onMouseMove={handleMouseMove}
-              className={`flex gap-6 overflow-x-auto snap-x snap-mandatory py-4 px-8 no-scrollbar scroll-smooth ${
-                isDown ? 'cursor-grabbing' : 'cursor-grab'
-              }`}
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {testimonials.map((item, idx) => (
+            {/* Infinite Horizontal Scrolling container */}
+            <div className="flex w-max gap-6 animate-[scrollHorizontal_40s_linear_infinite] hover:[animation-play-state:paused]">
+              {/* Render testimonials duplicated three times to ensure seamless infinite loop */}
+              {[...testimonials, ...testimonials, ...testimonials].map((item, idx) => (
                 <article
                   key={`${item.name}-${idx}`}
-                  className="rounded-3xl border border-white/5 hover:border-accent/30 bg-secondary/15 hover:bg-secondary/30 p-6 backdrop-blur-md transition-all duration-300 transform hover:scale-[1.01] flex flex-col justify-between w-[320px] md:w-[380px] shrink-0 min-h-[220px] snap-center select-none"
+                  className="rounded-3xl border border-white/5 hover:border-accent/30 bg-secondary/15 hover:bg-secondary/30 p-6 backdrop-blur-md transition-all duration-300 transform hover:scale-[1.01] flex flex-col justify-between w-[320px] md:w-[380px] shrink-0 min-h-[220px]"
                 >
                   <div>
                     <Quote className="mb-3 text-accent/80" size={24} />
-                    <p className="text-sm leading-relaxed text-slate-300 pointer-events-none">"{item.content}"</p>
+                    <p className="text-sm leading-relaxed text-slate-300">"{item.content}"</p>
                   </div>
-                  <div className="mt-5 flex items-center justify-between gap-4 border-t border-white/5 pt-4 pointer-events-none">
+                  <div className="mt-5 flex items-center justify-between gap-4 border-t border-white/5 pt-4">
                     <div>
                       <h3 className="text-sm font-bold text-white">{item.name}</h3>
                       <p className="text-[11px] text-text-muted mt-0.5">
@@ -111,6 +74,13 @@ const Testimonials = () => {
           </div>
         )}
       </div>
+
+      <style>{`
+        @keyframes scrollHorizontal {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-33.333%); }
+        }
+      `}</style>
     </SectionWrapper>
   );
 };
