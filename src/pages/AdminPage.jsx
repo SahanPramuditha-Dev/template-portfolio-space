@@ -330,6 +330,12 @@ const initialProject = {
   completed: false,
   projectType: 'personal',
   isPrivate: false,
+  demoEmail: '',
+  demoPassword: '',
+  perfScore: '',
+  accessScore: '',
+  bestScore: '',
+  seoScore: '',
 };
 
 const initialCertificate = {
@@ -664,6 +670,12 @@ const projectFields = [
   },
   { key: 'github', label: 'GitHub URL', type: 'text', group: 'links' },
   { key: 'external', label: 'Live Demo URL', type: 'text', group: 'links' },
+  { key: 'demoEmail', label: 'Demo Email Credentials', type: 'text', group: 'links' },
+  { key: 'demoPassword', label: 'Demo Password Credentials', type: 'text', group: 'links' },
+  { key: 'perfScore', label: 'Lighthouse Performance Score (0-100)', type: 'text', group: 'metrics' },
+  { key: 'accessScore', label: 'Lighthouse Accessibility Score (0-100)', type: 'text', group: 'metrics' },
+  { key: 'bestScore', label: 'Lighthouse Best Practices Score (0-100)', type: 'text', group: 'metrics' },
+  { key: 'seoScore', label: 'Lighthouse SEO Score (0-100)', type: 'text', group: 'metrics' },
   { key: 'sandboxUrl', label: 'Live Code Sandbox URL (CodeSandbox/StackBlitz/etc.)', type: 'text', group: 'links' },
   { key: 'videoUrl', label: 'Video preview URL (mp4/webm)', type: 'text', group: 'media' },
   { key: 'videoCaption', label: 'Video caption', type: 'text', group: 'media' },

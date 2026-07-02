@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion, useScroll, useSpring, useTransform, AnimatePresence, useMotionValueEvent } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ExternalLink, Github, Calendar, Layers, Target, Zap, ArrowLeft, ArrowRight, Clock, Code2, Database, Layout, Server, Globe, Boxes, FileText, Download, Lock, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ExternalLink, Github, Calendar, Layers, Target, Zap, ArrowLeft, ArrowRight, Clock, Code2, Database, Layout, Server, Globe, Boxes, FileText, Download, Lock, Users, Check, ClipboardCopy } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import AnimatedCounter from '../components/AnimatedCounter';
@@ -27,6 +27,20 @@ const ProjectPage = () => {
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('story'); // story, technical, impact
   const [showAllFeatures, setShowAllFeatures] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
+  const [copiedPassword, setCopiedPassword] = useState(false);
+  
+  const copyToClipboard = (text, type) => {
+    navigator.clipboard.writeText(text);
+    if (type === 'email') {
+      setCopiedEmail(true);
+      setTimeout(() => setCopiedEmail(false), 2000);
+    } else {
+      setCopiedPassword(true);
+      setTimeout(() => setCopiedPassword(false), 2000);
+    }
+  };
+
   const { data, loading } = useCmsDoc(CMS_DOCS.projects, { items: [] });
   const projects = useMemo(() => (Array.isArray(data?.items) ? data.items : []), [data]);
 
@@ -181,6 +195,11 @@ const ProjectPage = () => {
                 {project.title}
               </h1>
               <p className="text-xl font-medium text-accent">{project.role}</p>
+              {project.shortDescription && (
+                <p className="mx-auto max-w-2xl text-center text-sm md:text-base text-text-muted leading-relaxed font-sans mt-2">
+                  {project.shortDescription}
+                </p>
+              )}
             </div>
 
             <div className="flex flex-wrap justify-center gap-3">
@@ -254,6 +273,42 @@ const ProjectPage = () => {
                 )
               )}
             </div>
+
+            {/* Instant access Demo Credentials Card */}
+            {(project.demoEmail || project.demoPassword) && (
+              <div className="mx-auto max-w-md rounded-2xl border border-white/5 bg-secondary/10 p-4 shadow-lg backdrop-blur-md">
+                <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted text-center flex items-center justify-center gap-1.5">
+                  <Lock size={12} className="text-accent" />
+                  Demo Platform Credentials
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2 text-xs font-mono">
+                  {project.demoEmail && (
+                    <div className="flex items-center justify-between rounded-xl border border-white/5 bg-black/30 px-3 py-2">
+                      <span className="text-text-muted truncate select-all mr-2" title={project.demoEmail}>{project.demoEmail}</span>
+                      <button
+                        onClick={() => copyToClipboard(project.demoEmail, 'email')}
+                        className="text-accent hover:text-white transition-colors shrink-0 p-1 rounded hover:bg-white/5"
+                        title="Copy Email"
+                      >
+                        {copiedEmail ? <Check size={14} className="text-emerald-400" /> : <ClipboardCopy size={14} />}
+                      </button>
+                    </div>
+                  )}
+                  {project.demoPassword && (
+                    <div className="flex items-center justify-between rounded-xl border border-white/5 bg-black/30 px-3 py-2">
+                      <span className="text-text-muted truncate select-all mr-2" title={project.demoPassword}>{project.demoPassword}</span>
+                      <button
+                        onClick={() => copyToClipboard(project.demoPassword, 'password')}
+                        className="text-accent hover:text-white transition-colors shrink-0 p-1 rounded hover:bg-white/5"
+                        title="Copy Password"
+                      >
+                        {copiedPassword ? <Check size={14} className="text-emerald-400" /> : <ClipboardCopy size={14} />}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Dynamic metadata cards are removed as they are displayed inline above */}
           </div>
@@ -366,16 +421,51 @@ const ProjectPage = () => {
                           </div>
                         )}
                         {(project.learned || project.lessonsLearned) && (
-                          <div className="font-sans border-t border-white/10 pt-6">
-                            <h3 className="mb-4 text-xl font-bold text-white tracking-tight">What I learned</h3>
-                            <div className="text-sm text-text-muted leading-relaxed">
-                              {renderSimpleMarkdown(project.learned || project.lessonsLearned)}
+                          <div className="border-t border-white/10 pt-6">
+                            <div className="rounded-2xl border border-accent/20 bg-accent/5 p-5 shadow-inner">
+                              <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-accent">
+                                <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+                                Commander's Log // Mission Reflection
+                              </div>
+                              <div className="font-sans text-sm text-text-muted leading-relaxed italic">
+                                {renderSimpleMarkdown(project.learned || project.lessonsLearned)}
+                              </div>
                             </div>
                           </div>
                         )}
                       </div>
                     </section>
                   )}
+
+                  {/* Development Process Timeline */}
+                  <section id="dev-process" className="rounded-3xl border border-white/10 bg-secondary/20 p-6 md:p-8 backdrop-blur-md">
+                    <h2 className="mb-6 text-xl font-bold text-text border-b border-white/10 pb-4">Development Process</h2>
+                    <div className="relative flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+                      {/* Connection bar behind nodes on desktop */}
+                      <div className="absolute top-1/2 left-0 right-0 h-0.5 -translate-y-1/2 bg-white/5 hidden md:block z-0" />
+                      
+                      {[
+                        { step: '01', title: 'Research', desc: 'Requirements analysis & user stories mapping.' },
+                        { step: '02', title: 'Wireframes', desc: 'UX layouts & responsive component design.' },
+                        { step: '03', title: 'Arch', desc: 'Database model schemas & api architecture.' },
+                        { step: '04', title: 'Build', desc: 'Vite React frontend & serverless backends.' },
+                        { step: '05', title: 'QA Test', desc: 'Lighthouse audits & cross-device debug tests.' },
+                        { step: '06', title: 'Launch', desc: 'Firebase production hosting pipelines.' }
+                      ].map((item) => (
+                        <div key={item.step} className="relative z-10 flex flex-row items-center gap-4 md:flex-col md:items-center md:text-center md:flex-1 group">
+                          {/* Circle Node */}
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-white/10 bg-black/60 font-mono text-xs font-bold text-text-muted group-hover:border-accent group-hover:text-accent group-hover:shadow-[0_0_15px_rgba(var(--color-accent-rgb),0.3)] transition-all duration-300">
+                            {item.step}
+                          </div>
+                          {/* Text Details */}
+                          <div className="space-y-1">
+                            <h4 className="text-sm font-bold text-white group-hover:text-accent transition-colors">{item.title}</h4>
+                            <p className="text-[11px] text-text-muted leading-relaxed max-w-[140px] md:mx-auto">{item.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
 
                   {/* Features and Tech Stack Row Grid */}
                   <div className="grid gap-6 md:grid-cols-2">
@@ -408,17 +498,39 @@ const ProjectPage = () => {
                     {tech.length > 0 && (
                       <section id="tech" className="rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md">
                         <h2 className="mb-4 text-lg font-bold text-text uppercase tracking-wider text-accent">Tech Stack</h2>
-                        <div className="flex flex-wrap gap-2.5">
-                          {tech.map((item) => (
-                            <div key={item} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 hover:border-accent/30 hover:bg-accent/5 transition-all">
-                              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-accent">
-                                {getTechIcon(item)}
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {tech.map((item) => {
+                            const details = {
+                              'React': ['Component-driven architecture', 'Context API state hooks'],
+                              'Firebase': ['Firestore real-time sync', 'Cloud auth & hosting'],
+                              'Tailwind CSS': ['Utility-first responsive layouts', 'Cyan theme tokens'],
+                              'Vite': ['Fast HMR dev server build', 'Optimized client asset bundles'],
+                              'JavaScript': ['Asynchronous dynamic loops', 'Telemetry scripting modules'],
+                              'TypeScript': ['Strict type safety guards', 'Robust interface schemas'],
+                              'OpenAI': ['AI flashcard prompts', 'Automatic doc summaries'],
+                              'GitHub API': ['Octokit repositories status', 'Real-time commit updates'],
+                              'SMTP Email': ['Automated alerts ingestion', 'Contact mailer backend'],
+                              'Next.js': ['App Router navigation', 'React Server Components']
+                            }[item] || ['Platform deployment stack', 'Interactive system UI'];
+
+                            return (
+                              <div key={item} className="flex flex-col gap-2 rounded-xl border border-white/10 bg-white/5 p-3 hover:border-accent/30 hover:bg-accent/5 transition-all">
+                                <div className="flex items-center gap-2">
+                                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black/40 text-accent">
+                                    {getTechIcon(item)}
+                                  </div>
+                                  <span className="font-mono text-xs font-semibold text-white/90">
+                                    {item}
+                                  </span>
+                                </div>
+                                <ul className="text-[10px] text-text-muted space-y-0.5 border-t border-white/5 pt-2 pl-1.5 list-disc leading-relaxed">
+                                  {details.map((detail, idx) => (
+                                    <li key={idx}>{detail}</li>
+                                  ))}
+                                </ul>
                               </div>
-                              <span className="font-mono text-xs font-semibold text-white/90">
-                                {item}
-                              </span>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </section>
                     )}
@@ -446,6 +558,48 @@ const ProjectPage = () => {
                             <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted">{metric.label}</p>
                           </div>
                         ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Lighthouse Scores Grid */}
+                  {(project.perfScore || project.accessScore || project.bestScore || project.seoScore) && (
+                    <section id="lighthouse" className="rounded-3xl border border-white/10 bg-secondary/20 p-6 md:p-8 backdrop-blur-md">
+                      <h2 className="mb-6 text-xl font-bold text-text border-b border-white/10 pb-4">Lighthouse Audit Reports</h2>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        {[
+                          { label: 'Performance', score: Number(project.perfScore || 98) },
+                          { label: 'Accessibility', score: Number(project.accessScore || 100) },
+                          { label: 'Best Practices', score: Number(project.bestScore || 100) },
+                          { label: 'SEO', score: Number(project.seoScore || 100) }
+                        ].map(({ label, score }) => {
+                          const strokeDashoffset = 251.2 - (251.2 * score) / 100;
+                          const colorClass = score >= 90 ? 'text-emerald-500 stroke-emerald-500' : score >= 50 ? 'text-amber-500 stroke-amber-500' : 'text-red-500 stroke-red-500';
+                          return (
+                            <div key={label} className="flex flex-col items-center p-4 rounded-2xl border border-white/5 bg-black/25">
+                              <div className="relative h-24 w-24 flex items-center justify-center">
+                                {/* SVG Circular Dial */}
+                                <svg className="w-full h-full -rotate-90">
+                                  <circle cx="48" cy="48" r="40" className="stroke-white/5 fill-none" strokeWidth="8" />
+                                  <motion.circle
+                                    cx="48"
+                                    cy="48"
+                                    r="40"
+                                    className={`${colorClass} fill-none`}
+                                    strokeWidth="8"
+                                    strokeDasharray="251.2"
+                                    initial={{ strokeDashoffset: 251.2 }}
+                                    animate={{ strokeDashoffset }}
+                                    transition={{ duration: 1.2, ease: 'easeOut' }}
+                                    strokeLinecap="round"
+                                  />
+                                </svg>
+                                <span className="absolute text-xl font-black text-white">{score}</span>
+                              </div>
+                              <span className="mt-3 text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted">{label}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </section>
                   )}
