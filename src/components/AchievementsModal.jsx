@@ -88,15 +88,15 @@ const AchievementsModal = ({ isOpen, onClose }) => {
                   key={achievement.id}
                   className={`flex items-start gap-4 rounded-2xl border p-4 transition-all duration-300 ${
                     isUnlocked
-                      ? 'border-accent/25 bg-accent/5 shadow-[0_2px_12px_rgba(var(--color-accent-rgb)/0.05)]'
-                      : 'border-white/5 bg-primary/20 opacity-90'
+                      ? 'border-accent/30 bg-accent/10 shadow-[0_2px_16px_rgba(var(--color-accent-rgb),0.1)]'
+                      : 'border-white/10 bg-primary/60 opacity-90'
                   }`}
                 >
                   <div
                     className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors ${
                       isUnlocked
-                        ? 'bg-accent/20 border-accent/30 text-accent'
-                        : 'bg-secondary/40 border-white/5 text-text-muted'
+                        ? 'bg-accent/25 border-accent/40 text-accent'
+                        : 'bg-secondary/60 border-white/10 text-slate-400'
                     }`}
                   >
                     {isUnlocked ? <Unlock size={18} /> : <Lock size={18} />}
@@ -104,11 +104,11 @@ const AchievementsModal = ({ isOpen, onClose }) => {
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className={`font-display text-sm font-bold ${isUnlocked ? 'text-text' : 'text-text/85'}`}>
+                      <h3 className={`font-display text-sm font-bold text-white`}>
                         {achievement.title}
                       </h3>
                       {isUnlocked && achievement.unlockedAt && (
-                        <span className="inline-flex items-center gap-0.5 font-mono text-[8px] text-accent/80 bg-accent/10 rounded px-1.5 py-0.5 ml-auto">
+                        <span className="inline-flex items-center gap-0.5 font-mono text-[8px] text-accent/90 bg-accent/15 rounded px-2 py-0.5 ml-auto border border-accent/20">
                           <Calendar size={9} />
                           {new Date(achievement.unlockedAt).toLocaleDateString(undefined, {
                             month: 'short',
@@ -117,7 +117,7 @@ const AchievementsModal = ({ isOpen, onClose }) => {
                         </span>
                       )}
                     </div>
-                    <p className={`font-mono text-[10px] mt-1 leading-normal ${isUnlocked ? 'text-text/70' : 'text-text/50'}`}>
+                    <p className={`font-mono text-[10px] mt-1 leading-normal text-slate-300/90`}>
                       {achievement.description}
                     </p>
                   </div>
