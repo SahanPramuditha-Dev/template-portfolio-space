@@ -86,7 +86,9 @@ const Hero = () => {
   const heroWords = Array.isArray(siteDoc?.heroWordsJson) ? siteDoc.heroWordsJson : [];
   const socialLinks = Array.isArray(siteDoc?.socialLinksJson) ? siteDoc.socialLinksJson : [];
   const heroArtworkUrl = siteDoc?.heroArtworkUrl || '';
-  const projectCount = Array.isArray(projectsDoc?.items) ? projectsDoc.items.length : 0;
+  const projectItems = Array.isArray(projectsDoc?.items) ? projectsDoc.items : [];
+  const completedProjects = projectItems.filter(p => p.completed === true || p.completed === 'true');
+  const projectCount = completedProjects.length > 0 ? completedProjects.length : projectItems.length;
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;

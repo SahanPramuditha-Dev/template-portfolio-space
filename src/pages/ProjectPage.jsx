@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion, useScroll, useSpring, useTransform, AnimatePresence, useMotionValueEvent } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ExternalLink, Github, Calendar, Layers, Target, Zap, ArrowLeft, ArrowRight, Clock, Code2, Database, Layout, Server, Globe, Boxes, FileText, Download } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ExternalLink, Github, Calendar, Layers, Target, Zap, ArrowLeft, ArrowRight, Clock, Code2, Database, Layout, Server, Globe, Boxes, FileText, Download, Lock } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import AnimatedCounter from '../components/AnimatedCounter';
@@ -180,23 +180,32 @@ const ProjectPage = () => {
 
             <div className="flex flex-wrap justify-center gap-3">
               {project.year && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-secondary/40 bg-primary/40 px-4 py-2 text-xs text-text-muted font-medium">
-                  <Calendar size={14} />
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-secondary/40 bg-primary/40 px-4 py-2 text-xs text-text-muted font-medium font-mono">
+                  <Calendar size={13} />
                   {project.year}
                 </span>
               )}
+              <span className={`rounded-full px-4 py-2 text-xs font-mono border ${
+                project.projectType === 'client'
+                  ? 'border-blue-400/25 bg-blue-500/10 text-blue-300'
+                  : 'border-cyan-400/25 bg-cyan-500/10 text-cyan-300'
+              }`}>
+                {project.projectType === 'client' ? 'Client Project' : 'Personal Project'}
+              </span>
               {project.category && (
                 <span className="rounded-full border border-accent/20 bg-accent/10 px-4 py-2 text-xs font-mono text-accent">
                   {project.category}
                 </span>
               )}
-              {project.status && (
-                <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-4 py-2 text-xs font-mono text-emerald-300">
-                  {project.status}
-                </span>
-              )}
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-text-muted font-medium">
-                <Clock size={14} />
+              <span className={`rounded-full px-4 py-2 text-xs font-mono border ${
+                project.completed === true || project.completed === 'true'
+                  ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300'
+                  : 'border-amber-400/25 bg-amber-500/10 text-amber-300'
+              }`}>
+                {project.completed === true || project.completed === 'true' ? 'Completed' : 'In Progress'}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-text-muted font-medium font-mono">
+                <Clock size={13} />
                 {readTime} min read
               </span>
             </div>
@@ -208,11 +217,18 @@ const ProjectPage = () => {
                   Live Demo
                 </a>
               )}
-              {hasGithub && (
-                <a href={project.github} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl border border-accent/30 bg-accent/5 px-8 py-4 font-bold text-accent transition-colors hover:bg-accent/10">
-                  <Github size={18} />
-                  Source Code
-                </a>
+              {project.isPrivate === true || project.isPrivate === 'true' ? (
+                <span className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-8 py-4 font-bold text-text-muted select-none">
+                  <Lock size={16} className="text-text-muted/65" />
+                  Private Codebase
+                </span>
+              ) : (
+                hasGithub && (
+                  <a href={project.github} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl border border-accent/30 bg-accent/5 px-8 py-4 font-bold text-accent transition-colors hover:bg-accent/10">
+                    <Github size={18} />
+                    Source Code
+                  </a>
+                )
               )}
             </div>
 

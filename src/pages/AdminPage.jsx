@@ -326,6 +326,9 @@ const initialProject = {
   challenges: '',
   outcomes: '',
   featured: false,
+  completed: false,
+  projectType: 'personal',
+  isPrivate: false,
 };
 
 const initialCertificate = {
@@ -626,6 +629,15 @@ const projectFields = [
   { key: 'projectTimeline', label: 'Timeline / duration', type: 'text', group: 'summary', placeholder: 'e.g. 6 months · Q1–Q3 2024' },
   { key: 'outcomeBadge', label: 'Outcome badge (short)', type: 'text', group: 'summary', placeholder: 'e.g. Reduced load by 40%' },
   { key: 'featured', label: 'Featured Project', type: 'checkbox', group: 'summary' },
+  { key: 'completed', label: 'Completed Project Status', type: 'checkbox', group: 'summary' },
+  {
+    key: 'projectType',
+    label: 'Project Context Type',
+    type: 'select',
+    options: ['personal', 'client'],
+    group: 'summary',
+  },
+  { key: 'isPrivate', label: 'Private Code / Private Repository', type: 'checkbox', group: 'summary' },
   { key: 'description', label: 'Description', type: 'markdown', group: 'story' },
   { key: 'architecture', label: 'Architecture', type: 'markdown', group: 'story' },
   { key: 'features', label: 'Features', type: 'list', placeholder: 'Enter a feature', group: 'story' },
