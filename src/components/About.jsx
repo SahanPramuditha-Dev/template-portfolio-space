@@ -126,10 +126,10 @@ const About = () => {
   const aboutStats = Array.isArray(siteDoc?.aboutStatsJson) ? siteDoc.aboutStatsJson.map(stat => {
     const labelLower = stat.label?.toLowerCase() || '';
     if (labelLower.includes('projects completed')) {
-      return { ...stat, value: completedCount > 0 ? completedCount : stat.value };
+      return { ...stat, value: completedCount };
     }
     if (labelLower.includes('happy clients')) {
-      return { ...stat, value: happyClientsCount > 0 ? happyClientsCount : stat.value };
+      return { ...stat, value: happyClientsCount };
     }
     if (labelLower.includes('lines of code') && githubData.loc > 0) {
       const kLines = Math.floor(githubData.loc / 1000);
