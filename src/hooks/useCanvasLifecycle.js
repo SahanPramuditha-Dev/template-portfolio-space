@@ -8,7 +8,8 @@ import { useAccessibility } from '../context/AccessibilityContext';
  */
 export function useCanvasLifecycle(ref = null) {
   const [enabled, setEnabled] = useState(() => !shouldDisableHeavyVisuals());
-  const { reduceMotion } = useAccessibility();
+  const accessibility = useAccessibility();
+  const reduceMotion = accessibility ? accessibility.reduceMotion : false;
   const [tabActive, setTabActive] = useState(
     () => typeof document === 'undefined' || !document.hidden,
   );
