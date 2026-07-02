@@ -38,18 +38,47 @@ const Testimonials = () => {
             </a>
           </div>
         ) : (
-          <div className="relative overflow-hidden w-full p-4 select-none">
-            {/* Left and Right gradient mask for smooth side fade out */}
-            <div className="absolute top-0 bottom-0 left-0 w-24 bg-gradient-to-r from-primary to-transparent z-10 pointer-events-none" />
-            <div className="absolute top-0 bottom-0 right-0 w-24 bg-gradient-to-l from-primary to-transparent z-10 pointer-events-none" />
+          <div className="relative w-full p-4 group/carousel">
+            {/* Top Right Navigation Controls */}
+            <div className="absolute -top-16 right-4 flex items-center gap-2 z-20">
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById('testimonials_scroller');
+                  if (el) el.scrollBy({ left: -360, behavior: 'smooth' });
+                }}
+                className="p-2.5 rounded-full border border-white/5 bg-secondary/35 text-text-muted hover:border-accent/40 hover:text-accent transition-colors"
+                aria-label="Scroll left"
+              >
+                <span className="block transform rotate-180">➜</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById('testimonials_scroller');
+                  if (el) el.scrollBy({ left: 360, behavior: 'smooth' });
+                }}
+                className="p-2.5 rounded-full border border-white/5 bg-secondary/35 text-text-muted hover:border-accent/40 hover:text-accent transition-colors"
+                aria-label="Scroll right"
+              >
+                <span>➜</span>
+              </button>
+            </div>
 
-            {/* Infinite Horizontal Scrolling container */}
-            <div className="flex w-max gap-6 animate-[scrollHorizontal_40s_linear_infinite] hover:[animation-play-state:paused]">
-              {/* Render testimonials duplicated three times to ensure seamless infinite loop */}
-              {[...testimonials, ...testimonials, ...testimonials].map((item, idx) => (
+            {/* Left and Right gradient mask for smooth side fade out */}
+            <div className="absolute top-0 bottom-0 left-0 w-16 bg-gradient-to-r from-primary to-transparent z-10 pointer-events-none" />
+            <div className="absolute top-0 bottom-0 right-0 w-16 bg-gradient-to-l from-primary to-transparent z-10 pointer-events-none" />
+
+            {/* Native scrollable track with drag-to-scroll configuration */}
+            <div 
+              id="testimonials_scroller"
+              className="flex gap-6 overflow-x-auto scrollbar-none snap-x snap-mandatory py-4 relative scroll-smooth cursor-grab active:cursor-grabbing select-none"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {testimonials.map((item, idx) => (
                 <article
                   key={`${item.name}-${idx}`}
-                  className="rounded-3xl border border-white/5 hover:border-accent/30 bg-secondary/15 hover:bg-secondary/30 p-6 backdrop-blur-md transition-all duration-300 transform hover:scale-[1.01] flex flex-col justify-between w-[320px] md:w-[380px] shrink-0 min-h-[220px]"
+                  className="rounded-3xl border border-white/5 hover:border-accent/30 bg-secondary/15 hover:bg-secondary/30 p-6 backdrop-blur-md transition-all duration-300 transform hover:scale-[1.01] flex flex-col justify-between w-[300px] md:w-[360px] shrink-0 min-h-[220px] snap-start"
                 >
                   <div>
                     <Quote className="mb-3 text-accent/80" size={24} />
@@ -74,13 +103,6 @@ const Testimonials = () => {
           </div>
         )}
       </div>
-
-      <style>{`
-        @keyframes scrollHorizontal {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-33.333%); }
-        }
-      `}</style>
     </SectionWrapper>
   );
 };
