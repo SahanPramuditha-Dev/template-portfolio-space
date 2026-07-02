@@ -370,8 +370,6 @@ const Certifications = () => {
 
   // Show max 6 in main grid unless "show all" is toggled
   const GRID_LIMIT = 6;
-  const visibleCerts = filteredCerts.slice(0, GRID_LIMIT);
-  const hasMore = filteredCerts.length > GRID_LIMIT;
 
   if (loading || data === undefined) {
     return <CmsSectionSkeleton id="certifications" />;
@@ -394,35 +392,30 @@ const Certifications = () => {
           <FilterTabs certs={certificationsList} active={activeFilter} onChange={setActiveFilter} />
         )}
 
-        {/* Main Grid */}
+        {/* Main Horizontal Ticker */}
         {certificationsList.length === 0 ? (
           <div className="rounded-2xl border border-secondary/50 bg-secondary/20 px-6 py-16 text-center text-text-muted">
             No certificates have been added yet. Open the admin panel to publish your first certificate.
           </div>
         ) : (
           <>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeFilter}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                {visibleCerts.map((cert, index) => (
-                  <CertificationCard key={cert.title || index} cert={cert} index={index} onViewPdf={openPdf} />
+            <div className="relative overflow-hidden w-full p-4 select-none">
+              {/* Fade masks */}
+              <div className="absolute top-0 bottom-0 left-0 w-20 bg-gradient-to-r from-primary to-transparent z-10 pointer-events-none" />
+              <div className="absolute top-0 bottom-0 right-0 w-20 bg-gradient-to-l from-primary to-transparent z-10 pointer-events-none" />
+
+              {/* Horizontal Marquee wrapper */}
+              <div className="flex w-max gap-6 animate-[scrollHorizontal_55s_linear_infinite] hover:[animation-play-state:paused] py-2">
+                {[...filteredCerts, ...filteredCerts, ...filteredCerts].map((cert, index) => (
+                  <div key={`${cert.title}-${index}`} className="w-[320px] md:w-[350px] shrink-0">
+                    <CertificationCard cert={cert} index={0} onViewPdf={openPdf} />
+                  </div>
                 ))}
-              </motion.div>
-            </AnimatePresence>
+              </div>
+            </div>
 
             {/* Footer actions */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
-              {hasMore && (
-                <p className="text-xs text-text-muted font-mono">
-                  Showing {visibleCerts.length} of {filteredCerts.length} in this category
-                </p>
-              )}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
               {certificationsList.length > GRID_LIMIT && (
                 <button
                   onClick={() => setShowAll(true)}

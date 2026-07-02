@@ -9,105 +9,6 @@ const Testimonials = () => {
   const { data, loading } = useCmsDoc(CMS_DOCS.testimonials, { items: [] });
   const testimonials = Array.isArray(data?.items) ? data.items : [];
 
-  const scrollRef = React.useRef(null);
-  const isDragging = React.useRef(false);
-  const startX = React.useRef(0);
-  const scrollLeftStart = React.useRef(0);
-  const requestRef = React.useRef(null);
-  const autoScrollActive = React.useRef(true);
-  const resumeTimeout = React.useRef(null);
-  const initTimeout = React.useRef(null);
-
-  // Triple the list to create a seamless scrolling loop in both directions
-  const items = React.useMemo(() => {
-    if (testimonials.length === 0) return [];
-    return [...testimonials, ...testimonials, ...testimonials];
-  }, [testimonials]);
-
-  // Set up auto-scroll animation loop once loading completes and items exist
-  React.useEffect(() => {
-    if (loading || items.length === 0) return;
-
-    const el = scrollRef.current;
-    if (!el) return;
-
-    // Center scroll position with a slight delay to ensure browser layout is painted
-    initTimeout.current = setTimeout(() => {
-      if (el) {
-        el.scrollLeft = el.scrollWidth / 3;
-      }
-    }, 250);
-
-    const animate = () => {
-      if (el && autoScrollActive.current && !isDragging.current) {
-        const oneThirdWidth = el.scrollWidth / 3;
-        
-        if (oneThirdWidth > 0) {
-          el.scrollLeft += 0.35; // Smooth slow auto-scroll increments
-
-          // Infinite boundary check: if scrolled past 2/3, reset to 1/3
-          const limit = (el.scrollWidth * 2) / 3;
-          if (el.scrollLeft >= limit) {
-            el.scrollLeft -= oneThirdWidth;
-          }
-        }
-      }
-      requestRef.current = requestAnimationFrame(animate);
-    };
-
-    requestRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (requestRef.current) cancelAnimationFrame(requestRef.current);
-      if (resumeTimeout.current) clearTimeout(resumeTimeout.current);
-      if (initTimeout.current) clearTimeout(initTimeout.current);
-    };
-  }, [loading, items]);
-
-  // Dragging event handlers
-  const handleMouseDown = (e) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    isDragging.current = true;
-    autoScrollActive.current = false;
-    if (resumeTimeout.current) clearTimeout(resumeTimeout.current);
-
-    startX.current = e.pageX - el.offsetLeft;
-    scrollLeftStart.current = el.scrollLeft;
-  };
-
-  const handleMouseMove = (e) => {
-    const el = scrollRef.current;
-    if (!el || !isDragging.current) return;
-    e.preventDefault();
-
-    const x = e.pageX - el.offsetLeft;
-    const walk = (x - startX.current) * 1.5; // Drag sensitivity
-    el.scrollLeft = scrollLeftStart.current - walk;
-
-    // Loop boundaries check during dragging
-    const oneThirdWidth = el.scrollWidth / 3;
-    if (el.scrollLeft <= 10) {
-      el.scrollLeft += oneThirdWidth;
-      startX.current = x; // Reset start reference on boundary jumps
-      scrollLeftStart.current = el.scrollLeft;
-    } else if (el.scrollLeft >= (el.scrollWidth * 2) / 3) {
-      el.scrollLeft -= oneThirdWidth;
-      startX.current = x;
-      scrollLeftStart.current = el.scrollLeft;
-    }
-  };
-
-  const handleMouseUpOrLeave = () => {
-    if (!isDragging.current) return;
-    isDragging.current = false;
-
-    // Resume auto-scroll smoothly after a 2.5-second delay
-    resumeTimeout.current = setTimeout(() => {
-      autoScrollActive.current = true;
-    }, 2500);
-  };
-
   if (loading || data === undefined) {
     return <CmsSectionSkeleton id="testimonials" />;
   }
@@ -137,21 +38,15 @@ const Testimonials = () => {
             </a>
           </div>
         ) : (
-          <div className="relative overflow-hidden w-full p-4">
+          <div className="relative overflow-hidden w-full p-4 select-none">
             {/* Left and Right gradient mask for smooth side fade out */}
-            <div className="absolute top-0 bottom-0 left-0 w-24 bg-gradient-to-r from-primary via-primary/80 to-transparent z-10 pointer-events-none" />
-            <div className="absolute top-0 bottom-0 right-0 w-24 bg-gradient-to-l from-primary via-primary/80 to-transparent z-10 pointer-events-none" />
+            <div className="absolute top-0 bottom-0 left-0 w-24 bg-gradient-to-r from-primary to-transparent z-10 pointer-events-none" />
+            <div className="absolute top-0 bottom-0 right-0 w-24 bg-gradient-to-l from-primary to-transparent z-10 pointer-events-none" />
 
-            {/* Scrollable Track container */}
-            <div
-              ref={scrollRef}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUpOrLeave}
-              onMouseLeave={handleMouseUpOrLeave}
-              className="flex gap-6 overflow-x-hidden select-none cursor-grab active:cursor-grabbing py-2"
-            >
-              {items.map((item, idx) => (
+            {/* Infinite Horizontal Scrolling container */}
+            <div className="flex w-max gap-6 animate-[scrollHorizontal_40s_linear_infinite] hover:[animation-play-state:paused]">
+              {/* Render testimonials duplicated three times to ensure seamless infinite loop */}
+              {[...testimonials, ...testimonials, ...testimonials].map((item, idx) => (
                 <article
                   key={`${item.name}-${idx}`}
                   className="rounded-3xl border border-white/5 hover:border-accent/30 bg-secondary/15 hover:bg-secondary/30 p-6 backdrop-blur-md transition-all duration-300 transform hover:scale-[1.01] flex flex-col justify-between w-[320px] md:w-[380px] shrink-0 min-h-[220px]"
@@ -179,6 +74,13 @@ const Testimonials = () => {
           </div>
         )}
       </div>
+
+      <style>{`
+        @keyframes scrollHorizontal {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-33.333%); }
+        }
+      `}</style>
     </SectionWrapper>
   );
 };
