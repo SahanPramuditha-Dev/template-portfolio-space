@@ -130,6 +130,14 @@ const Contact = () => {
     setErrorMessage('');
     setFormState('submitting');
     try {
+      let pageViewsCount = 1;
+      try {
+        const stored = localStorage.getItem('orbital_telemetry_pageviews');
+        if (stored) pageViewsCount = parseInt(stored, 10);
+      } catch (e) {
+        console.warn(e);
+      }
+
       const payload = {
         name: formData.name,
         email: formData.email,
@@ -138,7 +146,13 @@ const Contact = () => {
         timeline: formData.timeline,
         message: formData.message,
         website: formData.website,
-        _subject: 'New message from portfolio contact form'
+        _subject: 'New message from portfolio contact form',
+        telemetry: {
+          device: window.innerWidth < 768 ? 'Mobile' : 'Desktop',
+          referrer: document.referrer || 'Direct / Bookmark',
+          pageViews: pageViewsCount,
+          timestamp: new Date().toISOString()
+        }
       };
 
       // 1. Save directly to Firestore Admin Inbox

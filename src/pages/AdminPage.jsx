@@ -2738,28 +2738,37 @@ const AnalyticsDashboard = () => {
       </div>
 
       {/* Daily Traffic Chart */}
-      <div className="rounded-2xl border border-white/10 bg-secondary/20 p-6">
-        <h3 className="font-display font-bold text-text mb-4 text-sm flex items-center gap-2">
-          <LineChart size={16} className="text-accent animate-pulse" />
-          UPLINK TRAFFIC OVER TIME (LAST 7 ACTIVE DAYS)
+      <div className="rounded-2xl border border-white/10 bg-secondary/20 p-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-3 text-[10px] font-mono text-emerald-400 flex items-center gap-1.5 bg-emerald-500/5 rounded-bl-xl border-l border-b border-white/5">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+          Live Analytics Feed Active
+        </div>
+        <h3 className="font-display font-bold text-text mb-4 text-xs tracking-wider flex items-center gap-2 text-text-muted">
+          <LineChart size={14} className="text-accent animate-pulse" />
+          UPLINK TRAFFIC PROFILE (LAST 7 ACTIVE DAYS)
         </h3>
         
         {/* SVG Chart */}
-        <div className="h-44 w-full flex items-end gap-3 mt-6 border-b border-white/10 pb-2 relative">
+        <div className="h-44 w-full flex items-end gap-4 mt-6 border-b border-white/10 pb-2 relative">
           {stats.dateData.map((val, idx) => {
             const pct = (val / stats.maxDailyView) * 100;
             return (
               <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group relative">
                 {/* Tooltip */}
-                <span className="absolute -top-6 bg-accent text-primary text-[9px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity font-mono pointer-events-none">
+                <span className="absolute -top-7 bg-accent text-primary text-[10px] font-bold font-mono px-2 py-0.5 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                   {val} views
                 </span>
-                {/* Bar */}
-                <div 
-                  style={{ height: `${pct || 4}%` }} 
-                  className="w-full bg-accent/25 border-t border-accent rounded-t group-hover:bg-accent/40 transition-colors"
-                />
-                <span className="text-[9px] text-text-muted font-mono mt-2 block whitespace-nowrap">
+                {/* Bar with cyberpunk double accent glow */}
+                <div className="w-full relative flex flex-col justify-end h-full">
+                  <div 
+                    style={{ height: `${pct || 4}%` }} 
+                    className="w-full bg-gradient-to-t from-accent/5 to-accent/30 border border-accent/40 rounded-t-lg group-hover:border-accent group-hover:from-accent/10 group-hover:to-accent/50 shadow-[0_0_15px_rgba(var(--color-accent-rgb),0.15)] group-hover:shadow-[0_0_25px_rgba(var(--color-accent-rgb),0.3)] transition-all duration-300 relative overflow-hidden"
+                  >
+                    {/* Top scanning pulse line */}
+                    <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-accent" />
+                  </div>
+                </div>
+                <span className="text-[10px] text-text-muted font-mono mt-2 block whitespace-nowrap">
                   {stats.dateLabels[idx]}
                 </span>
               </div>
