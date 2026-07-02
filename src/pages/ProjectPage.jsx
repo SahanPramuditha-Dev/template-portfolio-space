@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion, useScroll, useSpring, useTransform, AnimatePresence, useMotionValueEvent } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ExternalLink, Github, Calendar, Layers, Target, Zap, ArrowLeft, ArrowRight, Clock, Code2, Database, Layout, Server, Globe, Boxes, FileText, Download, Lock, Users, Check, ClipboardCopy } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ExternalLink, Github, Calendar, Layers, Target, Zap, ArrowLeft, ArrowRight, Clock, Code2, Database, Layout, Server, Globe, Boxes, FileText, Download, Lock, Users, Check, ClipboardCopy, Sparkles, Rocket, Lightbulb, Award } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import AnimatedCounter from '../components/AnimatedCounter';
@@ -99,6 +99,35 @@ const ProjectPage = () => {
   const documents = Array.isArray(project.documents) ? project.documents : [];
   const hasLive = isUsableHttpUrl(project.external);
   const hasGithub = isUsableHttpUrl(project.github);
+
+  const getSnippet = (value, max = 78) => {
+    if (!value) return '';
+    const plain = String(value)
+      .replace(/[#>*`_~[\]()]/g, '')
+      .replace(/\n+/g, ' ')
+      .trim();
+    return plain.length > max ? `${plain.slice(0, max)}…` : plain;
+  };
+
+  const snapshotItems = [
+    {
+      label: 'Role',
+      value: project.role || 'Product design + front-end engineering',
+      icon: <Target size={16} className="text-accent" />,
+    },
+    {
+      label: 'Challenge',
+      value: getSnippet(project.problem, 72) || 'Making a learning platform feel calm, focused, and motivating.',
+      icon: <Lightbulb size={16} className="text-amber-400" />,
+    },
+    {
+      label: 'Outcome',
+      value: getSnippet(project.solution, 72) || 'A polished experience with strong visual hierarchy and a clear action path.',
+      icon: <Award size={16} className="text-emerald-400" />,
+    },
+  ];
+
+  const highlightPoints = features.length > 0 ? features.slice(0, 3) : ['Focused UX flow', 'Fast, polished interactions', 'Clear product storytelling'];
 
   const currentIndex = projects.findIndex(p => (p.id === project.id || p.title === project.title));
   const prevProject = currentIndex > 0 ? projects[currentIndex - 1] : null;
@@ -313,6 +342,116 @@ const ProjectPage = () => {
             {/* Dynamic metadata cards are removed as they are displayed inline above */}
           </div>
 
+          <div className="mx-auto max-w-5xl px-4 sm:px-6">
+            <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+              <motion.section
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.08 }}
+                className="rounded-[1.75rem] border border-white/10 bg-gradient-to-br from-accent/10 via-secondary/20 to-primary/70 p-6 shadow-[0_18px_60px_rgba(0,0,0,0.2)] backdrop-blur-xl md:p-7"
+              >
+                <div className="mb-4 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.24em] text-accent">
+                  <Sparkles size={14} />
+                  Mission snapshot
+                </div>
+                <h2 className="text-2xl font-bold text-text">A sharper story for {project.title}</h2>
+                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-text-muted">
+                  This section gives visitors confidence quickly by showing the role, the challenge, and the outcome in a much more visual way.
+                </p>
+                <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                  {snapshotItems.map((item) => (
+                    <div key={item.label} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                      <div className="mb-3 inline-flex rounded-xl border border-white/10 bg-white/5 p-2">{item.icon}</div>
+                      <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-text-muted">{item.label}</p>
+                      <p className="mt-2 text-sm font-medium leading-relaxed text-white">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </motion.section>
+
+              <motion.aside
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.14 }}
+                className="rounded-[1.75rem] border border-white/10 bg-secondary/20 p-6 shadow-[0_14px_50px_rgba(0,0,0,0.18)] backdrop-blur-md"
+              >
+                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.24em] text-accent">
+                  <Rocket size={14} />
+                  Why it stands out
+                </div>
+                <div className="mt-4 rounded-2xl border border-accent/20 bg-accent/10 p-4">
+                  <p className="text-sm leading-relaxed text-text-muted">
+                    The strongest case studies combine product clarity with proof. This layout helps visitors see the thinking behind the experience before they dive into the details.
+                  </p>
+                </div>
+                <ul className="mt-5 space-y-2">
+                  {highlightPoints.map((point) => (
+                    <li key={point} className="flex items-start gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-text-muted">
+                      <span className="mt-1 text-accent">•</span>
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.aside>
+            </div>
+          </div>
+
+          <div className="mx-auto max-w-5xl px-4 sm:px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.18 }}
+              className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(var(--color-accent-rgb),0.16),transparent_45%),linear-gradient(135deg,rgba(15,23,42,0.92),rgba(10,16,30,0.86))] p-6 shadow-[0_20px_70px_rgba(0,0,0,0.24)] md:p-8"
+            >
+              <div className="absolute -left-10 top-10 h-32 w-32 rounded-full bg-accent/20 blur-3xl" />
+              <div className="absolute bottom-0 right-0 h-40 w-40 rounded-full bg-cyan-400/10 blur-3xl" />
+              <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                <div className="max-w-2xl">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-accent">Interactive experience</p>
+                  <h3 className="mt-2 text-2xl font-bold text-text">Built to feel more than a static portfolio page</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-text-muted">
+                    This case study now leans into motion, contrast, and clearer storytelling so the experience feels immersive from the first scroll.
+                  </p>
+                </div>
+                <div className="rounded-full border border-accent/20 bg-accent/10 px-4 py-2 text-sm font-mono text-accent">
+                  Scroll to explore
+                </div>
+              </div>
+              <div className="relative z-10 mt-7 grid gap-4 md:grid-cols-3">
+                {[
+                  {
+                    title: 'Clear narrative',
+                    body: 'The project story opens with purpose, challenge, and outcome in a way visitors can absorb instantly.',
+                    icon: <Lightbulb size={18} className="text-amber-400" />,
+                  },
+                  {
+                    title: 'Momentum and polish',
+                    body: 'Subtle motion and hover states give the page a more premium, alive feel.',
+                    icon: <Zap size={18} className="text-yellow-400" />,
+                  },
+                  {
+                    title: 'Proof-first presentation',
+                    body: 'Technical and impact sections are easier to digest, helping the work feel more credible.',
+                    icon: <Award size={18} className="text-emerald-400" />,
+                  },
+                ].map((item, index) => (
+                  <motion.div
+                    key={item.title}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: 0.22 + index * 0.08 }}
+                    whileHover={{ y: -6, scale: 1.01 }}
+                    className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 shadow-[0_10px_35px_rgba(0,0,0,0.18)] backdrop-blur"
+                  >
+                    <div className="mb-3 inline-flex rounded-xl border border-white/10 bg-black/20 p-2">{item.icon}</div>
+                    <h4 className="text-base font-semibold text-text">{item.title}</h4>
+                    <p className="mt-2 text-sm leading-relaxed text-text-muted">{item.body}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+
           {/* Snappy Case Study Tab Selector */}
           <div className="mx-auto max-w-5xl px-4 sm:px-6 mb-12">
             <div className="relative flex rounded-full border border-white/10 bg-secondary/15 p-1 backdrop-blur-md">
@@ -415,7 +554,7 @@ const ProjectPage = () => {
                             </a>
                           </div>
                         )}
-                        {project.architecture && (
+                        {project.architecture && !project.architectureImage && (
                           <div className="font-sans text-sm text-text-muted leading-relaxed">
                             {renderSimpleMarkdown(project.architecture)}
                           </div>
