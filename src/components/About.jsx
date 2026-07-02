@@ -276,17 +276,20 @@ const About = () => {
           {educationTimeline.length > 0 ? (
             <div className="space-y-4">
               {educationTimeline.map((item, index) => (
-                <div key={item.institution || item.program || index} className="rounded-2xl border border-secondary/50 bg-secondary/20 p-5">
+                <div
+                  key={item.institution || item.program || index}
+                  className="rounded-2xl border border-secondary/50 bg-secondary/20 hover:bg-secondary/30 p-5 transition-all duration-300 ease-out hover:scale-[1.008] hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-[0_4px_24px_rgba(var(--color-accent-rgb),0.06)] group"
+                >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <h4 className="text-lg font-semibold text-text">{item.program}</h4>
+                      <h4 className="text-lg font-semibold text-text group-hover:text-white transition-colors duration-300">{item.program}</h4>
                       <p className="text-sm text-accent">{item.institution}</p>
                     </div>
-                    <span className="rounded-full border border-secondary/40 bg-primary/40 px-3 py-1 text-xs font-mono text-text-muted">
+                    <span className="rounded-full border border-secondary/40 bg-primary/40 group-hover:border-accent/30 group-hover:text-accent px-3 py-1 text-xs font-mono text-text-muted transition-all duration-300">
                       {item.period}
                     </span>
                   </div>
-                  {item.note ? <p className="mt-3 text-sm leading-relaxed text-text-muted">{item.note}</p> : null}
+                  {item.note ? <p className="mt-3 text-sm leading-relaxed text-text-muted group-hover:text-slate-300 transition-colors duration-300">{item.note}</p> : null}
                 </div>
               ))}
             </div>
