@@ -135,7 +135,9 @@ export const uploadCmsAsset = async (file, folder = 'uploads') => {
 export const listCmsAssets = async (folder = 'uploads') => {
   const folderRef = ref(storage, folder);
   const res = await listAll(folderRef);
-  const items = await Promise.all(
+
+  // 1. Resolve files in the current folder path
+  const currentFolderFiles = await Promise.all(
     res.items.map(async (itemRef) => {
       const url = await getDownloadURL(itemRef);
       return {
@@ -145,7 +147,14 @@ export const listCmsAssets = async (folder = 'uploads') => {
       };
     })
   );
-  return items;
+
+  // 2. Recursively resolve files in sub-folders (like projects/, blog/, etc.)
+  const subFolderFilesArrays = await Promise.all(
+    res.prefixes.map((subFolderRef) => listCmsAssets(subFolderRef.fullPath))
+  );
+
+  // 3. Combine and return all assets
+  return [...currentFolderFiles, ...subFolderFilesArrays.flat()];
 };
 
 export const deleteCmsAsset = async (fullPath) => {
