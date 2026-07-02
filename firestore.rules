@@ -26,6 +26,10 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /site/public/stats {
+      allow read, write: if true;
+    }
+
     match /projects/{projectId} {
       allow read: if resource.data.status == 'published';
       allow write: if isAdmin();

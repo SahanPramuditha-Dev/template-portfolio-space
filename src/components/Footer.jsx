@@ -141,15 +141,17 @@ const PageViewsCounter = () => {
     // Import Firestore components dynamically to keep bundle size light
     const getCount = async () => {
       try {
-        const { getFirestore, collection, getCountFromServer, query, where } = await import('firebase/firestore');
+        const { getFirestore, doc, getDoc } = await import('firebase/firestore');
         const { app } = await import('../lib/firebase');
         const db = getFirestore(app);
-        const q = query(
-          collection(db, 'analyticsEvents'),
-          where('eventName', '==', 'page_view')
-        );
-        const snapshot = await getCountFromServer(q);
-        setViews(snapshot.data().count);
+        const ref = doc(db, 'site', 'public', 'stats', 'viewsCounter');
+        const snapshot = await getDoc(ref);
+        if (snapshot.exists()) {
+          setViews(snapshot.data().views || 0);
+        } else {
+          // If public views counter document doesn't exist, count all events (fallback/initial)
+          setViews(0);
+        }
       } catch (err) {
         console.error('Failed to get public page views count:', err);
       }
@@ -157,7 +159,7 @@ const PageViewsCounter = () => {
     getCount();
   }, []);
 
-  if (views === null) return null;
+  if (views === null || views === 0) return null;
 
   return (
     <span className="inline-flex items-center gap-1 bg-accent/10 border border-accent/20 px-2 py-0.5 rounded text-[11px] font-mono text-accent">

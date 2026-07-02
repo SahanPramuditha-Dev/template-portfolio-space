@@ -1,5 +1,5 @@
 import { db } from '../lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, setDoc, increment } from 'firebase/firestore';
 
 const generateSessionId = () => {
   if (typeof window === 'undefined') return '';
@@ -65,6 +65,15 @@ export const trackEvent = async (eventName, eventData = {}) => {
   }).catch(() => {
     // Fail silently in background
   });
+
+  // If tracking a page view, increment the public views counter
+  if (eventName === 'page_view') {
+    setDoc(doc(db, 'site', 'public', 'stats', 'viewsCounter'), {
+      views: increment(1)
+    }, { merge: true }).catch(() => {
+      // Fail silently
+    });
+  }
 
   // Google Analytics 4
   if (typeof window !== 'undefined' && window.gtag) {
