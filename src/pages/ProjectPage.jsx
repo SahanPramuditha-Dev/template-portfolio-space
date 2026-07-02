@@ -164,17 +164,39 @@ const ProjectPage = () => {
       >
         <article className="relative z-10 mx-auto w-full max-w-5xl space-y-6 pb-12">
           {/* Hero Section */}
-          <div className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-black/40 shadow-2xl h-[25vh] min-h-[220px] md:h-[35vh] md:min-h-[300px]">
+          <div className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-black/40 shadow-2xl h-[32vh] min-h-[250px] md:h-[45vh] md:min-h-[380px]">
             <motion.div style={{ y: heroY }} className="absolute inset-0 w-full h-full">
               {heroSlide?.kind === 'video' ? (
-                <div className="relative h-full w-full flex items-center justify-center bg-black">
-                  <img src={heroSlide.poster || ''} alt="" className="absolute inset-0 h-[120%] w-[120%] -left-[10%] -top-[10%] object-cover opacity-30 blur-3xl saturate-200" aria-hidden="true" />
-                  <video src={heroSlide.url} controls playsInline preload="metadata" className="relative z-10 h-full w-full object-contain p-4 md:p-8 drop-shadow-2xl" />
+                <div className="relative h-full w-full flex items-center justify-center overflow-hidden">
+                  {/* Glowing Ambient Blurred Shadow */}
+                  {heroSlide.poster && (
+                    <img src={heroSlide.poster} alt="" className="absolute inset-0 h-full w-full object-cover scale-110 blur-3xl opacity-40 saturate-150" aria-hidden="true" />
+                  )}
+                  {/* MacBook / Browser Frame mockup */}
+                  <div className="relative z-10 w-[90%] max-w-4xl h-[85%] rounded-xl border border-white/15 bg-black/60 shadow-2xl overflow-hidden flex flex-col">
+                    {/* Browser header bar */}
+                    <div className="h-6 shrink-0 border-b border-white/5 bg-white/[0.03] px-3 flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
+                    </div>
+                    <video src={heroSlide.url} controls playsInline preload="metadata" className="flex-1 w-full h-full object-contain bg-black" />
+                  </div>
                 </div>
               ) : heroSlide ? (
-                <div className="relative h-full w-full flex items-center justify-center bg-black">
-                  <img src={heroSlide.url} alt="" className="absolute inset-0 h-[120%] w-[120%] -left-[10%] -top-[10%] object-cover opacity-30 blur-3xl saturate-200" aria-hidden="true" />
-                  <img src={heroSlide.url} alt={heroSlide.alt || project.title} className="relative z-10 h-full w-full object-contain p-4 md:p-8 drop-shadow-2xl" loading="lazy" decoding="async" />
+                <div className="relative h-full w-full flex items-center justify-center overflow-hidden">
+                  {/* Glowing Ambient Blurred Shadow */}
+                  <img src={heroSlide.url} alt="" className="absolute inset-0 h-full w-full object-cover scale-115 blur-3xl opacity-45 saturate-150" aria-hidden="true" />
+                  {/* MacBook / Browser Frame mockup */}
+                  <div className="relative z-10 w-[90%] max-w-4xl h-[85%] rounded-xl border border-white/15 bg-black/60 shadow-2xl overflow-hidden flex flex-col">
+                    {/* Browser header bar */}
+                    <div className="h-6 shrink-0 border-b border-white/5 bg-white/[0.03] px-3 flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
+                    </div>
+                    <img src={heroSlide.url} alt={heroSlide.alt || project.title} className="flex-1 w-full h-full object-contain bg-black" loading="lazy" decoding="async" />
+                  </div>
                 </div>
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,rgb(var(--color-accent-rgb)/0.22),transparent_45%),linear-gradient(135deg,rgba(15,23,42,0.98),rgba(30,41,59,0.82))]">
@@ -183,8 +205,8 @@ const ProjectPage = () => {
               )}
             </motion.div>
             {/* Dark gradients for readability */}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-transparent" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
 
             {/* Gallery Navigation */}
             {slides.length > 1 && (
