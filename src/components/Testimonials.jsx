@@ -81,7 +81,7 @@ const Testimonials = () => {
               onMouseLeave={() => setIsInteracting(false)}
               onTouchStart={() => setIsInteracting(true)}
               onTouchEnd={() => setIsInteracting(false)}
-              className="flex overflow-x-auto gap-6 p-4 scrollbar-none scroll-smooth cursor-grab active:cursor-grabbing"
+              className="flex overflow-x-auto gap-6 p-4 scrollbar-none scroll-auto cursor-grab active:cursor-grabbing"
               style={{
                 msOverflowStyle: 'none',
                 scrollbarWidth: 'none',
