@@ -54,14 +54,8 @@ import MessagesInbox from '../components/MessagesInbox';
 import MediaLibrary from '../components/MediaLibrary';
 import SimpleMdeReact from 'react-simplemde-editor';
 import 'easymde/dist/easymde.min.css';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { Link } from 'react-router-dom';
 import {
   arrayMove,
   SortableContext,
@@ -3146,19 +3140,19 @@ const AdminPage = () => {
             <h2 className="text-lg font-bold text-text truncate">{activeSection.label}</h2>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <a
-              href="/"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-primary/40 px-4.5 py-2 text-xs font-medium text-text transition-colors hover:border-accent/35 hover:bg-primary/55"
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-primary/30 px-4 py-2 text-xs font-semibold text-text transition-colors hover:border-accent/35 hover:bg-primary/55"
             >
-              <ArrowLeft size={14} />
+              <ArrowLeft size={13} />
               View site
-            </a>
+            </Link>
             <button
               type="button"
               onClick={logout}
-              className="inline-flex items-center gap-2 rounded-xl border border-red-400/30 bg-red-400/10 px-4.5 py-2 text-xs font-medium text-red-200 transition-colors hover:bg-red-400/15"
+              className="inline-flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/20"
             >
-              <LogOut size={14} />
+              <LogOut size={13} />
               Sign out
             </button>
           </div>
