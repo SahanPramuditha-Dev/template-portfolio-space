@@ -3027,176 +3027,183 @@ const AdminPage = () => {
   const activeSection = tabs.find((tab) => tab.id === activeTab) || tabs[0];
 
   return (
-    <div className="min-h-screen bg-primary bg-[radial-gradient(ellipse_80%_45%_at_50%_-15%,rgb(var(--color-accent-rgb)/0.07),transparent)] px-4 py-6 text-text sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <header className="flex flex-col gap-5 rounded-3xl border border-white/10 bg-secondary/30 p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-md sm:p-7 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 items-start gap-4">
+    <div className="h-screen w-screen flex overflow-hidden bg-primary bg-[radial-gradient(ellipse_80%_45%_at_50%_-15%,rgb(var(--color-accent-rgb)/0.07),transparent)] text-text">
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-primary/80 backdrop-blur-sm lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* FIXED SIDEBAR (Zero Scroll Layout Shift) */}
+      <aside className={clsx(
+        "fixed inset-y-0 left-0 z-50 w-72 flex flex-col bg-secondary/95 border-r border-white/10 p-6 transition-transform duration-300 ease-in-out lg:static lg:w-72 lg:transform-none lg:bg-secondary/20 lg:backdrop-blur-md shrink-0 h-full",
+        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      )}>
+        <div className="flex items-center justify-between mb-6 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl border border-accent/25 bg-accent/10 p-2.5 text-accent">
+              <Shield size={18} strokeWidth={2} />
+            </div>
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent">Console</p>
+              <h1 className="text-sm font-bold tracking-tight text-text">CMS Dashboard</h1>
+            </div>
+          </div>
+          <button 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="lg:hidden p-2 rounded-xl text-text-muted hover:text-text hover:bg-white/5"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Scrollable Navigation Area inside Sidebar */}
+        <nav
+          className="flex-1 overflow-y-auto space-y-5 pr-1 [scrollbar-width:thin]"
+          aria-label="Admin sections"
+        >
+          {tabGroups.map((group) => (
+            <div key={group.label} className="mb-5 last:mb-0">
+              <p className="mb-2 px-3 text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/65">
+                {group.label}
+              </p>
+              <div className="space-y-1">
+                {group.items.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveTab(tab.id);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={clsx(
+                        'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs transition-colors',
+                        isActive
+                          ? 'border border-accent/35 bg-accent/15 font-semibold text-accent shadow-[0_0_0_1px_rgb(var(--color-accent-rgb)/0.08)]'
+                          : 'border border-transparent text-text-muted hover:border-white/10 hover:bg-primary/45 hover:text-text'
+                      )}
+                    >
+                      <Icon size={15} strokeWidth={1.75} className={isActive ? 'text-accent' : 'opacity-70'} />
+                      <span className="truncate">{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        {/* Pinned user profile footer inside Sidebar */}
+        <div className="mt-auto pt-4 border-t border-white/5 shrink-0">
+          <p className="text-[10px] truncate text-text-muted leading-tight">Signed in as:</p>
+          <p className="text-xs font-bold text-text truncate mt-1">{user.email}</p>
+        </div>
+      </aside>
+
+      {/* INDEPENDENT CONTENT AREA (Only this part scrolls) */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Top Header Panel */}
+        <header className="flex items-center justify-between gap-4 px-6 py-4 border-b border-white/10 bg-secondary/35 backdrop-blur-md shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden mt-1 p-2 -ml-2 rounded-xl text-text-muted hover:text-text hover:bg-white/5 transition-colors"
+              className="lg:hidden p-2 rounded-xl text-text-muted hover:text-text hover:bg-white/5 transition-colors"
             >
-              <Menu size={24} />
+              <Menu size={20} />
             </button>
-            <div className="hidden rounded-2xl border border-accent/25 bg-accent/10 p-3 text-accent sm:block">
-              <Shield size={22} strokeWidth={1.75} />
-            </div>
-            <div>
-              <p className="text-xs font-mono uppercase tracking-[0.2em] text-accent">Admin</p>
-              <h1 className="font-display mt-1.5 text-2xl font-bold tracking-tight text-text sm:text-3xl">
-                Content dashboard
-              </h1>
-              <p className="mt-2 truncate text-sm text-text-muted">
-                Signed in as <span className="font-medium text-text">{user.email}</span>
-              </p>
-            </div>
+            <h2 className="text-lg font-bold text-text truncate">{activeSection.label}</h2>
           </div>
-          <div className="flex flex-wrap gap-2 sm:justify-end">
+          <div className="flex items-center gap-2 shrink-0">
             <a
               href="/"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-primary/40 px-4 py-2.5 text-sm font-medium text-text transition-colors hover:border-accent/35 hover:bg-primary/55"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-primary/40 px-4.5 py-2 text-xs font-medium text-text transition-colors hover:border-accent/35 hover:bg-primary/55"
             >
-              <ArrowLeft size={16} />
+              <ArrowLeft size={14} />
               View site
             </a>
             <button
               type="button"
               onClick={logout}
-              className="inline-flex items-center gap-2 rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-2.5 text-sm font-medium text-red-200 transition-colors hover:bg-red-400/15"
+              className="inline-flex items-center gap-2 rounded-xl border border-red-400/30 bg-red-400/10 px-4.5 py-2 text-xs font-medium text-red-200 transition-colors hover:bg-red-400/15"
             >
-              <LogOut size={16} />
+              <LogOut size={14} />
               Sign out
             </button>
           </div>
         </header>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)] lg:items-start">
-          {/* Mobile Overlay */}
-          {isMobileMenuOpen && (
-            <div 
-              className="fixed inset-0 z-40 bg-primary/80 backdrop-blur-sm lg:hidden"
-              onClick={() => setIsMobileMenuOpen(false)}
+        {/* Scrollable Work Workspace Pane */}
+        <main className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6 [scrollbar-width:thin]">
+          {activeSection.id === 'site' && <SiteEditor />}
+          {activeSection.id === 'media' && <MediaLibrary />}
+          {activeSection.id === CMS_DOCS.messages && <MessagesInbox />}
+          {activeSection.id === 'analytics' && <AnalyticsDashboard />}
+          {activeSection.id === CMS_DOCS.projects && (
+            <CollectionEditor
+              docId={CMS_DOCS.projects}
+              section={sectionConfig[CMS_DOCS.projects]}
+              fields={projectFields}
             />
           )}
-
-          <aside className={clsx(
-            "fixed inset-y-0 left-0 z-50 w-72 transform overflow-y-auto lg:overflow-y-visible bg-secondary/95 border-r border-white/10 p-6 transition-transform duration-300 ease-in-out lg:static lg:w-auto lg:transform-none lg:bg-transparent lg:border-none lg:p-0",
-            isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-          )}>
-            <div className="flex items-center justify-between mb-6 lg:hidden">
-              <span className="text-sm font-mono uppercase tracking-[0.2em] text-accent">Menu</span>
-              <button 
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 -mr-2 rounded-xl text-text-muted hover:text-text hover:bg-white/5"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <nav
-              className="max-h-[calc(100vh-8rem)] overflow-y-auto rounded-3xl border border-white/10 bg-secondary/30 p-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] backdrop-blur-md [scrollbar-width:thin] lg:max-h-[calc(100vh-5rem)] lg:sticky lg:top-6"
-              aria-label="Admin sections"
-            >
-              {tabGroups.map((group) => (
-                <div key={group.label} className="mb-5 last:mb-0">
-                  <p className="mb-2 px-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted/90">
-                    {group.label}
-                  </p>
-                  <div className="space-y-1">
-                    {group.items.map((tab) => {
-                      const Icon = tab.icon;
-                      const isActive = activeTab === tab.id;
-                      return (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          onClick={() => {
-                            setActiveTab(tab.id);
-                            setIsMobileMenuOpen(false);
-                          }}
-                          className={clsx(
-                            'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors',
-                            isActive
-                              ? 'border border-accent/35 bg-accent/15 font-semibold text-accent shadow-[0_0_0_1px_rgb(var(--color-accent-rgb)/0.12)]'
-                              : 'border border-transparent text-text-muted hover:border-white/10 hover:bg-primary/40 hover:text-text'
-                          )}
-                        >
-                          <Icon size={17} strokeWidth={1.75} className={isActive ? 'text-accent' : 'opacity-80'} />
-                          <span className="truncate">{tab.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </nav>
-          </aside>
-
-          <main className="min-w-0 space-y-6">
-            {activeSection.id === 'site' && <SiteEditor />}
-            {activeSection.id === 'media' && <MediaLibrary />}
-            {activeSection.id === CMS_DOCS.messages && <MessagesInbox />}
-            {activeSection.id === 'analytics' && <AnalyticsDashboard />}
-            {activeSection.id === CMS_DOCS.projects && (
-              <CollectionEditor
-                docId={CMS_DOCS.projects}
-                section={sectionConfig[CMS_DOCS.projects]}
-                fields={projectFields}
-              />
-            )}
-            {activeSection.id === CMS_DOCS.certifications && (
-              <CollectionEditor
-                docId={CMS_DOCS.certifications}
-                section={sectionConfig[CMS_DOCS.certifications]}
-                fields={certificateFields}
-              />
-            )}
-            {activeSection.id === CMS_DOCS.skills && (
-              <CollectionEditor
-                docId={CMS_DOCS.skills}
-                section={sectionConfig[CMS_DOCS.skills]}
-                fields={skillFields}
-              />
-            )}
-            {activeSection.id === CMS_DOCS.experience && (
-              <CollectionEditor
-                docId={CMS_DOCS.experience}
-                section={sectionConfig[CMS_DOCS.experience]}
-                fields={experienceFields}
-              />
-            )}
-            {activeSection.id === CMS_DOCS.blog && (
-              <CollectionEditor docId={CMS_DOCS.blog} section={sectionConfig[CMS_DOCS.blog]} fields={blogFields} />
-            )}
-            {activeSection.id === CMS_DOCS.testimonials && (
-              <CollectionEditor
-                docId={CMS_DOCS.testimonials}
-                section={sectionConfig[CMS_DOCS.testimonials]}
-                fields={testimonialFields}
-              />
-            )}
-            {activeSection.id === CMS_DOCS.services && (
-              <CollectionEditor
-                docId={CMS_DOCS.services}
-                section={sectionConfig[CMS_DOCS.services]}
-                fields={serviceFields}
-              />
-            )}
-            {activeSection.id === CMS_DOCS.openSource && (
-              <CollectionEditor
-                docId={CMS_DOCS.openSource}
-                section={sectionConfig[CMS_DOCS.openSource]}
-                fields={openSourceFields}
-              />
-            )}
-            {activeSection.id === CMS_DOCS.resources && (
-              <CollectionEditor
-                docId={CMS_DOCS.resources}
-                section={sectionConfig[CMS_DOCS.resources]}
-                fields={resourceFields}
-              />
-            )}
-          </main>
-        </div>
+          {activeSection.id === CMS_DOCS.certifications && (
+            <CollectionEditor
+              docId={CMS_DOCS.certifications}
+              section={sectionConfig[CMS_DOCS.certifications]}
+              fields={certificateFields}
+            />
+          )}
+          {activeSection.id === CMS_DOCS.skills && (
+            <CollectionEditor
+              docId={CMS_DOCS.skills}
+              section={sectionConfig[CMS_DOCS.skills]}
+              fields={skillFields}
+            />
+          )}
+          {activeSection.id === CMS_DOCS.experience && (
+            <CollectionEditor
+              docId={CMS_DOCS.experience}
+              section={sectionConfig[CMS_DOCS.experience]}
+              fields={experienceFields}
+            />
+          )}
+          {activeSection.id === CMS_DOCS.blog && (
+            <CollectionEditor docId={CMS_DOCS.blog} section={sectionConfig[CMS_DOCS.blog]} fields={blogFields} />
+          )}
+          {activeSection.id === CMS_DOCS.testimonials && (
+            <CollectionEditor
+              docId={CMS_DOCS.testimonials}
+              section={sectionConfig[CMS_DOCS.testimonials]}
+              fields={testimonialFields}
+            />
+          )}
+          {activeSection.id === CMS_DOCS.services && (
+            <CollectionEditor
+              docId={CMS_DOCS.services}
+              section={sectionConfig[CMS_DOCS.services]}
+              fields={serviceFields}
+            />
+          )}
+          {activeSection.id === CMS_DOCS.openSource && (
+            <CollectionEditor
+              docId={CMS_DOCS.openSource}
+              section={sectionConfig[CMS_DOCS.openSource]}
+              fields={openSourceFields}
+            />
+          )}
+          {activeSection.id === CMS_DOCS.resources && (
+            <CollectionEditor
+              docId={CMS_DOCS.resources}
+              section={sectionConfig[CMS_DOCS.resources]}
+              fields={resourceFields}
+            />
+          )}
+        </main>
       </div>
       <CropModalRoot />
     </div>
