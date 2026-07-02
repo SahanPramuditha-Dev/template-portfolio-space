@@ -11,6 +11,31 @@ const Testimonials = () => {
   const scrollContainerRef = React.useRef(null);
   const [isInteracting, setIsInteracting] = React.useState(false);
 
+  // Mouse drag-to-scroll refs
+  const isDraggingRef = React.useRef(false);
+  const startXRef = React.useRef(0);
+  const scrollLeftStartRef = React.useRef(0);
+
+  const handleMouseDown = (e) => {
+    isDraggingRef.current = true;
+    setIsInteracting(true);
+    startXRef.current = e.pageX - scrollContainerRef.current.offsetLeft;
+    scrollLeftStartRef.current = scrollContainerRef.current.scrollLeft;
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDraggingRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollContainerRef.current.offsetLeft;
+    const walk = (x - startXRef.current) * 1.5; // Scroll speed scaling factor
+    scrollContainerRef.current.scrollLeft = scrollLeftStartRef.current - walk;
+  };
+
+  const handleMouseUpOrLeave = () => {
+    isDraggingRef.current = false;
+    setIsInteracting(false);
+  };
+
   React.useEffect(() => {
     if (testimonials.length === 0) return;
 
@@ -19,10 +44,10 @@ const Testimonials = () => {
 
     let animationFrameId;
     let lastTime = performance.now();
-    const speed = 0.05; // Scroll speed in pixels per millisecond
+    const speed = 0.04; // Slightly slower speed for maximum cinematic smoothness
 
     const step = (time) => {
-      if (!isInteracting && container) {
+      if (!isInteracting && container && !isDraggingRef.current) {
         const delta = time - lastTime;
         container.scrollLeft += speed * delta;
 
@@ -77,11 +102,13 @@ const Testimonials = () => {
             {/* Scrolling container supporting manual overflow-x scroll */}
             <div 
               ref={scrollContainerRef}
-              onMouseEnter={() => setIsInteracting(true)}
-              onMouseLeave={() => setIsInteracting(false)}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUpOrLeave}
+              onMouseLeave={handleMouseUpOrLeave}
               onTouchStart={() => setIsInteracting(true)}
               onTouchEnd={() => setIsInteracting(false)}
-              className="flex overflow-x-auto gap-6 p-4 scrollbar-none scroll-auto cursor-grab active:cursor-grabbing"
+              className="flex overflow-x-auto gap-6 p-4 scrollbar-none scroll-auto cursor-grab active:cursor-grabbing select-none"
               style={{
                 msOverflowStyle: 'none',
                 scrollbarWidth: 'none',
