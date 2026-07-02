@@ -29,6 +29,7 @@ const ProjectPage = () => {
   const [showAllFeatures, setShowAllFeatures] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [copiedPassword, setCopiedPassword] = useState(false);
+  const [isAutoplayPaused, setIsAutoplayPaused] = useState(false);
   
   const copyToClipboard = (text, type) => {
     navigator.clipboard.writeText(text);
@@ -48,6 +49,24 @@ const ProjectPage = () => {
   const { scrollYProgress, scrollY } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
   const heroY = useTransform(scrollY, [0, 800], [0, 200]);
+
+  React.useEffect(() => {
+    if (loading || !projects || projects.length === 0) return;
+    const activeProj = projects.find((item) => {
+      const candidates = [item.id, item.slug, item.title, item.missionCode].map(slugify).filter(Boolean);
+      return candidates.includes(slug);
+    });
+    if (!activeProj) return;
+
+    const slidesList = getMediaSlides(activeProj);
+    if (slidesList.length <= 1 || isAutoplayPaused) return;
+
+    const interval = setInterval(() => {
+      setActiveSlideIndex((prev) => (prev + 1) % slidesList.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [projects, loading, slug, isAutoplayPaused]);
   
   const [showActionBar, setShowActionBar] = useState(false);
   useMotionValueEvent(scrollY, "change", (latest) => {
@@ -163,9 +182,13 @@ const ProjectPage = () => {
         backHref="/#projects"
       >
         <article className="relative z-10 mx-auto w-full max-w-5xl space-y-6 pb-12">
-          {/* Hero Section */}
-          <div className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-black/40 shadow-2xl h-[35vh] min-h-[280px] md:h-[48vh] md:min-h-[420px]">
-            <motion.div style={{ y: heroY }} className="absolute inset-0 w-full h-full">
+          {/* Hero Section - Floating Browser Canvas */}
+          <div 
+            className="relative w-full"
+            onMouseEnter={() => setIsAutoplayPaused(true)}
+            onMouseLeave={() => setIsAutoplayPaused(false)}
+          >
+            <motion.div style={{ y: heroY }} className="relative mx-auto w-[94%] max-w-4xl h-[30vh] min-h-[260px] md:h-[45vh] md:min-h-[400px] flex items-center justify-center">
               {heroSlide?.kind === 'video' ? (
                 <div className="relative h-full w-full flex items-center justify-center overflow-hidden">
                   {/* Glowing Ambient Blurred Shadow */}
@@ -173,7 +196,7 @@ const ProjectPage = () => {
                     <img src={heroSlide.poster} alt="" className="absolute inset-0 h-full w-full object-cover scale-110 blur-3xl opacity-35 saturate-150" aria-hidden="true" />
                   )}
                   {/* MacBook / Browser Frame mockup */}
-                  <div className="relative z-10 w-[95%] max-w-4xl h-[90%] rounded-2xl border border-white/10 bg-secondary/80 shadow-2xl overflow-hidden flex flex-col">
+                  <div className="relative z-10 w-full h-full rounded-2xl border border-white/10 bg-secondary/90 shadow-[0_24px_80px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col">
                     {/* Browser header bar */}
                     <div className="h-7 shrink-0 border-b border-white/5 bg-white/[0.03] px-4 flex items-center justify-between">
                       <div className="flex gap-1.5">
@@ -186,8 +209,8 @@ const ProjectPage = () => {
                       </div>
                       <div className="w-6" /> {/* spacer balance */}
                     </div>
-                    <div className="flex-1 w-full h-full overflow-hidden bg-black">
-                      <video src={heroSlide.url} controls playsInline preload="metadata" className="w-full h-full object-cover object-top" />
+                    <div className="flex-1 w-full h-full overflow-hidden bg-black/60 flex items-center justify-center p-1">
+                      <video src={heroSlide.url} controls playsInline preload="metadata" className="w-full h-full object-contain object-top rounded-lg" />
                     </div>
                   </div>
                 </div>
@@ -196,7 +219,7 @@ const ProjectPage = () => {
                   {/* Glowing Ambient Blurred Shadow */}
                   <img src={heroSlide.url} alt="" className="absolute inset-0 h-full w-full object-cover scale-115 blur-3xl opacity-40 saturate-150" aria-hidden="true" />
                   {/* MacBook / Browser Frame mockup */}
-                  <div className="relative z-10 w-[95%] max-w-4xl h-[90%] rounded-2xl border border-white/10 bg-secondary/80 shadow-2xl overflow-hidden flex flex-col">
+                  <div className="relative z-10 w-full h-full rounded-2xl border border-white/10 bg-secondary/90 shadow-[0_24px_80px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col">
                     {/* Browser header bar */}
                     <div className="h-7 shrink-0 border-b border-white/5 bg-white/[0.03] px-4 flex items-center justify-between">
                       <div className="flex gap-1.5">
@@ -209,8 +232,8 @@ const ProjectPage = () => {
                       </div>
                       <div className="w-6" /> {/* spacer balance */}
                     </div>
-                    <div className="flex-1 w-full h-full overflow-hidden bg-black">
-                      <img src={heroSlide.url} alt={heroSlide.alt || project.title} className="w-full h-full object-cover object-top" loading="lazy" decoding="async" />
+                    <div className="flex-1 w-full h-full overflow-hidden bg-black/60 flex items-center justify-center p-1">
+                      <img src={heroSlide.url} alt={heroSlide.alt || project.title} className="w-full h-full object-contain object-top rounded-lg" loading="lazy" decoding="async" />
                     </div>
                   </div>
                 </div>
@@ -220,32 +243,32 @@ const ProjectPage = () => {
                 </div>
               )}
             </motion.div>
-            {/* Dark gradients for readability */}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
 
-            {/* Gallery Navigation */}
+            {/* Gallery Navigation Arrows - floating next to the browser mockup */}
             {slides.length > 1 && (
               <>
                 <button
                   onClick={prevSlide}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white backdrop-blur-md transition-all hover:bg-accent hover:text-primary z-20"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-black/40 hover:bg-black/75 border border-white/5 p-2 md:p-3 text-white backdrop-blur-md transition-all hover:text-accent z-20"
+                  aria-label="Previous Slide"
                 >
-                  <ChevronLeft size={24} />
+                  <ChevronLeft size={20} />
                 </button>
                 <button
                   onClick={nextSlide}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white backdrop-blur-md transition-all hover:bg-accent hover:text-primary z-20"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-black/40 hover:bg-black/75 border border-white/5 p-2 md:p-3 text-white backdrop-blur-md transition-all hover:text-accent z-20"
+                  aria-label="Next Slide"
                 >
-                  <ChevronRight size={24} />
+                  <ChevronRight size={20} />
                 </button>
-                <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-2 z-20">
+                {/* Dots Navigation below browser */}
+                <div className="absolute -bottom-6 left-1/2 flex -translate-x-1/2 gap-1.5 z-20">
                   {slides.map((_, i) => (
                     <button
                       key={i}
                       onClick={() => setActiveSlideIndex(i)}
-                      className={`h-2.5 rounded-full transition-all ${
-                        i === activeSlideIndex ? 'w-8 bg-accent' : 'w-2.5 bg-white/50 hover:bg-white/80'
+                      className={`h-1.5 rounded-full transition-all ${
+                        i === activeSlideIndex ? 'w-5 bg-accent shadow-[0_0_10px_rgb(var(--color-accent-rgb))]' : 'w-1.5 bg-white/40 hover:bg-white/70'
                       }`}
                       aria-label={`Go to slide ${i + 1}`}
                     />
