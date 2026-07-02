@@ -1,5 +1,4 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef, useEffect, useState } from 'react';
 import { Quote, Star } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
@@ -8,62 +7,81 @@ import { CmsSectionSkeleton } from './CmsShapeSkeleton';
 const Testimonials = () => {
   const { data, loading } = useCmsDoc(CMS_DOCS.testimonials, { items: [] });
   const testimonials = Array.isArray(data?.items) ? data.items : [];
-  const scrollContainerRef = React.useRef(null);
-  const [isInteracting, setIsInteracting] = React.useState(false);
+  
+  const scrollRef = useRef(null);
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeftStart = useRef(0);
+  const [isHovered, setIsHovered] = useState(false);
 
-  // Mouse drag-to-scroll refs
-  const isDraggingRef = React.useRef(false);
-  const startXRef = React.useRef(0);
-  const scrollLeftStartRef = React.useRef(0);
-
-  const handleMouseDown = (e) => {
-    isDraggingRef.current = true;
-    setIsInteracting(true);
-    startXRef.current = e.pageX - scrollContainerRef.current.offsetLeft;
-    scrollLeftStartRef.current = scrollContainerRef.current.scrollLeft;
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDraggingRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - scrollContainerRef.current.offsetLeft;
-    const walk = (x - startXRef.current) * 1.5; // Scroll speed scaling factor
-    scrollContainerRef.current.scrollLeft = scrollLeftStartRef.current - walk;
-  };
-
-  const handleMouseUpOrLeave = () => {
-    isDraggingRef.current = false;
-    setIsInteracting(false);
-  };
-
-  React.useEffect(() => {
+  useEffect(() => {
     if (testimonials.length === 0) return;
-
-    const container = scrollContainerRef.current;
+    
+    const container = scrollRef.current;
     if (!container) return;
 
     let animationFrameId;
-    let lastTime = performance.now();
-    const speed = 0.04; // Slightly slower speed for maximum cinematic smoothness
+    const speed = 0.8; // pixels per frame
 
-    const step = (time) => {
-      if (!isInteracting && container && !isDraggingRef.current) {
-        const delta = time - lastTime;
-        container.scrollLeft += speed * delta;
-
-        // Reset scroll position to 0 once we reach the length of one full track to loop infinitely
-        const halfScrollWidth = container.scrollWidth / 3;
-        if (container.scrollLeft >= halfScrollWidth) {
-          container.scrollLeft -= halfScrollWidth;
+    const tick = () => {
+      // Only auto-scroll if the user is not actively dragging or hovering
+      if (!isDragging.current && !isHovered) {
+        container.scrollLeft += speed;
+        
+        // Loop back seamlessly when scrolling past one set of testimonials
+        const maxScroll = container.scrollWidth / 3;
+        if (container.scrollLeft >= maxScroll) {
+          container.scrollLeft -= maxScroll;
         }
       }
-      lastTime = time;
-      animationFrameId = requestAnimationFrame(step);
+      animationFrameId = requestAnimationFrame(tick);
     };
 
-    animationFrameId = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [testimonials, isInteracting]);
+    animationFrameId = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [testimonials, isHovered]);
+
+  const handleMouseDown = (e) => {
+    const container = scrollRef.current;
+    if (!container) return;
+    isDragging.current = true;
+    startX.current = e.pageX - container.offsetLeft;
+    scrollLeftStart.current = container.scrollLeft;
+  };
+
+  const handleMouseLeaveOrUp = () => {
+    isDragging.current = false;
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging.current) return;
+    e.preventDefault();
+    const container = scrollRef.current;
+    if (!container) return;
+    const x = e.pageX - container.offsetLeft;
+    const walk = (x - startX.current) * 1.5; // Drag sensitivity multiplier
+    container.scrollLeft = scrollLeftStart.current - walk;
+  };
+
+  const handleTouchStart = (e) => {
+    const container = scrollRef.current;
+    if (!container) return;
+    isDragging.current = true;
+    startX.current = e.touches[0].pageX - container.offsetLeft;
+    scrollLeftStart.current = container.scrollLeft;
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging.current) return;
+    const container = scrollRef.current;
+    if (!container) return;
+    const x = e.touches[0].pageX - container.offsetLeft;
+    const walk = (x - startX.current) * 1.5;
+    container.scrollLeft = scrollLeftStart.current - walk;
+  };
 
   if (loading || data === undefined) {
     return <CmsSectionSkeleton id="testimonials" />;
@@ -94,25 +112,24 @@ const Testimonials = () => {
             </a>
           </div>
         ) : (
-          <div className="relative w-full select-none">
+          <div className="relative w-full p-4">
             {/* Left and Right gradient mask for smooth side fade out */}
-            <div className="absolute top-0 bottom-0 left-0 w-20 bg-gradient-to-r from-primary to-transparent z-10 pointer-events-none" />
-            <div className="absolute top-0 bottom-0 right-0 w-20 bg-gradient-to-l from-primary to-transparent z-10 pointer-events-none" />
+            <div className="absolute top-0 bottom-0 left-0 w-24 bg-gradient-to-r from-primary to-transparent z-10 pointer-events-none" />
+            <div className="absolute top-0 bottom-0 right-0 w-24 bg-gradient-to-l from-primary to-transparent z-10 pointer-events-none" />
 
-            {/* Scrolling container supporting manual overflow-x scroll */}
-            <div 
-              ref={scrollContainerRef}
+            {/* Scrollable Container wrapper */}
+            <div
+              ref={scrollRef}
               onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseLeaveOrUp}
+              onMouseLeave={handleMouseLeaveOrUp}
               onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUpOrLeave}
-              onMouseLeave={handleMouseUpOrLeave}
-              onTouchStart={() => setIsInteracting(true)}
-              onTouchEnd={() => setIsInteracting(false)}
-              className="flex overflow-x-auto gap-6 p-4 scrollbar-none scroll-auto cursor-grab active:cursor-grabbing select-none"
-              style={{
-                msOverflowStyle: 'none',
-                scrollbarWidth: 'none',
-              }}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleMouseLeaveOrUp}
+              onTouchMove={handleTouchMove}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+              className="flex gap-6 overflow-x-auto overflow-y-hidden select-none cursor-grab active:cursor-grabbing scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             >
               {/* Render testimonials duplicated three times to ensure seamless infinite loop */}
               {[...testimonials, ...testimonials, ...testimonials].map((item, idx) => (
