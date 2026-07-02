@@ -24,35 +24,19 @@ const Testimonials = () => {
     return [...testimonials, ...testimonials, ...testimonials];
   }, [testimonials]);
 
-  // Clean up loops and timeouts on unmount
+  // Set up auto-scroll animation loop once loading completes and items exist
   React.useEffect(() => {
-    return () => {
-      if (requestRef.current) cancelAnimationFrame(requestRef.current);
-      if (resumeTimeout.current) clearTimeout(resumeTimeout.current);
-      if (initTimeout.current) clearTimeout(initTimeout.current);
-    };
-  }, []);
+    if (loading || items.length === 0) return;
 
-  // Callback Ref executes exactly when the DOM node mounts
-  const setScrollRef = React.useCallback((el) => {
-    if (requestRef.current) {
-      cancelAnimationFrame(requestRef.current);
-      requestRef.current = null;
-    }
-    if (initTimeout.current) {
-      clearTimeout(initTimeout.current);
-      initTimeout.current = null;
-    }
-
-    scrollRef.current = el;
-    if (!el || items.length === 0) return;
+    const el = scrollRef.current;
+    if (!el) return;
 
     // Center scroll position with a slight delay to ensure browser layout is painted
     initTimeout.current = setTimeout(() => {
       if (el) {
         el.scrollLeft = el.scrollWidth / 3;
       }
-    }, 200);
+    }, 250);
 
     const animate = () => {
       if (el && autoScrollActive.current && !isDragging.current) {
@@ -72,7 +56,13 @@ const Testimonials = () => {
     };
 
     requestRef.current = requestAnimationFrame(animate);
-  }, [items]);
+
+    return () => {
+      if (requestRef.current) cancelAnimationFrame(requestRef.current);
+      if (resumeTimeout.current) clearTimeout(resumeTimeout.current);
+      if (initTimeout.current) clearTimeout(initTimeout.current);
+    };
+  }, [loading, items]);
 
   // Dragging event handlers
   const handleMouseDown = (e) => {
@@ -154,7 +144,7 @@ const Testimonials = () => {
 
             {/* Scrollable Track container */}
             <div
-              ref={setScrollRef}
+              ref={scrollRef}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUpOrLeave}
