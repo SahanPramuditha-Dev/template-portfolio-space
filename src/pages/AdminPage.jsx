@@ -38,6 +38,7 @@ import {
   X,
   UploadCloud,
   ExternalLink,
+  Terminal,
 } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
