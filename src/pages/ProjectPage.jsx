@@ -26,6 +26,7 @@ const ProjectPage = () => {
   const { slug } = useParams();
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('story'); // story, technical, impact
+  const [showAllFeatures, setShowAllFeatures] = useState(false);
   const { data, loading } = useCmsDoc(CMS_DOCS.projects, { items: [] });
   const projects = useMemo(() => (Array.isArray(data?.items) ? data.items : []), [data]);
 
@@ -374,15 +375,28 @@ const ProjectPage = () => {
                   {/* Features and Tech Stack Row Grid */}
                   <div className="grid gap-6 md:grid-cols-2">
                     {features.length > 0 && (
-                      <section id="features" className="rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md">
-                        <h2 className="mb-4 text-lg font-bold text-text uppercase tracking-wider text-accent">Key Features</h2>
-                        <ul className="space-y-2.5">
-                          {features.map((feature) => (
-                            <li key={feature} className="rounded-xl border border-secondary/40 bg-primary/40 px-4 py-3 text-xs text-text-muted font-sans leading-relaxed">
-                              {feature}
-                            </li>
-                          ))}
-                        </ul>
+                      <section id="features" className="rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md flex flex-col justify-between">
+                        <div>
+                          <h2 className="mb-4 text-lg font-bold text-text uppercase tracking-wider text-accent">Key Features</h2>
+                          <ul className="grid gap-3 sm:grid-cols-2">
+                            {(showAllFeatures ? features : features.slice(0, 6)).map((feature) => (
+                              <li key={feature} className="rounded-xl border border-secondary/40 bg-primary/40 px-4 py-3 text-xs text-text-muted font-sans leading-relaxed flex items-start">
+                                <span className="mr-2 text-accent text-sm leading-none">•</span>
+                                <span>{feature}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        {features.length > 6 && (
+                          <div className="mt-5 border-t border-white/5 pt-4 text-center">
+                            <button
+                              onClick={() => setShowAllFeatures(!showAllFeatures)}
+                              className="px-4 py-2 rounded-xl border border-accent/20 bg-accent/5 hover:bg-accent/15 text-xs font-mono text-accent transition-all duration-300"
+                            >
+                              {showAllFeatures ? 'Show Less' : `Show More (+${features.length - 6})`}
+                            </button>
+                          </div>
+                        )}
                       </section>
                     )}
 
