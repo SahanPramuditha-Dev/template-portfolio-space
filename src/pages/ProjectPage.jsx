@@ -25,6 +25,7 @@ const getTechIcon = (name) => {
 const ProjectPage = () => {
   const { slug } = useParams();
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState('story'); // story, technical, impact
   const { data, loading } = useCmsDoc(CMS_DOCS.projects, { items: [] });
   const projects = useMemo(() => (Array.isArray(data?.items) ? data.items : []), [data]);
 
@@ -263,166 +264,206 @@ const ProjectPage = () => {
             })()}
           </div>
 
-          {/* Content Wrapper */}
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:flex lg:gap-16">
-            
-            {/* Sticky Table of Contents */}
-            <div className="hidden lg:block w-64 shrink-0">
-              <div className="sticky top-24 space-y-4">
-                <h3 className="font-mono text-sm uppercase tracking-widest text-text">Contents</h3>
-                <nav className="flex flex-col gap-3 border-l border-white/10 pl-4">
-                  {(project.description || description) && (
-                    <a href="#overview" className="text-sm font-medium text-text-muted hover:text-accent transition-colors">Overview</a>
-                  )}
-                  {project.problem && (
-                    <a href="#problem" className="text-sm font-medium text-text-muted hover:text-accent transition-colors">Problem</a>
-                  )}
-                  {project.solution && (
-                    <a href="#solution" className="text-sm font-medium text-text-muted hover:text-accent transition-colors">Solution</a>
-                  )}
-                  {(project.architecture || project.learned || project.lessonsLearned) && (
-                    <a href="#build-notes" className="text-sm font-medium text-text-muted hover:text-accent transition-colors">Build Notes</a>
-                  )}
-                  {features.length > 0 && (
-                    <a href="#features" className="text-sm font-medium text-text-muted hover:text-accent transition-colors">Key Features</a>
-                  )}
-                  {impactMetrics.length > 0 && (
-                    <a href="#impact" className="text-sm font-medium text-text-muted hover:text-accent transition-colors">Impact</a>
-                  )}
-                  {tech.length > 0 && (
-                    <a href="#tech" className="text-sm font-medium text-text-muted hover:text-accent transition-colors">Tech Stack</a>
-                  )}
-                </nav>
-              </div>
+          {/* Snappy Case Study Tab Selector */}
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 mb-12">
+            <div className="relative flex rounded-full border border-white/10 bg-secondary/15 p-1 backdrop-blur-md">
+              {['story', 'technical', 'impact'].map((tab) => {
+                const isActive = activeTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`relative flex-1 py-3 text-center text-xs font-mono font-bold uppercase tracking-wider transition-colors duration-300 z-10 ${
+                      isActive ? 'text-primary' : 'text-text-muted hover:text-white'
+                    }`}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeTabIndicator"
+                        className="absolute inset-0 rounded-full bg-accent shadow-[0_0_15px_rgb(var(--color-accent-rgb))]"
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    <span className="relative z-20">{tab}</span>
+                  </button>
+                );
+              })}
             </div>
+          </div>
 
-            {/* Main Content Area */}
-            <div className="flex-1 space-y-16 min-w-0">
-              
-              {/* Case Study Narrative */}
-              {(project.description || description) && (
-                <motion.section id="overview" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 max-w-none font-sans leading-relaxed text-text-muted">
-                  {renderSimpleMarkdown(project.description || description)}
-                </motion.section>
+          {/* Content Wrapper */}
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 min-h-[380px]">
+            <AnimatePresence mode="wait">
+              {activeTab === 'story' && (
+                <motion.div
+                  key="story-tab"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.25 }}
+                  className="space-y-12"
+                >
+                  {/* Overview Paragraph */}
+                  {(project.description || description) && (
+                    <section id="overview" className="max-w-none font-sans leading-relaxed text-text-muted text-base">
+                      {renderSimpleMarkdown(project.description || description)}
+                    </section>
+                  )}
+
+                  {/* Problem & Solution Cards */}
+                  {(project.problem || project.solution) && (
+                    <div className="grid gap-6 md:grid-cols-2">
+                      {project.problem && (
+                        <section id="problem" className="rounded-3xl border border-white/10 bg-secondary/20 p-6 md:p-8 backdrop-blur-md">
+                          <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-text">
+                            <Target size={20} className="text-red-400" />
+                            Problem
+                          </h2>
+                          <div className="font-sans text-sm text-text-muted leading-relaxed">
+                            {renderSimpleMarkdown(project.problem)}
+                          </div>
+                        </section>
+                      )}
+                      {project.solution && (
+                        <section id="solution" className="rounded-3xl border border-white/10 bg-secondary/20 p-6 md:p-8 backdrop-blur-md">
+                          <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-text">
+                            <Zap size={20} className="text-yellow-400" />
+                            Solution
+                          </h2>
+                          <div className="font-sans text-sm text-text-muted leading-relaxed">
+                            {renderSimpleMarkdown(project.solution)}
+                          </div>
+                        </section>
+                      )}
+                    </div>
+                  )}
+                </motion.div>
               )}
 
-            {(project.problem || project.solution) && (
-              <div className="grid gap-6 lg:grid-cols-2">
-                {project.problem && (
-                  <motion.section id="problem" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
-                    <h2 className="mb-4 flex items-center gap-2 text-2xl font-bold text-text">
-                      <Target size={22} className="text-red-400" />
-                      Problem
-                    </h2>
-                    <div className="font-sans text-text-muted">
-                      {renderSimpleMarkdown(project.problem)}
-                    </div>
-                  </motion.section>
-                )}
-                {project.solution && (
-                  <motion.section id="solution" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
-                    <h2 className="mb-4 flex items-center gap-2 text-2xl font-bold text-text">
-                      <Zap size={22} className="text-yellow-400" />
-                      Solution
-                    </h2>
-                    <div className="font-sans text-text-muted">
-                      {renderSimpleMarkdown(project.solution)}
-                    </div>
-                  </motion.section>
-                )}
-              </div>
-            )}
+              {activeTab === 'technical' && (
+                <motion.div
+                  key="technical-tab"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.25 }}
+                  className="space-y-10"
+                >
+                  {/* Build Notes / Architecture */}
+                  {(project.architecture || project.learned || project.lessonsLearned) && (
+                    <section id="build-notes" className="rounded-3xl border border-white/10 bg-secondary/20 p-6 md:p-10 backdrop-blur-md">
+                      <h2 className="mb-6 text-2xl font-bold text-text border-b border-white/10 pb-4">Build Notes & Architecture</h2>
+                      <div className="space-y-8">
+                        {project.architecture && (
+                          <div className="font-sans text-sm text-text-muted leading-relaxed">
+                            {renderSimpleMarkdown(project.architecture)}
+                          </div>
+                        )}
+                        {(project.learned || project.lessonsLearned) && (
+                          <div className="font-sans border-t border-white/10 pt-6">
+                            <h3 className="mb-4 text-xl font-bold text-white tracking-tight">What I learned</h3>
+                            <div className="text-sm text-text-muted leading-relaxed">
+                              {renderSimpleMarkdown(project.learned || project.lessonsLearned)}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </section>
+                  )}
 
-            {(project.architecture || project.learned || project.lessonsLearned) && (
-              <motion.section id="build-notes" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 rounded-3xl border border-white/10 bg-secondary/20 p-8 sm:p-12 backdrop-blur-md">
-                <h2 className="mb-8 text-3xl font-bold text-text border-b border-white/10 pb-6">Build Notes</h2>
-                <div className="flex flex-col gap-16">
-                  {project.architecture && (
-                    <div className="font-sans">
-                      {renderSimpleMarkdown(project.architecture)}
+                  {/* Features and Tech Stack Row Grid */}
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {features.length > 0 && (
+                      <section id="features" className="rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md">
+                        <h2 className="mb-4 text-lg font-bold text-text uppercase tracking-wider text-accent">Key Features</h2>
+                        <ul className="space-y-2.5">
+                          {features.map((feature) => (
+                            <li key={feature} className="rounded-xl border border-secondary/40 bg-primary/40 px-4 py-3 text-xs text-text-muted font-sans leading-relaxed">
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    )}
+
+                    {tech.length > 0 && (
+                      <section id="tech" className="rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md">
+                        <h2 className="mb-4 text-lg font-bold text-text uppercase tracking-wider text-accent">Tech Stack</h2>
+                        <div className="flex flex-wrap gap-2.5">
+                          {tech.map((item) => (
+                            <div key={item} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 hover:border-accent/30 hover:bg-accent/5 transition-all">
+                              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-accent">
+                                {getTechIcon(item)}
+                              </div>
+                              <span className="font-mono text-xs font-semibold text-white/90">
+                                {item}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === 'impact' && (
+                <motion.div
+                  key="impact-tab"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.25 }}
+                  className="space-y-10"
+                >
+                  {/* Impact Metrics */}
+                  {impactMetrics.length > 0 && (
+                    <section id="impact" className="rounded-3xl border border-white/10 bg-secondary/20 p-6 md:p-8 backdrop-blur-md">
+                      <h2 className="mb-6 text-xl font-bold text-text border-b border-white/10 pb-4">Impact Metrics</h2>
+                      <div className="grid gap-4 sm:grid-cols-3">
+                        {impactMetrics.map((metric) => (
+                          <div key={`${metric.label}-${metric.value}`} className="rounded-2xl border border-accent/20 bg-accent/5 p-6 text-center hover:border-accent/40 transition-colors">
+                            <AnimatedCounter value={metric.value} suffix={metric.suffix} />
+                            <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted">{metric.label}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Documents & Presentations */}
+                  {documents.length > 0 && (
+                    <section id="documents" className="rounded-3xl border border-white/10 bg-secondary/20 p-6 md:p-8 backdrop-blur-md">
+                      <h2 className="mb-4 text-xl font-bold text-text">Documents & Presentations</h2>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        {documents.map((doc, idx) => (
+                          <a key={idx} href={doc.url} target="_blank" rel="noreferrer" className="group flex items-center justify-between rounded-xl border border-white/5 bg-white/5 p-4 transition-all hover:bg-accent/10 hover:border-accent/30">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black/40 text-accent transition-transform group-hover:scale-105">
+                                <FileText size={18} />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-bold text-sm text-white group-hover:text-accent transition-colors">{doc.name || 'Document'}</span>
+                                <span className="text-[10px] text-text-muted">PDF / Resource</span>
+                              </div>
+                            </div>
+                            <div className="mr-1 text-text-muted transition-colors group-hover:text-accent">
+                              <Download size={16} />
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {impactMetrics.length === 0 && documents.length === 0 && (
+                    <div className="rounded-2xl border border-white/5 bg-secondary/10 p-8 text-center text-text-muted">
+                      No metrics or slide documents are published for this project yet.
                     </div>
                   )}
-                  {(project.learned || project.lessonsLearned) && (
-                    <div className="font-sans border-t border-white/10 pt-10">
-                      <h3 className="mb-6 text-2xl font-bold text-white tracking-tight">What I learned</h3>
-                      <div className="text-sm text-text-muted">
-                        {renderSimpleMarkdown(project.learned || project.lessonsLearned)}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </motion.section>
-            )}
-
-          {features.length > 0 && (
-            <motion.section id="features" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md">
-              <h2 className="mb-4 text-2xl font-bold text-text">Key Features</h2>
-              <ul className="grid gap-3 sm:grid-cols-2">
-                {features.map((feature) => (
-                  <li key={feature} className="rounded-2xl border border-secondary/40 bg-primary/40 p-4 text-text-muted">
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </motion.section>
-          )}
-
-          {impactMetrics.length > 0 && (
-            <motion.section id="impact" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
-              <h2 className="mb-6 text-2xl font-bold text-text">Impact</h2>
-              <div className="grid gap-4 sm:grid-cols-3">
-                {impactMetrics.map((metric) => (
-                  <div key={`${metric.label}-${metric.value}`} className="rounded-2xl border border-accent/20 bg-accent/10 p-6 text-center">
-                    <AnimatedCounter value={metric.value} suffix={metric.suffix} />
-                    <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted">{metric.label}</p>
-                  </div>
-                ))}
-              </div>
-            </motion.section>
-          )}
-
-          {tech.length > 0 && (
-            <motion.section id="tech" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
-              <h2 className="mb-6 text-2xl font-bold text-text">Tech Stack</h2>
-              <div className="flex flex-wrap gap-4">
-                {tech.map((item) => (
-                  <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 transition-colors hover:border-accent/40 hover:bg-accent/10">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-accent shadow-inner">
-                      {getTechIcon(item)}
-                    </div>
-                    <span className="font-mono text-sm font-semibold text-white/90">
-                      {item}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </motion.section>
-          )}
-
-          {documents.length > 0 && (
-            <motion.section id="documents" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6 }} className="scroll-mt-24 rounded-3xl border border-white/10 bg-secondary/20 p-8 backdrop-blur-md">
-              <h2 className="mb-6 text-2xl font-bold text-text">Documents & Presentations</h2>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {documents.map((doc, idx) => (
-                  <a key={idx} href={doc.url} target="_blank" rel="noreferrer" className="group flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 p-4 transition-all hover:bg-accent/10 hover:border-accent/30">
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-black/40 text-accent transition-transform group-hover:scale-110">
-                        <FileText size={20} />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-bold text-white group-hover:text-accent transition-colors">{doc.name || 'Document'}</span>
-                        <span className="text-xs text-text-muted">PDF / Document</span>
-                      </div>
-                    </div>
-                    <div className="mr-2 text-text-muted transition-colors group-hover:text-accent">
-                      <Download size={18} />
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </motion.section>
-          )}
-          </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </article>
 
