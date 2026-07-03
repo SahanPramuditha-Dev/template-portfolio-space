@@ -22,7 +22,7 @@
       },
       {
         "source": "**",
-        "function": "serveWithMeta"
+        "destination": "/index.html"
       }
     ]
   }
