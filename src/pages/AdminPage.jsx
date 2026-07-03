@@ -1538,7 +1538,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
   }
 
   return (
-    <div className="space-y-6 rounded-3xl border border-white/10 bg-secondary/25 p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-md">
+    <div className="space-y-6 rounded-3xl border border-white/10 bg-secondary/25 p-4 sm:p-6 lg:p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-md">
       <SectionBanner
         icon={section.icon}
         title={section.title}
@@ -2329,7 +2329,7 @@ const SiteEditor = () => {
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-secondary/25 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-md">
-      <div className="space-y-6 p-6 sm:p-8 sm:pb-28">
+      <div className="space-y-6 p-4 pb-20 sm:p-8 sm:pb-28">
         <SectionBanner
           icon={Settings2}
           title="Website Content"
@@ -2343,7 +2343,7 @@ const SiteEditor = () => {
 
         <div className="grid gap-6 md:grid-cols-[200px_1fr] items-start pt-2">
           {/* Internal Section Index Navigation Menu */}
-          <div className="flex flex-col gap-1.5 border-r border-white/5 pr-4 sticky top-6">
+          <div className="flex flex-col gap-1.5 md:border-r border-white/5 md:pr-4 sticky top-6">
             <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-2 px-2">Config Areas</p>
             {SITE_CONTENT_TABS.map((tab) => {
               const active = siteTab === tab.id;
@@ -3701,7 +3701,7 @@ const AdminPage = () => {
         </header>
 
         {/* Scrollable Work Workspace Pane */}
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6 [scrollbar-width:thin]">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 [scrollbar-width:thin]">
           {activeSection.id === 'site' && <SiteEditor />}
           {activeSection.id === 'media' && <MediaLibrary />}
           {activeSection.id === CMS_DOCS.messages && <MessagesInbox />}
