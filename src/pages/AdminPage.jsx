@@ -1763,6 +1763,7 @@ const normalizeSiteDraft = (source = initialSiteContent) => ({
   seoTitle: source.seoTitle ?? initialSiteContent.seoTitle,
   seoDescription: source.seoDescription ?? initialSiteContent.seoDescription,
   seoImage: source.seoImage ?? initialSiteContent.seoImage,
+  seoFavicon: source.seoFavicon ?? initialSiteContent.seoFavicon,
 });
 
 const stringListConfig = {
