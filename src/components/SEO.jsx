@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import React from 'react';
+import { Helmet } from 'react-helmet-async';
 
 const DEFAULT_SITE_URL = 'https://www.sahanpramuditha.me';
 
@@ -10,24 +11,6 @@ const normalizeSiteUrl = (rawUrl) => {
   return withProtocol.replace(/\/+$/, '');
 };
 
-const upsertMetaTag = (selector, attributes) => {
-  let tag = document.head.querySelector(selector);
-  if (!tag) {
-    tag = document.createElement('meta');
-    document.head.appendChild(tag);
-  }
-  Object.entries(attributes).forEach(([key, value]) => tag.setAttribute(key, value));
-};
-
-const upsertLinkTag = (selector, attributes) => {
-  let tag = document.head.querySelector(selector);
-  if (!tag) {
-    tag = document.createElement('link');
-    document.head.appendChild(tag);
-  }
-  Object.entries(attributes).forEach(([key, value]) => tag.setAttribute(key, value));
-};
-
 const SEO = ({
   title = 'Sahan Pramuditha | Software Engineer and Creative Developer',
   description = 'Sahan Pramuditha is a software engineer and creative developer building accessible, high-performance digital experiences.',
@@ -35,54 +18,48 @@ const SEO = ({
   ogImage = null,
   noindex = false,
 } = {}) => {
-  useEffect(() => {
-    const siteUrl = normalizeSiteUrl(import.meta.env.VITE_SITE_URL || DEFAULT_SITE_URL);
-    const canonicalUrl = canonicalPath.startsWith('http')
-      ? canonicalPath
-      : `${siteUrl}${canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`}`;
-    const resolvedOgImage = ogImage
-      ? (String(ogImage).startsWith('http') ? ogImage : `${siteUrl}${String(ogImage).startsWith('/') ? ogImage : `/${ogImage}`}`)
-      : `${siteUrl}/og-image.svg`;
-    const twitterHandle = '@sahanpramuditha';
-    const keywords =
-      'Sahan Pramuditha, software engineer, creative developer, web developer, React developer, portfolio, Three.js';
+  const siteUrl = normalizeSiteUrl(import.meta.env.VITE_SITE_URL || DEFAULT_SITE_URL);
+  const canonicalUrl = canonicalPath.startsWith('http')
+    ? canonicalPath
+    : `${siteUrl}${canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`}`;
+  const resolvedOgImage = ogImage
+    ? (String(ogImage).startsWith('http') ? ogImage : `${siteUrl}${String(ogImage).startsWith('/') ? ogImage : `/${ogImage}`}`)
+    : `${siteUrl}/og-image.svg`;
+  const twitterHandle = '@sahanpramuditha';
+  const keywords = 'Sahan Pramuditha, software engineer, creative developer, web developer, React developer, portfolio, Three.js';
 
-    document.title = title;
-
-    upsertMetaTag('meta[name="description"]', { name: 'description', content: description });
-    upsertMetaTag('meta[name="keywords"]', { name: 'keywords', content: keywords });
-    upsertMetaTag('meta[name="author"]', { name: 'author', content: 'Sahan Pramuditha' });
-    upsertMetaTag('meta[name="application-name"]', { name: 'application-name', content: 'Sahan Pramuditha' });
-    upsertMetaTag('meta[name="creator"]', { name: 'creator', content: 'Sahan Pramuditha' });
-    upsertMetaTag('meta[name="publisher"]', { name: 'publisher', content: 'Sahan Pramuditha' });
-    upsertMetaTag('meta[name="robots"]', { name: 'robots', content: noindex ? 'noindex, nofollow' : 'index, follow' });
-
-    upsertLinkTag('link[rel="canonical"]', { rel: 'canonical', href: canonicalUrl });
-
-    upsertMetaTag('meta[property="og:type"]', { property: 'og:type', content: 'website' });
-    upsertMetaTag('meta[property="og:locale"]', { property: 'og:locale', content: 'en_US' });
-    upsertMetaTag('meta[property="og:url"]', { property: 'og:url', content: canonicalUrl });
-    upsertMetaTag('meta[property="og:title"]', { property: 'og:title', content: title });
-    upsertMetaTag('meta[property="og:description"]', { property: 'og:description', content: description });
-    upsertMetaTag('meta[property="og:image"]', { property: 'og:image', content: resolvedOgImage });
-    upsertMetaTag('meta[property="og:image:width"]', { property: 'og:image:width', content: '1200' });
-    upsertMetaTag('meta[property="og:image:height"]', { property: 'og:image:height', content: '630' });
-    upsertMetaTag('meta[property="og:site_name"]', { property: 'og:site_name', content: 'Sahan Pramuditha' });
-
-    upsertMetaTag('meta[name="twitter:card"]', { name: 'twitter:card', content: 'summary_large_image' });
-    upsertMetaTag('meta[name="twitter:url"]', { name: 'twitter:url', content: canonicalUrl });
-    upsertMetaTag('meta[name="twitter:title"]', { name: 'twitter:title', content: title });
-    upsertMetaTag('meta[name="twitter:description"]', { name: 'twitter:description', content: description });
-    upsertMetaTag('meta[name="twitter:image"]', { name: 'twitter:image', content: resolvedOgImage });
-    upsertMetaTag('meta[name="twitter:site"]', { name: 'twitter:site', content: twitterHandle });
-    upsertMetaTag('meta[name="twitter:creator"]', { name: 'twitter:creator', content: twitterHandle });
-
-    // Note: Profile photo preload removed - the image is already set to loading="eager" 
-    // in About.jsx, which is sufficient for fast loading. Vite-processed image imports
-    // don't work well with preload links, so we rely on eager loading instead.
-  }, [title, description, canonicalPath, ogImage, noindex]);
-
-  return null;
+  return (
+    <Helmet>
+      <title>{title}</title>
+      <meta name="description" content={description} />
+      <meta name="keywords" content={keywords} />
+      <meta name="author" content="Sahan Pramuditha" />
+      <meta name="application-name" content="Sahan Pramuditha" />
+      <meta name="creator" content="Sahan Pramuditha" />
+      <meta name="publisher" content="Sahan Pramuditha" />
+      <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
+      
+      <link rel="canonical" href={canonicalUrl} />
+      
+      <meta property="og:type" content="website" />
+      <meta property="og:locale" content="en_US" />
+      <meta property="og:url" content={canonicalUrl} />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:image" content={resolvedOgImage} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:site_name" content="Sahan Pramuditha" />
+      
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:url" content={canonicalUrl} />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+      <meta name="twitter:image" content={resolvedOgImage} />
+      <meta name="twitter:site" content={twitterHandle} />
+      <meta name="twitter:creator" content={twitterHandle} />
+    </Helmet>
+  );
 };
 
 export default SEO;

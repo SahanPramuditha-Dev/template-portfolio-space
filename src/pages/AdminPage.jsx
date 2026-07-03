@@ -212,6 +212,7 @@ const initialSiteContent = {
   seoTitle: 'Sahan Pramuditha | Software Engineer and Creative Developer',
   seoDescription: 'Sahan Pramuditha is a software engineer and creative developer building accessible, high-performance digital experiences.',
   seoImage: '',
+  seoFavicon: '',
 };
 
 const initialExperienceItem = {
@@ -2232,13 +2233,14 @@ const SiteEditor = () => {
   const uploadAsset = async (key) => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = 'image/*,.gif,.mp4,.webm';
+    input.accept = 'image/*,.gif,.mp4,.webm,.ico,.svg';
     input.onchange = async () => {
       let file = input.files?.[0];
       if (!file) return;
-      if (file.type.startsWith('image/') && file.type !== 'image/gif') {
+      const isCropExempt = file.type === 'image/gif' || file.type === 'image/svg+xml' || file.type === 'image/x-icon' || file.name.endsWith('.ico') || file.name.endsWith('.svg');
+      if (file.type.startsWith('image/') && !isCropExempt) {
         try {
-          const aspect = key === 'profilePhotoUrl' || key === 'ogImage' ? 1 : 16/9;
+          const aspect = key === 'profilePhotoUrl' || key === 'ogImage' || key === 'seoFavicon' ? 1 : 16/9;
           file = await requestImageCrop(file, aspect);
         } catch {
           return;
@@ -2532,6 +2534,12 @@ const SiteEditor = () => {
                   value={draft.seoImage}
                   onChange={(value) => updateField('seoImage', value)}
                   onUpload={() => uploadAsset('seoImage')}
+                />
+                <FieldEditor
+                  field={{ key: 'seoFavicon', label: 'Favicon URL (.ico, .png, .svg)', type: 'image' }}
+                  value={draft.seoFavicon}
+                  onChange={(value) => updateField('seoFavicon', value)}
+                  onUpload={() => uploadAsset('seoFavicon')}
                 />
               </SiteSection>
             )}

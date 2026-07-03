@@ -1,5 +1,7 @@
 import { StrictMode, Suspense, lazy } from 'react'
 import { createRoot } from 'react-dom/client'
+import { HelmetProvider } from 'react-helmet-async'
+import GlobalHelmet from './components/GlobalHelmet.jsx'
 import '@fontsource/calistoga'
 import '@fontsource/space-grotesk/300.css'
 import '@fontsource/space-grotesk/400.css'
@@ -61,30 +63,33 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <ErrorBoundary>
-      <ThemeProvider>
-        <BrowserRouter>
-          <RouteAnalytics />
-          <Suspense fallback={<RouteFallback />}>
-            <Routes>
-              <Route path="/" element={<App />} />
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="/blog" element={<BlogPage />} />
-              <Route path="/blog/:slug" element={<BlogPostPage />} />
-              <Route path="/projects/:slug" element={<ProjectPage />} />
-              <Route path="/resume" element={<ResumePage />} />
-              <Route path="/resources" element={<ResourcesPage />} />
-              <Route path="/testimonials" element={<TestimonialsPage />} />
-              <Route path="/services" element={<ServicesPage />} />
-              <Route path="/opensource" element={<OpenSourcePage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/cookies" element={<CookiePolicyPage />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </ThemeProvider>
-    </ErrorBoundary>
+    <HelmetProvider>
+      <GlobalHelmet />
+      <ErrorBoundary>
+        <ThemeProvider>
+          <BrowserRouter>
+            <RouteAnalytics />
+            <Suspense fallback={<RouteFallback />}>
+              <Routes>
+                <Route path="/" element={<App />} />
+                <Route path="/admin" element={<AdminPage />} />
+                <Route path="/blog" element={<BlogPage />} />
+                <Route path="/blog/:slug" element={<BlogPostPage />} />
+                <Route path="/projects/:slug" element={<ProjectPage />} />
+                <Route path="/resume" element={<ResumePage />} />
+                <Route path="/resources" element={<ResourcesPage />} />
+                <Route path="/testimonials" element={<TestimonialsPage />} />
+                <Route path="/services" element={<ServicesPage />} />
+                <Route path="/opensource" element={<OpenSourcePage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/cookies" element={<CookiePolicyPage />} />
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </ThemeProvider>
+      </ErrorBoundary>
+    </HelmetProvider>
   </StrictMode>,
 )

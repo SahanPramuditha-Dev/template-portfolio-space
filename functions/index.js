@@ -1,6 +1,8 @@
 const functions = require('firebase-functions/v1');
 const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
 
 admin.initializeApp();
 
