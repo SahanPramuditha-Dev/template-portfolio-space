@@ -2304,6 +2304,7 @@ const SiteEditor = () => {
         seoTitle: draft.seoTitle,
         seoDescription: draft.seoDescription,
         seoImage: draft.seoImage,
+        seoFavicon: draft.seoFavicon,
       });
       setStatus('Site content saved.');
     } catch (error) {
