@@ -27,11 +27,11 @@ if (typeof window !== 'undefined') {
 const getGeoLocation = async () => {
   if (cachedGeo) return cachedGeo;
   try {
-    const res = await fetch('https://get.geojs.io/v1/ip/geo.json');
+    const res = await fetch('https://ipwho.is/');
     if (res.ok) {
       const data = await res.json();
       const info = {
-        country: data.country || 'Unknown',
+        country: data.country || data.country_name || 'Unknown',
         countryCode: data.country_code || 'UN',
         city: data.city || 'Unknown',
       };

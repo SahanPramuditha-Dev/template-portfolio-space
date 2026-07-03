@@ -192,7 +192,10 @@ const TelemetryDashboard = () => {
 
     const fetchTelemetry = async () => {
       try {
-        const res = await fetch('/api/telemetry');
+        const url = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+          ? 'https://us-central1-sahanpramuditha-portfolio.cloudfunctions.net/telemetry' 
+          : '/api/telemetry';
+        const res = await fetch(url);
         if (!res.ok) throw new Error('Uplink query failed');
         const data = await res.json();
         
