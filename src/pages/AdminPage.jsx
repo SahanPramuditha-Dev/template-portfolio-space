@@ -2335,10 +2335,9 @@ const SiteEditor = () => {
 
         <AdminStatus message={status} />
 
-        <div className="grid gap-6 md:grid-cols-[200px_1fr] items-start pt-2">
-          {/* Internal Section Index Navigation Menu */}
-          <div className="flex flex-col gap-1.5 md:border-r border-white/5 md:pr-4 sticky top-6">
-            <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-2 px-2">Config Areas</p>
+        <div className="flex flex-col gap-6 pt-2">
+          {/* Horizontal Section Index Navigation Menu */}
+          <div className="flex flex-wrap gap-2 pb-4 border-b border-white/5">
             {SITE_CONTENT_TABS.map((tab) => {
               const active = siteTab === tab.id;
               return (
@@ -2347,14 +2346,13 @@ const SiteEditor = () => {
                   type="button"
                   onClick={() => setSiteTab(tab.id)}
                   className={clsx(
-                    'w-full text-left rounded-xl border px-3.5 py-3 transition-colors outline-none focus-visible:ring-1 focus-visible:ring-accent/40',
+                    'rounded-full border px-4 py-2 text-xs font-mono whitespace-nowrap transition-colors outline-none focus-visible:ring-1 focus-visible:ring-accent/40',
                     active
-                      ? 'border-accent/35 bg-accent/15 font-semibold text-accent'
-                      : 'border-transparent text-text-muted hover:border-white/10 hover:bg-primary/30 hover:text-text'
+                      ? 'border-accent/40 bg-accent/15 font-bold text-accent shadow-[0_0_0_1px_rgb(var(--color-accent-rgb)/0.12)]'
+                      : 'border-white/10 bg-primary/30 text-text-muted hover:border-accent/25 hover:text-text'
                   )}
                 >
-                  <span className="block text-xs font-mono">{tab.label}</span>
-                  <span className="mt-0.5 block text-[10px] font-normal opacity-85">{tab.hint}</span>
+                  {tab.label}
                 </button>
               );
             })}
