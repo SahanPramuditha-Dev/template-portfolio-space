@@ -712,7 +712,7 @@ const TelemetryDashboard = () => {
               </span>
               
               {/* Category Filter Tabs */}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {['ALL', 'SENSORS', 'TRANSFERS', 'UPLINKS'].map(filterName => (
                   <button
                     key={filterName}
@@ -763,7 +763,7 @@ const TelemetryDashboard = () => {
                         <span className={`px-1.5 py-0.2 rounded border text-[7px] font-extrabold flex-shrink-0 tracking-widest ${tagColor}`}>
                           {tag}
                         </span>
-                        <span className={`truncate ${isSelected ? 'text-amber-400 font-bold' : 'text-text opacity-95'}`}>
+                        <span className={`truncate min-w-0 flex-1 ${isSelected ? 'text-amber-400 font-bold' : 'text-text opacity-95'}`}>
                           {act.text}
                         </span>
                       </div>
