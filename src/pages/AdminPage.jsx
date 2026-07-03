@@ -2367,7 +2367,7 @@ const SiteEditor = () => {
           </div>
 
           {/* Configuration Form Pane */}
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0">
             {siteTab === 'hero' && (
               <SiteSection
                 title="Hero & intro"
@@ -3684,18 +3684,20 @@ const AdminPage = () => {
           <div className="flex items-center gap-2 shrink-0">
             <Link
               to="/"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-primary/30 px-4 py-2 text-xs font-semibold text-text transition-colors hover:border-accent/35 hover:bg-primary/55"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-primary/30 px-3 sm:px-4 py-2 text-xs font-semibold text-text transition-colors hover:border-accent/35 hover:bg-primary/55"
+              aria-label="View site"
             >
               <ArrowLeft size={13} />
-              View site
+              <span className="hidden sm:inline">View site</span>
             </Link>
             <button
               type="button"
               onClick={logout}
-              className="inline-flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/20"
+              className="inline-flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 sm:px-4 py-2 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/20"
+              aria-label="Sign out"
             >
               <LogOut size={13} />
-              Sign out
+              <span className="hidden sm:inline">Sign out</span>
             </button>
           </div>
         </header>
