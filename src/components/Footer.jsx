@@ -93,8 +93,6 @@ const Footer = () => {
         <div className="flex flex-col items-center justify-between gap-4 text-sm text-text-muted md:flex-row">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-center md:text-left">
             <p>© {currentYear} Sahan Pramuditha. All rights reserved.</p>
-            <span className="hidden sm:inline-block text-text-muted/40">•</span>
-            <PageViewsCounter />
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
@@ -131,42 +129,6 @@ const Footer = () => {
         </div>
       </div>
     </footer>
-  );
-};
-
-const PageViewsCounter = () => {
-  const [views, setViews] = useState(null);
-
-  useEffect(() => {
-    const getCount = async () => {
-      try {
-        const { getFirestore, doc, getDoc } = await import('firebase/firestore');
-        const { app } = await import('../lib/firebase');
-        const db = getFirestore(app);
-        const ref = doc(db, 'publicStats', 'views');
-        const snapshot = await getDoc(ref);
-        if (snapshot.exists()) {
-          setViews(snapshot.data().count || 0);
-        } else {
-          setViews(0);
-        }
-      } catch {
-        // Silently catch errors
-      }
-    };
-    getCount();
-  }, []);
-
-  if (views === null) return null;
-
-  return (
-    <span className="inline-flex items-center gap-2 bg-gradient-to-r from-accent/5 to-accent/15 border border-accent/25 hover:border-accent/40 px-3.5 py-1 rounded-full text-[10px] font-mono tracking-wider text-accent transition-all duration-300 shadow-[0_0_12px_rgba(var(--color-accent-rgb),0.05)] hover:shadow-[0_0_18px_rgba(var(--color-accent-rgb),0.15)] select-none">
-      <span className="relative flex h-2 w-2">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
-      </span>
-      <span>{views.toLocaleString()} ORBITAL SESSIONS</span>
-    </span>
   );
 };
 
