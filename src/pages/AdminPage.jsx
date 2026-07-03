@@ -2212,11 +2212,6 @@ const SITE_CONTENT_TABS = [
   { id: 'seo', label: 'SEO', hint: 'Global site metadata' },
 ];
 
-const ABOUT_SUB_TABS = [
-  { id: 'bio', label: 'Bio & photo', hint: 'Long copy and portrait' },
-  { id: 'lists', label: 'Lists', hint: 'Learning, tools, goals, hobbies' },
-  { id: 'cards', label: 'Cards', hint: 'Education, stats, approach' },
-];
 
 const SiteEditor = () => {
   const { data, loading } = useCmsDoc(CMS_DOCS.site, initialSiteContent);
@@ -2224,7 +2219,6 @@ const SiteEditor = () => {
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
   const [siteTab, setSiteTab] = useState('hero');
-  const [aboutSubTab, setAboutSubTab] = useState('bio');
 
   useEffect(() => {
     if (data === undefined) return;
@@ -2440,35 +2434,11 @@ const SiteEditor = () => {
             {siteTab === 'about' && (
               <SiteSection
                 title="About & profile"
-                description="Use the subtabs to switch between bio, line-item lists, and structured cards—less scrolling, same data."
+                description="Manage your bio, profile photo, lists, and structured cards."
               >
-                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-                  <p className="text-xs font-mono uppercase tracking-[0.14em] text-text-muted">About section</p>
-                  <div className="flex flex-wrap gap-2">
-                    {ABOUT_SUB_TABS.map((tab) => {
-                      const active = aboutSubTab === tab.id;
-                      return (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          onClick={() => setAboutSubTab(tab.id)}
-                          className={clsx(
-                            'rounded-xl border px-3 py-2 text-left text-sm transition-colors',
-                            active
-                              ? 'border-accent/40 bg-accent/15 font-semibold text-accent shadow-[0_0_0_1px_rgb(var(--color-accent-rgb)/0.12)]'
-                              : 'border-white/10 bg-primary/30 text-text-muted hover:border-accent/25 hover:text-text'
-                          )}
-                        >
-                          <span className="block">{tab.label}</span>
-                          <span className="mt-0.5 block text-[11px] font-normal text-text-muted">{tab.hint}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {aboutSubTab === 'bio' && (
-                  <div className="space-y-4 pt-2">
+                <div className="space-y-12">
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent border-b border-white/5 pb-2">Bio & Photo</h4>
                     <FieldEditor
                       field={{ key: 'aboutParagraphs', label: 'About Paragraphs', type: 'textarea' }}
                       value={draft.aboutParagraphs}
@@ -2481,42 +2451,44 @@ const SiteEditor = () => {
                       onUpload={() => uploadAsset('profilePhotoUrl')}
                     />
                   </div>
-                )}
 
-                {aboutSubTab === 'lists' && (
-                  <div className="grid gap-4 pt-2">
-                    {Object.entries(stringListConfig)
-                      .filter(([k]) => k !== 'heroWordsJson')
-                      .map(([key, config]) => (
-                        <RepeatableTextEditor
-                          key={key}
-                          label={config.label}
-                          helper={config.helper}
-                          placeholder={config.placeholder}
-                          value={draft[key]}
-                          onChange={(value) => updateField(key, value)}
-                        />
-                      ))}
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent border-b border-white/5 pb-2">Line-item Lists</h4>
+                    <div className="grid gap-4">
+                      {Object.entries(stringListConfig)
+                        .filter(([k]) => k !== 'heroWordsJson')
+                        .map(([key, config]) => (
+                          <RepeatableTextEditor
+                            key={key}
+                            label={config.label}
+                            helper={config.helper}
+                            placeholder={config.placeholder}
+                            value={draft[key]}
+                            onChange={(value) => updateField(key, value)}
+                          />
+                        ))}
+                    </div>
                   </div>
-                )}
 
-                {aboutSubTab === 'cards' && (
-                  <div className="grid gap-4 pt-2">
-                    {Object.entries(objectEditorConfigs)
-                      .filter(([key]) => key !== 'socialLinksJson')
-                      .map(([key, config]) => (
-                        <RepeatableObjectEditor
-                          key={key}
-                          label={config.label}
-                          helper={config.helper}
-                          value={draft[key]}
-                          onChange={(value) => updateField(key, value)}
-                          createItem={config.createItem}
-                          fields={config.fields}
-                        />
-                      ))}
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent border-b border-white/5 pb-2">Structured Cards</h4>
+                    <div className="grid gap-4">
+                      {Object.entries(objectEditorConfigs)
+                        .filter(([key]) => key !== 'socialLinksJson')
+                        .map(([key, config]) => (
+                          <RepeatableObjectEditor
+                            key={key}
+                            label={config.label}
+                            helper={config.helper}
+                            value={draft[key]}
+                            onChange={(value) => updateField(key, value)}
+                            createItem={config.createItem}
+                            fields={config.fields}
+                          />
+                        ))}
+                    </div>
                   </div>
-                )}
+                </div>
               </SiteSection>
             )}
 
