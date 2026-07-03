@@ -701,7 +701,7 @@ const TelemetryDashboard = () => {
       <div className="grid gap-6 md:grid-cols-3 border-t border-white/5 pt-6 text-xs">
         
         {/* Terminal Activity Feed */}
-        <div className="p-4 bg-primary/45 rounded-lg border border-secondary/40 md:col-span-2 flex flex-col justify-between h-[380px]">
+        <div className="p-4 bg-primary/45 rounded-lg border border-secondary/40 md:col-span-2 flex flex-col justify-between h-[380px] min-w-0">
           <div className="h-full flex flex-col justify-between">
             
             {/* Terminal Header & Filter categories */}
@@ -790,7 +790,7 @@ const TelemetryDashboard = () => {
           onDoubleClick={() => {
             setShowMapModal(true);
           }}
-          className="p-4 bg-secondary/35 rounded-lg border border-secondary/40 flex flex-col justify-between overflow-hidden cursor-zoom-in group/map relative"
+          className="p-4 bg-secondary/35 rounded-lg border border-secondary/40 flex flex-col justify-between overflow-hidden cursor-zoom-in group/map relative min-w-0"
           title="Double click to enlarge"
         >
           <div>
