@@ -13,7 +13,6 @@ import ScrollProgress from './components/ScrollProgress';
 import ScrollToTop from './components/ScrollToTop';
 import SmoothScroll from './components/SmoothScroll';
 import MobileQuickActions from './components/MobileQuickActions';
-import { Analytics } from '@vercel/analytics/react';
 import { isBotUserAgent, shouldDisableHeavyVisuals } from './utils/runtimeGuards';
 import { CmsSectionSkeleton, FooterCmsSkeleton } from './components/CmsShapeSkeleton';
 import { AchievementsProvider } from './context/AchievementsContext';
@@ -168,7 +167,6 @@ function App() {
             </Suspense>
           </div>
           <MobileQuickActions />
-          <Analytics />
         </motion.div>
       )}
       </AchievementsProvider>
