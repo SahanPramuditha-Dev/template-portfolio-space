@@ -729,8 +729,8 @@ const TelemetryDashboard = () => {
             </div>
             
             {/* Real terminal-style activity list */}
-            <div className="flex-1 overflow-y-auto space-y-3.5 font-mono text-[10px] leading-relaxed pr-1 custom-scrollbar">
-              {filteredActivities.map((act, index) => {
+            <div className="flex-1 overflow-hidden space-y-3.5 font-mono text-[10px] leading-relaxed pr-1">
+              {filteredActivities.slice(0, 6).map((act, index, arr) => {
                 const secs = String((24 + index * 12) % 60).padStart(2, '0');
                 const timeStr = `[09:31:${secs}]`;
                 const isSelected = selectedCountry?.name?.toLowerCase().includes(act.text.toLowerCase());
@@ -766,7 +766,7 @@ const TelemetryDashboard = () => {
                       </div>
                       <span className="text-text-muted text-[8px] opacity-65 flex-shrink-0">{act.time}</span>
                     </div>
-                    {index < filteredActivities.length - 1 && (
+                    {index < arr.length - 1 && (
                       <div className="text-white/5 select-none leading-none h-px w-full border-t border-dashed border-white/5 my-1" />
                     )}
                   </div>
