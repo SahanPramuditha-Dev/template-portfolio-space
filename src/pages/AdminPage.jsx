@@ -3595,7 +3595,7 @@ const AdminPage = () => {
 
       {/* FIXED SIDEBAR (Zero Scroll Layout Shift) */}
       <aside className={clsx(
-        "fixed inset-y-0 left-0 z-50 w-72 flex flex-col bg-secondary/95 border-r border-white/10 p-6 transition-transform duration-300 ease-in-out lg:static lg:w-72 lg:transform-none lg:bg-secondary/20 lg:backdrop-blur-md shrink-0 h-full",
+        "fixed inset-y-0 left-0 z-50 w-72 flex flex-col bg-primary/95 backdrop-blur-2xl border-r border-white/10 p-6 transition-transform duration-300 ease-in-out lg:static lg:w-72 lg:transform-none lg:bg-secondary/20 lg:backdrop-blur-md shrink-0 h-full",
         isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
         <div className="flex items-center justify-between mb-6 shrink-0">
