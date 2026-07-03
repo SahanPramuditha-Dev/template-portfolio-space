@@ -3453,14 +3453,23 @@ const AdminPage = () => {
         <div className="w-full max-w-6xl grid gap-8 xl:grid-cols-[1fr_1.02fr] xl:items-stretch">
           <div className="flex flex-col justify-center rounded-3xl border border-white/10 bg-secondary/30 p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-md sm:p-10">
             <div className="mb-8">
-              <div className="mb-5 inline-flex rounded-2xl border border-accent/25 bg-accent/10 p-3.5 text-accent">
-                <LayoutDashboard size={26} strokeWidth={1.75} />
+              <Link
+                to="/"
+                className="group mb-8 inline-flex items-center gap-2 text-sm font-medium text-text-muted transition-colors hover:text-accent"
+              >
+                <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" />
+                Back to Homepage
+              </Link>
+              <div>
+                <div className="mb-5 inline-flex rounded-2xl border border-accent/25 bg-accent/10 p-3.5 text-accent">
+                  <LayoutDashboard size={26} strokeWidth={1.75} />
+                </div>
+                <p className="text-xs font-mono uppercase tracking-[0.22em] text-accent">Portfolio CMS</p>
+                <h1 className="font-display mt-3 text-3xl font-bold tracking-tight text-text sm:text-4xl">Sign in</h1>
+                <p className="mt-3 max-w-md text-sm leading-relaxed text-text-muted">
+                  Edit site copy, projects, and media-backed content. Use your Firebase admin account below.
+                </p>
               </div>
-              <p className="text-xs font-mono uppercase tracking-[0.22em] text-accent">Portfolio CMS</p>
-              <h1 className="font-display mt-3 text-3xl font-bold tracking-tight text-text sm:text-4xl">Sign in</h1>
-              <p className="mt-3 max-w-md text-sm leading-relaxed text-text-muted">
-                Edit site copy, projects, and media-backed content. Use your Firebase admin account below.
-              </p>
             </div>
 
             <form onSubmit={login} className="space-y-5">
