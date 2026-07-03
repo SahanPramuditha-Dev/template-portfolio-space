@@ -2301,10 +2301,10 @@ const SiteEditor = () => {
         footerTagline: draft.footerTagline,
         footerEmail: draft.footerEmail,
         socialLinksJson: draft.socialLinksJson,
-        seoTitle: draft.seoTitle,
-        seoDescription: draft.seoDescription,
-        seoImage: draft.seoImage,
-        seoFavicon: draft.seoFavicon,
+        seoTitle: draft.seoTitle || '',
+        seoDescription: draft.seoDescription || '',
+        seoImage: draft.seoImage || '',
+        seoFavicon: draft.seoFavicon || '',
       });
       setStatus('Site content saved.');
     } catch (error) {
