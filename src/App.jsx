@@ -130,7 +130,7 @@ function App() {
 
           <div className="relative z-10">
             <Navbar />
-            <main id="main-content" className="pb-16 md:pb-0">
+            <main id="main-content" className="pb-16 md:pb-0 overflow-x-hidden">
               <Hero />
               <About />
               <NowAvailability />

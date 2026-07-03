@@ -758,7 +758,7 @@ const TelemetryDashboard = () => {
                 return (
                   <div key={index} className="space-y-2">
                     <div className="flex items-center justify-between gap-4 select-none">
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
                         <span className="text-text-muted opacity-50 flex-shrink-0">{timeStr}</span>
                         <span className={`px-1.5 py-0.2 rounded border text-[7px] font-extrabold flex-shrink-0 tracking-widest ${tagColor}`}>
                           {tag}
