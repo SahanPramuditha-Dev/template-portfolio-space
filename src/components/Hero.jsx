@@ -217,7 +217,7 @@ const Hero = () => {
                     whileTap={{ scale: 0.9 }}
                     aria-label={`${link.label} profile`}
                   >
-                    <span className="p-3 bg-secondary border border-black/5 dark:border-white/5 rounded-full text-text-muted group-hover:text-primary group-hover:bg-accent transition-all duration-300 shadow-md group-hover:shadow-lg">
+                    <span className="p-3 bg-secondary rounded-full text-text-muted group-hover:text-primary group-hover:bg-accent transition-all duration-300 shadow-md group-hover:shadow-lg">
                       <Icon size={22} />
                     </span>
                     <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted group-hover:text-accent transition-colors duration-300">{link.label}</span>
@@ -243,7 +243,7 @@ const Hero = () => {
             </motion.a>
             <motion.a
               href="#contact"
-              className="px-8 py-4 border border-slate-200 dark:border-secondary/50 bg-slate-50 dark:bg-secondary/30 text-text rounded-lg hover:border-accent/50 hover:text-accent transition-colors inline-flex items-center gap-2 font-mono"
+              className="px-8 py-4 border border-secondary/50 bg-secondary/30 text-text rounded-lg hover:border-accent/50 hover:text-accent transition-colors inline-flex items-center gap-2 font-mono"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >

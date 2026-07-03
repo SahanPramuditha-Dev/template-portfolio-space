@@ -17,6 +17,10 @@
     ],
     "rewrites": [
       {
+        "source": "/api/telemetry",
+        "function": "telemetry"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

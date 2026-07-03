@@ -7,11 +7,11 @@
     --color-primary: #f8fafc; /* Slate 50 */
     --color-secondary: #ffffff; /* White */
     --color-text: #0f172a; /* Slate 900 */
-    --color-text-muted: #475569; /* Slate 600 - darker for readability */
-    --color-accent: #0369a1; /* Sky 700 - higher contrast blue */
-    --color-accent-glow: #0284c7; /* Sky 600 */
-    --color-accent-rgb: 3 105 161;
-    --color-accent-glow-rgb: 2 132 199;
+    --color-text-muted: #64748b; /* Slate 500 */
+    --color-accent: #0284c7; /* Sky 600 */
+    --color-accent-glow: #0ea5e9; /* Sky 500 */
+    --color-accent-rgb: 2 132 199;
+    --color-accent-glow-rgb: 14 165 233;
   }
 
   .dark {
@@ -279,7 +279,7 @@ img[loading="lazy"] {
   .rotate-y-180 {
     transform: rotateY(180deg);
   }
-  .dark .text-shadow-glow {
+  .text-shadow-glow {
     text-shadow: 0 0 20px var(--color-accent-glow);
   }
 

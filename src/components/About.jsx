@@ -3,6 +3,7 @@ import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { Code2, Server, Users } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
 import GithubStats from './GithubStats';
+import TelemetryDashboard from './TelemetryDashboard';
 import ImageWithFallback from './ImageWithFallback';
 import profilePhoto from '../assets/profilephoto.jpeg';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
@@ -271,7 +272,7 @@ const About = () => {
 
         <div className="mb-20">
           <h3 className="text-2xl font-bold text-text mb-8 flex items-center gap-2">
-            <span className="text-accent font-mono text-xl">01.3.</span> Education Timeline
+            <span className="text-accent font-mono text-xl">01.2.</span> Education Timeline
           </h3>
           {educationTimeline.length > 0 ? (
             <div className="space-y-4">
@@ -302,14 +303,23 @@ const About = () => {
 
         <div>
           <h3 className="text-2xl font-bold text-text mb-8 flex items-center gap-2">
-            <span className="text-accent font-mono text-xl">01.2.</span> Open Source Presence
+            <span className="text-accent font-mono text-xl">01.3.</span> Open Source Presence
           </h3>
           <div className="w-full">
             <GithubStats username={GITHUB_USERNAME} />
           </div>
-          <p className="text-center text-text-muted mt-6 text-xs font-mono opacity-50">
+          <p className="text-center text-text-muted mt-6 text-xs font-mono opacity-50 mb-12">
             * Data fetched dynamically from GitHub API
           </p>
+        </div>
+
+        <div>
+          <h3 className="text-2xl font-bold text-text mb-8 flex items-center gap-2">
+            <span className="text-accent font-mono text-xl">01.4.</span> Real-time Portfolio Telemetry
+          </h3>
+          <div className="w-full">
+            <TelemetryDashboard />
+          </div>
         </div>
       </div>
     </SectionWrapper>
