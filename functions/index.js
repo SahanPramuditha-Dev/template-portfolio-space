@@ -254,12 +254,168 @@ exports.telemetry = functions.https.onRequest(async (req, res) => {
   }
 
   // Load variables dynamically from either process.env or functions.config()
-  const serviceAccountEnv = process.env.GA_SERVICE_ACCOUNT_JSON || functions.config().ga?.service_account;
-  const propertyId = process.env.GA4_PROPERTY_ID || functions.config().ga?.property_id;
+  let serviceAccountEnv = process.env.GA_SERVICE_ACCOUNT_JSON || functions.config().ga?.service_account;
+  let propertyId = process.env.GA4_PROPERTY_ID || functions.config().ga?.property_id;
+
+  // Development convenience: allow loading credentials from local files in `functions/`
+  // Put your service account JSON at `functions/service-account.json` (not committed to git)
+  // and your GA4 property id in `functions/ga_property_id.txt` when developing locally.
+  try {
+    if (!serviceAccountEnv) {
+      const localSaPath = path.join(__dirname, 'service-account.json');
+      if (fs.existsSync(localSaPath)) {
+        serviceAccountEnv = fs.readFileSync(localSaPath, 'utf8');
+        console.log('Loaded GA service account from local service-account.json');
+      }
+    }
+  } catch (e) {
+    console.warn('Error reading local service-account.json:', e.message || e);
+  }
+
+  try {
+    if (!propertyId) {
+      const pidPath = path.join(__dirname, 'ga_property_id.txt');
+      if (fs.existsSync(pidPath)) {
+        propertyId = fs.readFileSync(pidPath, 'utf8').trim();
+        console.log('Loaded GA4 property id from local ga_property_id.txt');
+      }
+    }
+  } catch (e) {
+    console.warn('Error reading local ga_property_id.txt:', e.message || e);
+  }
 
   if (!serviceAccountEnv || !propertyId) {
-    res.status(200).json(MOCK_DATA);
-    return;
+    // If GA credentials are not configured, attempt to build realtime telemetry
+    // from Firestore `telemetry_events` collection (populated by client beacons).
+    try {
+      const now = Date.now();
+      const db = admin.firestore();
+      const days30 = new Date(now - 30 * 24 * 60 * 60 * 1000);
+      const snapshot = await db.collection('analyticsEvents')
+        .where('timestamp', '>=', admin.firestore.Timestamp.fromDate(days30))
+        .orderBy('timestamp', 'desc')
+        .limit(2000)
+        .get();
+
+      const docs = snapshot.docs.map(d => {
+        const data = d.data();
+        return {
+          ...data,
+          path: data.eventData?.path || data.path || '/',
+          country: data.eventData?.country || data.country || 'Unknown',
+          countryCode: data.eventData?.countryCode || data.countryCode || 'UN',
+          ip: data.sessionId || data.ip || 'unknown'
+        };
+      });
+      if (docs.length === 0) {
+        res.status(200).json(MOCK_DATA);
+        return;
+      }
+
+      // Aggregate simple metrics
+      const nowTs = admin.firestore.Timestamp.fromDate(new Date());
+      const twoMinutesAgo = admin.firestore.Timestamp.fromMillis(Date.now() - 2 * 60 * 1000);
+      const recent = docs.filter(d => d.timestamp && d.timestamp.seconds >= twoMinutesAgo.seconds);
+
+      const onlineVisitors = new Set(recent.map(d => d.ip || d.uuid || d.userAgent)).size || 1;
+
+      // visitorsCount: unique IPs over 30 days (approx)
+      const uniqueIps = new Set(docs.map(d => d.ip || d.uuid || d.userAgent));
+      const visitorsCount = uniqueIps.size || docs.length;
+
+      // Top pages
+      const pageCounts = {};
+      docs.forEach(d => {
+        const p = d.path || '/';
+        pageCounts[p] = (pageCounts[p] || 0) + 1;
+      });
+      const sortedPages = Object.entries(pageCounts).sort((a, b) => b[1] - a[1]);
+      const mostViewedProject = (sortedPages[0] && sortedPages[0][0]) || 'StudyOS';
+      const mostViewedProjectCount = (sortedPages[0] && sortedPages[0][1]) || docs.length;
+
+      // Countries (if available)
+      const countryMap = {};
+      docs.forEach(d => {
+        const c = d.country || 'Unknown';
+        countryMap[c] = (countryMap[c] || 0) + 1;
+      });
+      const countriesList = Object.entries(countryMap).map(([name, count]) => ({ name, count }));
+      countriesList.sort((a, b) => b.count - a.count);
+      const topCountriesList = countriesList.slice(0, 4).map(c => ({ name: c.name, flag: getFlagEmoji(c.name), count: c.count, percent: Math.round((c.count / docs.length) * 100) }));
+
+      // Simple device/browser split
+      const deviceMap = {};
+      const browserMap = {};
+      docs.forEach(d => {
+        const ua = (d.userAgent || '').toLowerCase();
+        let device = 'Desktop';
+        if (ua.includes('mobile') || ua.includes('iphone') || ua.includes('android')) device = 'Mobile';
+        else if (ua.includes('ipad') || ua.includes('tablet')) device = 'Tablet';
+        deviceMap[device] = (deviceMap[device] || 0) + 1;
+
+        let browser = 'Other';
+        if (ua.includes('chrome') && !ua.includes('edg')) browser = 'Chrome';
+        else if (ua.includes('firefox')) browser = 'Firefox';
+        else if (ua.includes('safari') && !ua.includes('chrome')) browser = 'Safari';
+        else if (ua.includes('edg') || ua.includes('edge')) browser = 'Edge';
+        browserMap[browser] = (browserMap[browser] || 0) + 1;
+      });
+
+      const techTotalUsers = docs.length || 1;
+      const devices = Object.entries(deviceMap).map(([name, count]) => ({ name, percent: Math.round((count / techTotalUsers) * 100) })).slice(0, 4);
+      const browsers = Object.entries(browserMap).map(([name, count]) => ({ name, percent: Math.round((count / techTotalUsers) * 100) })).slice(0, 4);
+
+      // Sparklines: counts per day for last 14 days
+      const dayBuckets = {};
+      for (let i = 13; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0,10);
+        dayBuckets[key] = 0;
+      }
+      docs.forEach(d => {
+        const t = d.timestamp ? new Date(d.timestamp.seconds * 1000) : new Date();
+        const key = t.toISOString().slice(0,10);
+        if (key in dayBuckets) dayBuckets[key]++;
+      });
+      const sparklines = {
+        visitors: Object.values(dayBuckets),
+        countries: MOCK_DATA.sparklines.countries,
+        session: MOCK_DATA.sparklines.session,
+        topProject: MOCK_DATA.sparklines.topProject,
+        trending: MOCK_DATA.sparklines.trending
+      };
+
+      const payload = {
+        onlineVisitors,
+        visitorsCount,
+        visitorsDiff: 12,
+        countriesCount: topCountriesList.length || 0,
+        topCountriesList: topCountriesList.length ? topCountriesList : MOCK_DATA.topCountriesList,
+        averageSessionText: MOCK_DATA.averageSessionText,
+        averageSessionDiff: -3,
+        mostViewedProject,
+        mostViewedProjectCount,
+        mostViewedProjectDiff: 16,
+        mostViewedProjectLastActive: '2m ago',
+        trendingProject: MOCK_DATA.trendingProject,
+        trendingProjectCount: MOCK_DATA.trendingProjectCount,
+        trendingProjectDiff: MOCK_DATA.trendingProjectDiff,
+        devices: devices.length ? devices : MOCK_DATA.devices,
+        browsers: browsers.length ? browsers : MOCK_DATA.browsers,
+        sources: MOCK_DATA.sources,
+        sections: MOCK_DATA.sections,
+        activityFeed: docs.slice(0, 10).map(d => ({ text: `${d.path || 'page'}${d.country ? ` from ${d.country}` : ''}`, time: 'now', type: 'view' })),
+        sparklines
+      };
+
+      res.status(200).json(payload);
+      return;
+    } catch (e) {
+      console.warn('Failed to aggregate Firestore telemetry:', e.message || e);
+      res.status(200).json(MOCK_DATA);
+      return;
+    }
   }
 
   if (cachedTelemetryData && Date.now() < cacheExpiry) {
@@ -502,12 +658,69 @@ exports.telemetry = functions.https.onRequest(async (req, res) => {
       sparklines.trending = MOCK_DATA.sparklines.trending;
     }
 
-    const activityFeed = [
-      { text: `Visitor from ${topCountriesList[0]?.name || 'Sri Lanka'} viewed ${mostViewedProject}`, time: '3s ago', type: 'view' },
-      { text: `Visitor from ${topCountriesList[1]?.name || 'United States'} downloaded Resume`, time: '1m ago', type: 'download' },
-      { text: `Uplink established with sector ${topCountriesList[0]?.name || 'Sri Lanka'}`, time: '2m ago', type: 'connection' },
-      { text: `Visitor from ${topCountriesList[2]?.name || 'India'} explored Projects section`, time: '4m ago', type: 'explore' }
-    ];
+    let activityFeed = [];
+    try {
+      const db = admin.firestore();
+      const eventsSnap = await db.collection('analyticsEvents')
+        .orderBy('timestamp', 'desc')
+        .limit(10)
+        .get();
+
+      activityFeed = eventsSnap.docs.map(doc => {
+        const data = doc.data();
+        const country = data.eventData?.country || 'Unknown';
+        const flag = getFlagEmoji(country);
+
+        let text = `Visitor from ${country} triggered ${data.eventName}`;
+        if (data.eventName === 'page_view') {
+          text = `Visitor from ${country} ${flag} viewed page ${data.eventData?.path || '/'}`;
+        } else if (data.eventName === 'project_view') {
+          text = `Visitor from ${country} ${flag} viewed project ${data.eventData?.project_title || 'a project'}`;
+        } else if (data.eventName === 'download') {
+          text = `Visitor from ${country} ${flag} downloaded ${data.eventData?.file_type || 'file'}`;
+        } else if (data.eventName === 'contact_submit') {
+          text = `Visitor from ${country} ${flag} submitted contact form`;
+        } else if (data.eventName === 'social_click') {
+          text = `Visitor from ${country} ${flag} clicked social link: ${data.eventData?.platform || 'link'}`;
+        }
+
+        let time = 'now';
+        if (data.timestamp) {
+          const diffMs = Date.now() - (data.timestamp.seconds * 1000);
+          const diffMins = Math.floor(diffMs / 60000);
+          if (diffMins < 1) {
+            const diffSecs = Math.max(1, Math.floor(diffMs / 1000));
+            time = `${diffSecs}s ago`;
+          } else if (diffMins < 60) {
+            time = `${diffMins}m ago`;
+          } else {
+            const diffHours = Math.floor(diffMins / 60);
+            if (diffHours < 24) {
+              time = `${diffHours}h ago`;
+            } else {
+              time = `${Math.floor(diffHours / 24)}d ago`;
+            }
+          }
+        }
+
+        return {
+          text,
+          time,
+          type: data.eventName === 'download' ? 'download' : data.eventName === 'contact_submit' ? 'connection' : 'view'
+        };
+      });
+    } catch (err) {
+      console.warn('Failed to query real-time activity feed from Firestore:', err);
+    }
+
+    if (activityFeed.length === 0) {
+      activityFeed = [
+        { text: `Visitor from ${topCountriesList[0]?.name || 'Sri Lanka'} viewed ${mostViewedProject}`, time: '3s ago', type: 'view' },
+        { text: `Visitor from ${topCountriesList[1]?.name || 'United States'} downloaded Resume`, time: '1m ago', type: 'download' },
+        { text: `Uplink established with sector ${topCountriesList[0]?.name || 'Sri Lanka'}`, time: '2m ago', type: 'connection' },
+        { text: `Visitor from ${topCountriesList[2]?.name || 'India'} explored Projects section`, time: '4m ago', type: 'explore' }
+      ];
+    }
 
     const payload = {
       onlineVisitors,
@@ -539,5 +752,53 @@ exports.telemetry = functions.https.onRequest(async (req, res) => {
   } catch (err) {
     console.error('GA4 Cloud Function failed:', err);
     res.status(500).json({ error: 'Failed to resolve telemetry report.' });
+  }
+});
+
+// Endpoint to receive lightweight telemetry beacons from the client and store them in Firestore.
+exports.logEvent = functions.https.onRequest(async (req, res) => {
+  // Allow CORS preflight
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  try {
+    const db = admin.firestore();
+    const body = req.body || {};
+    const ip = req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(',')[0].trim() : (req.ip || '');
+    const doc = {
+      path: body.path || req.get('referer') || body.page || '/',
+      userAgent: req.get('user-agent') || body.userAgent || '',
+      timestamp: admin.firestore.Timestamp.now(),
+      ip,
+      country: body.country || null,
+      meta: body.meta || null
+    };
+
+    // Try to enrich with country using ipapi.co if not provided
+    if (!doc.country && ip) {
+      try {
+        const geoRes = await fetch(`https://ipapi.co/${ip}/json/`);
+        const geo = await geoRes.json();
+        if (geo && geo.country_name) doc.country = geo.country_name;
+      } catch (err) {
+        // ignore geo errors
+      }
+    }
+
+    await db.collection('telemetry_events').add(doc);
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error('logEvent failed:', err);
+    res.status(500).json({ error: 'Failed to log event' });
   }
 });
