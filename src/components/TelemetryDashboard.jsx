@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Users, Globe, Star, Clock, Flame, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WORLD_MAP_PATHS } from './WorldMapPaths';
+import RealtimeTelemetry from './RealtimeTelemetry';
 
 const MOCK_DATA = {
   onlineVisitors: 3,
@@ -192,9 +193,12 @@ const TelemetryDashboard = () => {
 
     const fetchTelemetry = async () => {
       try {
-        const url = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-          ? 'https://us-central1-sahanpramuditha-portfolio.cloudfunctions.net/telemetry' 
+        // Allow overriding the telemetry endpoint via Vite env var `VITE_TELEMETRY_URL`.
+        // Fallback to the relative `/api/telemetry` so local dev can proxy or use the emulator.
+        const url = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_TELEMETRY_URL)
+          ? import.meta.env.VITE_TELEMETRY_URL
           : '/api/telemetry';
+        console.debug('Telemetry fetch URL:', url);
         const res = await fetch(url);
         if (!res.ok) throw new Error('Uplink query failed');
         const data = await res.json();
@@ -700,90 +704,8 @@ const TelemetryDashboard = () => {
       {/* Bottom Panel: Real-time Activity Feed & Geographic World Map */}
       <div className="grid gap-6 md:grid-cols-3 border-t border-white/5 pt-6 text-xs">
         
-        {/* Terminal Activity Feed */}
-        <div className="p-4 bg-primary/45 rounded-lg border border-secondary/40 md:col-span-2 flex flex-col justify-between h-[380px] min-w-0">
-          <div className="h-full flex flex-col justify-between">
-            
-            {/* Terminal Header & Filter categories */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-3 border-b border-white/5 pb-2 text-[10px] uppercase tracking-widest text-accent">
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                Live Uplink Stream
-              </span>
-              
-              {/* Category Filter Tabs */}
-              <div className="flex flex-wrap items-center gap-2">
-                {['ALL', 'SENSORS', 'TRANSFERS', 'UPLINKS'].map(filterName => (
-                  <button
-                    key={filterName}
-                    onClick={() => {
-                      setTerminalFilter(filterName);
-                    }}
-                    className={`px-2 py-0.5 rounded border text-[8px] tracking-normal ${
-                      terminalFilter === filterName
-                        ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300'
-                        : 'bg-transparent border-transparent text-text-muted hover:text-text'
-                    }`}
-                  >
-                    [{filterName}]
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            {/* Real terminal-style activity list */}
-            <div className="flex-1 overflow-hidden space-y-3.5 font-mono text-[10px] leading-relaxed pr-1">
-              {filteredActivities.slice(0, 6).map((act, index, arr) => {
-                const secs = String((24 + index * 12) % 60).padStart(2, '0');
-                const timeStr = `[09:31:${secs}]`;
-                const isSelected = selectedCountry?.name?.toLowerCase().includes(act.text.toLowerCase());
-                
-                // Custom color-coded terminal category tags
-                let tag = 'LOGS';
-                let tagColor = 'text-slate-400 bg-slate-400/5 border-slate-400/15';
-                if (act.type === 'connection') {
-                  tag = 'CONN';
-                  tagColor = 'text-cyan-400 bg-cyan-400/5 border-cyan-400/15';
-                } else if (act.type === 'explore' || act.type === 'view') {
-                  tag = 'VIEW';
-                  tagColor = 'text-indigo-400 bg-indigo-400/5 border-indigo-400/15';
-                } else if (act.type === 'download') {
-                  tag = 'DOWN';
-                  tagColor = 'text-green-400 bg-green-400/5 border-green-400/15';
-                } else if (act.type === 'contact') {
-                  tag = 'FORM';
-                  tagColor = 'text-amber-400 bg-amber-400/5 border-amber-400/15';
-                }
-
-                return (
-                  <div key={index} className="space-y-2">
-                    <div className="flex items-center justify-between gap-4 select-none">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <span className="text-text-muted opacity-50 flex-shrink-0">{timeStr}</span>
-                        <span className={`px-1.5 py-0.2 rounded border text-[7px] font-extrabold flex-shrink-0 tracking-widest ${tagColor}`}>
-                          {tag}
-                        </span>
-                        <span className={`truncate min-w-0 flex-1 ${isSelected ? 'text-amber-400 font-bold' : 'text-text opacity-95'}`}>
-                          {act.text}
-                        </span>
-                      </div>
-                      <span className="text-text-muted text-[8px] opacity-65 flex-shrink-0">{act.time}</span>
-                    </div>
-                    {index < arr.length - 1 && (
-                      <div className="text-white/5 select-none leading-none h-px w-full border-t border-dashed border-white/5 my-1" />
-                    )}
-                  </div>
-                );
-              })}
-              
-              {/* Animated Prompt Cursor Line */}
-              <div className="flex items-center gap-1.5 pt-2 text-[8px] text-text-muted select-none opacity-60">
-                <span>sahan@mission-control:~$</span>
-                <span className="w-1 h-2.5 bg-cyan-400 animate-pulse inline-block" style={{ animationDuration: '1s' }} />
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Realtime Firestore-backed activity feed */}
+        <RealtimeTelemetry />
 
         {/* High-Tech Vector World Map Card */}
         <div 
@@ -886,20 +808,21 @@ const TelemetryDashboard = () => {
                 className="bg-primary/95 border border-secondary/60 rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto font-mono flex flex-col relative shadow-[0_0_50px_rgba(var(--color-accent-rgb),0.15)] animate-fadeIn"
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* Close Button */}
-                <button 
-                  onClick={() => setShowMapModal(false)}
-                  className="absolute top-4 right-4 text-text-muted hover:text-text cursor-pointer transition-colors text-lg"
-                >
-                  ✕
-                </button>
-
                 {/* Title */}
-                <div className="font-bold text-accent mb-4 uppercase tracking-wider text-xs border-b border-white/5 pb-2.5 flex items-center justify-between">
+                <div className="font-bold text-accent mb-4 uppercase tracking-wider text-xs border-b border-white/5 pb-2.5 flex items-center justify-between gap-4">
                   <span>Geo Telemetry - High-Resolution World Map</span>
-                  <span className="text-[10px] text-text-muted animate-pulse select-none">
-                    📍 Hover country for stats • Click for focus
-                  </span>
+                  <div className="flex items-center gap-4">
+                    <span className="text-[10px] text-text-muted animate-pulse select-none">
+                      📍 Hover country for stats • Click for focus
+                    </span>
+                    <button 
+                      onClick={() => setShowMapModal(false)}
+                      className="text-text-muted hover:text-text cursor-pointer transition-colors text-base leading-none translate-y-[-1px]"
+                      aria-label="Close modal"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
 
                 {/* SVG Map Container */}
