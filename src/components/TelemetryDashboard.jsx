@@ -701,32 +701,31 @@ const TelemetryDashboard = () => {
         )}
       </AnimatePresence>
 
-      {/* Bottom Panel: Real-time Activity Feed & Geographic World Map */}
-      <div className="grid gap-6 md:grid-cols-3 border-t border-white/5 pt-6 text-xs">
-        
-        {/* Realtime Firestore-backed activity feed */}
-        <RealtimeTelemetry />
-
+      {/* Bottom Panel: Expanded Geographic World Map */}
+      <div className="border-t border-white/5 pt-6 text-xs">
         {/* High-Tech Vector World Map Card */}
         <div 
           onDoubleClick={() => {
             setShowMapModal(true);
           }}
-          className="p-4 bg-secondary/35 rounded-lg border border-secondary/40 flex flex-col justify-between overflow-hidden cursor-zoom-in group/map relative min-w-0"
+          className="p-6 bg-secondary/35 rounded-lg border border-secondary/40 overflow-hidden cursor-zoom-in group/map relative min-w-0"
           title="Double click to enlarge"
         >
-          <div>
-            <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-1.5">
-              <span className="font-bold text-accent uppercase tracking-wider text-[10px]">
-                Geo Telemetry Map
-              </span>
-              <span className="text-[8px] text-text-muted opacity-50 select-none group-hover/map:opacity-80 transition-opacity">
-                ⤢ double click
-              </span>
-            </div>
-            <div className="w-full flex items-center justify-center p-2 bg-black/35 rounded border border-white/5 relative">
+          <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
+            <span className="font-bold text-accent uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              Geo Telemetry & User Distribution
+            </span>
+            <span className="text-[8px] text-text-muted opacity-50 select-none group-hover/map:opacity-80 transition-opacity">
+              ⤢ double click to enlarge
+            </span>
+          </div>
+
+          <div className="grid md:grid-cols-[2fr_1fr] gap-6 items-center">
+            {/* SVG Map Container */}
+            <div className="w-full flex items-center justify-center p-3 bg-black/35 rounded-lg border border-white/5 relative">
               <svg 
-                className="w-full h-auto text-white/10" 
+                className="w-full h-auto text-white/10 max-h-[300px]" 
                 viewBox="30.767 241.591 784.077 458.627" 
                 fill="currentColor"
               >
@@ -773,20 +772,29 @@ const TelemetryDashboard = () => {
               </svg>
             </div>
             
-            <div className="mt-3 space-y-1.5 font-mono text-[9px]">
-              {metrics.topCountriesList.slice(0, 3).map((c) => (
-                <div key={c.name} className="flex items-center justify-between">
-                  <span className="text-text-muted flex items-center gap-1.5">
-                    <CountryFlag countryName={c.name} className="w-3.5 h-2.5" />
-                    <span>{c.name}</span>
-                  </span>
-                  <span className="font-bold text-accent">{c.percent}%</span>
+            {/* Stats Breakdown Panel */}
+            <div className="flex flex-col justify-between h-full py-1">
+              <div>
+                <h4 className="text-[10px] text-accent uppercase tracking-wider mb-3 font-mono">Visitor Locations</h4>
+                <div className="space-y-3 font-mono text-[10px]">
+                  {metrics.topCountriesList.map((c) => (
+                    <div key={c.name} className="flex items-center justify-between border-b border-white/[0.03] pb-2">
+                      <span className="text-text flex items-center gap-2">
+                        <CountryFlag countryName={c.name} className="w-4 h-3 rounded-[1px] border border-white/5" />
+                        <span>{c.name}</span>
+                      </span>
+                      <span className="font-bold text-accent">{c.count} sessions ({c.percent}%)</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+              
+              <div className="mt-6 text-[9px] text-text-muted font-mono leading-relaxed bg-primary/20 border border-white/5 rounded p-3 select-none">
+                📍 Beacons represent live uplink sectors. Double click the map to view in full screen and hover over sectors for detailed metrics.
+              </div>
             </div>
           </div>
         </div>
-
       </div>
 
       {/* Map Zoom Modal Overlay via React Portal */}
