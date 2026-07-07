@@ -6,65 +6,63 @@ import { useCanvasLifecycle, useIsMobileCanvas } from '../hooks/useCanvasLifecyc
 import PerformanceMonitor from './PerformanceMonitor';
 import DisposeOnUnmount from './DisposeOnUnmount';
 
-// High-quality Earth model loaded from GLB
-const EarthModel = ({ paused }) => {
+const EarthModel = ({ paused, isMobile }) => {
   const { scene } = useGLTF('/models/earth/earth.glb');
   const earthRef = useRef();
 
-  // Compute the optimal scale to fit the sphere to a target diameter of 3.0 units
   const scale = useMemo(() => {
     const box = new THREE.Box3().setFromObject(scene);
     const size = new THREE.Vector3();
     box.getSize(size);
     const maxDim = Math.max(size.x, size.y, size.z);
-    
-    // We want the sphere to have a diameter of ~2.2 in the scene to fit the container without clipping
-    const targetDiameter = 2.2; 
+    const targetDiameter = 2.2;
     const computedScale = maxDim > 0 ? targetDiameter / maxDim : 0.011;
     return computedScale;
   }, [scene]);
 
-  // Clone the scene so we don't mutate the cached version
   const clonedScene = useMemo(() => {
     const clone = scene.clone();
     clone.traverse((child) => {
       if (child.isMesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
+        // Skip shadow maps on mobile — saves significant GPU fill rate
+        child.castShadow = !isMobile;
+        child.receiveShadow = !isMobile;
         if (child.material) {
-          // Adjust physical properties for visual depth
           child.material.roughness = 0.45;
           child.material.metalness = 0.15;
         }
       }
     });
     return clone;
-  }, [scene]);
+  }, [scene, isMobile]);
 
   useFrame((state, delta) => {
     if (!paused && earthRef.current) {
-      // Gentle self-rotation of the Earth
       earthRef.current.rotation.y += delta * 0.1;
     }
   });
 
   return (
-    <primitive 
-      ref={earthRef} 
-      object={clonedScene} 
-      scale={scale} 
-      position={[0, 0, 0]} 
+    <primitive
+      ref={earthRef}
+      object={clonedScene}
+      scale={scale}
+      position={[0, 0, 0]}
     />
   );
 };
 
-const EarthScene = ({ paused }) => {
+const EarthScene = ({ paused, isMobile }) => {
   return (
     <group>
-      {/* Floating wrapper for the Earth */}
-      <Float speed={1.1} rotationIntensity={0.12} floatIntensity={0.25}>
+      {/* Float animation: gentler on mobile to save CPU */}
+      <Float
+        speed={isMobile ? 0.6 : 1.1}
+        rotationIntensity={isMobile ? 0.05 : 0.12}
+        floatIntensity={isMobile ? 0.1 : 0.25}
+      >
         <Suspense fallback={null}>
-          <EarthModel paused={paused} />
+          <EarthModel paused={paused} isMobile={isMobile} />
         </Suspense>
       </Float>
     </group>
@@ -75,8 +73,8 @@ const Earth3D = ({ className = '' }) => {
   const containerRef = useRef(null);
   const { enabled, shouldAnimate } = useCanvasLifecycle(containerRef);
   const isMobile = useIsMobileCanvas();
-  
-  // Performance Throttling
+
+  // Performance Throttling — start already low on mobile
   const [dpr, setDpr] = useState(() => (isMobile ? 1.0 : [1, 1.35]));
   const [antialias, setAntialias] = useState(() => !isMobile);
 
@@ -95,34 +93,36 @@ const Earth3D = ({ className = '' }) => {
   }
 
   return (
-    <div 
-      ref={containerRef} 
-      className={`relative h-full w-full overflow-hidden bg-transparent ${className}`} 
+    <div
+      ref={containerRef}
+      className={`relative h-full w-full overflow-hidden bg-transparent ${className}`}
       aria-label="Interactive 3D Earth"
     >
       <Canvas
         camera={{ position: [0, 0.15, 5.0], fov: 38 }}
         dpr={dpr}
-        gl={{ antialias: antialias, alpha: true, powerPreference: 'low-power' }}
-        frameloop={shouldAnimate ? "always" : "never"}
+        gl={{ antialias, alpha: true, powerPreference: 'low-power', precision: isMobile ? 'mediump' : 'highp' }}
+        frameloop={shouldAnimate ? 'always' : 'never'}
+        performance={{ min: 0.5 }}
       >
         <PerformanceMonitor onLowPerformance={handleLowPerformance} />
-        <ambientLight intensity={0.45} />
-        <hemisphereLight args={['#e2f1ff', '#0b1329', 1.0]} />
-        <directionalLight position={[4, 3.5, 4]} intensity={2.0} />
-        <directionalLight position={[-4, -1, -3]} intensity={0.4} color="#1d4ed8" />
-        
-        <EarthScene paused={!shouldAnimate} />
+        <ambientLight intensity={isMobile ? 0.7 : 0.45} />
+        <hemisphereLight args={['#e2f1ff', '#0b1329', isMobile ? 0.8 : 1.0]} />
+        <directionalLight position={[4, 3.5, 4]} intensity={isMobile ? 1.4 : 2.0} />
+        {/* Second fill light skipped on mobile — saves a draw call */}
+        {!isMobile && <directionalLight position={[-4, -1, -3]} intensity={0.4} color="#1d4ed8" />}
+
+        <EarthScene paused={!shouldAnimate} isMobile={isMobile} />
 
         <OrbitControls
           enablePan={false}
           enableZoom={false}
           autoRotate={shouldAnimate}
-          autoRotateSpeed={0.5}
+          autoRotateSpeed={isMobile ? 0.3 : 0.5}
           minPolarAngle={Math.PI / 3.4}
           maxPolarAngle={Math.PI / 1.7}
         />
-          <DisposeOnUnmount />
+        <DisposeOnUnmount />
       </Canvas>
     </div>
   );

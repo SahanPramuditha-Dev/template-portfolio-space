@@ -124,7 +124,7 @@ function App() {
               <CustomCursor />
             </Suspense>
           )}
-          {heavyVisualsEnabled && !isMobile && (
+          {heavyVisualsEnabled && (
             <Suspense fallback={null}>
               <ThreeBackground />
             </Suspense>

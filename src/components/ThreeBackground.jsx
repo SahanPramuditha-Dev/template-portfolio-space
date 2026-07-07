@@ -8,6 +8,7 @@ import PerformanceMonitor from './PerformanceMonitor';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { shouldDisableHeavyVisuals } from '../utils/runtimeGuards';
+import { useIsMobileCanvas } from '../hooks/useCanvasLifecycle';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -53,17 +54,17 @@ const FloatingShapes = () => {
 };
 
 /* ─── Star field ─────────────────────────────────────────────────────────── */
-const Stars = () => {
+const Stars = ({ isMobile }) => {
   const ref     = useRef();
   const { theme } = useTheme();
   const { mouse } = useThree();
 
-  // Smooth lerp targets — avoid per-frame jumps
   const targetRotX = useRef(0);
   const targetRotY = useRef(0);
 
+  // Fewer stars on mobile = less GPU vertex processing
   const [sphere] = useState(() =>
-    random.inSphere(new Float32Array(4000 * 3), { radius: 1.5 })
+    random.inSphere(new Float32Array((isMobile ? 1500 : 4000) * 3), { radius: 1.5 })
   );
 
   useFrame((_, delta) => {
@@ -117,15 +118,16 @@ const Stars = () => {
 
 /* ─── Canvas wrapper ─────────────────────────────────────────────────────── */
 const ThreeBackground = () => {
-  const [enabled, setEnabled]         = useState(() => !shouldDisableHeavyVisuals());
-  const { reduceMotion }              = useAccessibility();
+  const [enabled, setEnabled]           = useState(() => !shouldDisableHeavyVisuals());
+  const { reduceMotion }                = useAccessibility();
   const [heavyEffects, setHeavyEffects] = useState(true);
+  const isMobile                        = useIsMobileCanvas();
 
-  // Fixed DPR — no mid-render resizes
+  // Lower DPR cap on mobile — 1.0 is plenty for a background
   const dpr = useMemo(() => {
     if (typeof window === 'undefined') return 1;
-    return Math.min(window.devicePixelRatio, 1.5);
-  }, []);
+    return isMobile ? 1.0 : Math.min(window.devicePixelRatio, 1.5);
+  }, [isMobile]);
 
   const handleLowPerformance = useCallback(() => {
     setHeavyEffects(false);
@@ -152,19 +154,20 @@ const ThreeBackground = () => {
     <div className="fixed inset-0 z-0 pointer-events-none">
       <Canvas
         camera={{ position: [0, 0, 1] }}
-        dpr={dpr}                             // fixed — no resize jank
+        dpr={dpr}
         gl={{
-          antialias: true,                    // smooth edges on shapes
-          powerPreference: 'high-performance',// full GPU power for 60 fps
+          antialias: !isMobile,               // skip on mobile
+          powerPreference: isMobile ? 'low-power' : 'high-performance',
           alpha: true,
-          stencil: false,                     // disable unused buffer = faster
-          depth: false,                       // disable depth buffer = faster for 2D bg
+          stencil: false,
+          depth: false,
         }}
         frameloop={reduceMotion ? 'never' : 'always'}
       >
         <PerformanceMonitor onLowPerformance={handleLowPerformance} />
-        <Stars />
-        {heavyEffects && <FloatingShapes />}
+        <Stars isMobile={isMobile} />
+        {/* Skip floating 3D shapes on mobile — saves ~30% GPU time */}
+        {heavyEffects && !isMobile && <FloatingShapes />}
       </Canvas>
     </div>
   );

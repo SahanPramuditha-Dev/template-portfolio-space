@@ -297,15 +297,14 @@ const Hero = () => {
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent" />
             </div>
-          ) : heavyVisualsEnabled && !isMobile ? (
-            // Only load Three.js Earth on desktop — saves ~800 KB on mobile
+          ) : heavyVisualsEnabled ? (
+            // Lazy-loaded — Three.js only fetched after initial render, not blocking
             <Suspense fallback={
               <div className="w-full h-full rounded-2xl bg-gradient-to-br from-accent/20 via-secondary/20 to-primary/20 animate-pulse" aria-hidden="true" />
             }>
               <Earth3D className="h-full w-full" />
             </Suspense>
           ) : (
-            // Mobile & lite-mode: lightweight CSS gradient — zero JS cost
             <div
               className="w-full h-full rounded-2xl bg-gradient-to-br from-accent/20 via-secondary/20 to-primary/20"
               aria-hidden="true"

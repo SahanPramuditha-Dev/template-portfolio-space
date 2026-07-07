@@ -35,12 +35,8 @@ export const shouldDisableHeavyVisuals = () => {
     typeof navigator !== 'undefined' &&
     typeof navigator.deviceMemory === 'number' &&
     navigator.deviceMemory <= 4;
-  const narrowScreen =
-    typeof window !== 'undefined' &&
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(max-width: 767px)').matches;
 
-  return isBotUserAgent() || prefersReducedMotion || saveData || lowMemory || narrowScreen || !supportsWebGL();
+  return isBotUserAgent() || prefersReducedMotion || saveData || lowMemory || !supportsWebGL();
 };
 
 export const getVisualModePreference = () => {
