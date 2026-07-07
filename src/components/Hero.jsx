@@ -1,11 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Github, Linkedin, Facebook, Mail, FileText } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { trackSocialClick } from '../utils/analytics';
 import { shouldDisableHeavyVisuals } from '../utils/runtimeGuards';
+import { useIsMobileCanvas } from '../hooks/useCanvasLifecycle';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { HeroCmsSkeleton } from './CmsShapeSkeleton';
-import Earth3D from './Earth3D';
+
+// Lazy-load Earth3D so Three.js is NOT on the critical path
+const Earth3D = lazy(() => import('./Earth3D'));
 
 
 const DEFAULT_RESUME_URL = '/resume.pdf';
@@ -83,6 +86,7 @@ const Hero = () => {
   const resumeUrl = siteDoc?.resumeUrl || (import.meta.env.VITE_RESUME_URL || '').trim() || DEFAULT_RESUME_URL;
   const resumeAvailable = Boolean(resumeUrl);
   const [heavyVisualsEnabled, setHeavyVisualsEnabled] = useState(() => !shouldDisableHeavyVisuals());
+  const isMobile = useIsMobileCanvas();
   const heroWords = Array.isArray(siteDoc?.heroWordsJson) ? siteDoc.heroWordsJson : [];
   const socialLinks = Array.isArray(siteDoc?.socialLinksJson) ? siteDoc.socialLinksJson : [];
   const heroArtworkUrl = siteDoc?.heroArtworkUrl || '';
@@ -293,9 +297,15 @@ const Hero = () => {
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent" />
             </div>
-          ) : heavyVisualsEnabled ? (
-            <Earth3D className="h-full w-full" />
+          ) : heavyVisualsEnabled && !isMobile ? (
+            // Only load Three.js Earth on desktop — saves ~800 KB on mobile
+            <Suspense fallback={
+              <div className="w-full h-full rounded-2xl bg-gradient-to-br from-accent/20 via-secondary/20 to-primary/20 animate-pulse" aria-hidden="true" />
+            }>
+              <Earth3D className="h-full w-full" />
+            </Suspense>
           ) : (
+            // Mobile & lite-mode: lightweight CSS gradient — zero JS cost
             <div
               className="w-full h-full rounded-2xl bg-gradient-to-br from-accent/20 via-secondary/20 to-primary/20"
               aria-hidden="true"

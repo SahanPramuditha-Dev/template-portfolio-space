@@ -14,6 +14,7 @@ import ScrollToTop from './components/ScrollToTop';
 import SmoothScroll from './components/SmoothScroll';
 import MobileQuickActions from './components/MobileQuickActions';
 import { isBotUserAgent, shouldDisableHeavyVisuals } from './utils/runtimeGuards';
+import { useIsMobileCanvas } from './hooks/useCanvasLifecycle';
 import { CmsSectionSkeleton, FooterCmsSkeleton } from './components/CmsShapeSkeleton';
 import { AchievementsProvider } from './context/AchievementsContext';
 import { AccessibilityProvider } from './context/AccessibilityContext';
@@ -38,6 +39,7 @@ function App() {
     () => isBot || shouldDisableHeavyVisuals() || sessionStorage.getItem('intro_done') === '1'
   );
   const [heavyVisualsEnabled, setHeavyVisualsEnabled] = useState(() => !shouldDisableHeavyVisuals());
+  const isMobile = useIsMobileCanvas();
   const { data: siteDoc } = useCmsDoc(CMS_DOCS.site);
 
   useEffect(() => {
@@ -122,7 +124,7 @@ function App() {
               <CustomCursor />
             </Suspense>
           )}
-          {heavyVisualsEnabled && (
+          {heavyVisualsEnabled && !isMobile && (
             <Suspense fallback={null}>
               <ThreeBackground />
             </Suspense>

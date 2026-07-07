@@ -527,3 +527,41 @@ img[loading="lazy"] {
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
 }
+
+/* ─── Mobile Performance Optimizations ──────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Momentum / native smooth scrolling on iOS */
+  html, body {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: auto; /* avoid jank from CSS smooth scroll on mobile */
+  }
+
+  /* Reduce expensive backdrop-blur on mobile GPU */
+  .glass-card,
+  [class*="backdrop-blur"] {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+  }
+
+  /* Kill heavy box shadows on mobile — pure GPU fill cost */
+  [class*="shadow-[0_0_"] {
+    box-shadow: none !important;
+  }
+
+  /* Halve animation durations on mobile for snappier feel */
+  *, *::before, *::after {
+    animation-duration: calc(var(--tw-animation-duration, 300ms) * 0.6) !important;
+    transition-duration: 0.15s !important;
+  }
+
+  /* Promote scrollable containers to their own compositor layer */
+  main, section {
+    will-change: auto;
+    contain: content;
+  }
+
+  /* Hide custom cursor elements on touch screens */
+  [data-custom-cursor], [class*="custom-cursor"] {
+    display: none !important;
+  }
+}
