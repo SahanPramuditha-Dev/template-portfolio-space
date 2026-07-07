@@ -1013,6 +1013,31 @@ const SectionBanner = ({ icon, title, help, onAdd, onSave, onReset, onUpload, hi
 const FieldEditor = ({ field, value, onChange, onUpload, section, docId }) => {
   const fieldId = `admin-field-${field.key}`;
 
+  // Local suggestions for tech list fields (avoid referencing AdminPage scope)
+  const { data: _projectsDoc } = useCmsDoc(CMS_DOCS.projects, { items: [] });
+  const { data: _siteDoc } = useCmsDoc(CMS_DOCS.site, {});
+  const _techSuggestions = React.useMemo(() => {
+    const fromProjects = Array.isArray(_projectsDoc?.items)
+      ? _projectsDoc.items.flatMap((p) => (Array.isArray(p.tech) ? p.tech : []))
+      : [];
+    const fromSite = Array.isArray(_siteDoc?.techTags) ? _siteDoc.techTags : [];
+    return [...new Set([...fromSite.filter(Boolean), ...fromProjects.filter(Boolean)])].sort((a, b) =>
+      String(a).localeCompare(String(b))
+    );
+  }, [_projectsDoc, _siteDoc]);
+
+  const addGlobalTechTagLocal = async (tag) => {
+    if (!tag || !tag.trim()) return;
+    const normalized = String(tag).trim();
+    const existing = Array.isArray(_siteDoc?.techTags) ? _siteDoc.techTags : [];
+    if (existing.includes(normalized)) return;
+    try {
+      await saveCmsDoc(CMS_DOCS.site, { techTags: [...existing, normalized] });
+    } catch (err) {
+      console.error('Failed to save global tech tag', err);
+    }
+  };
+
   if (field.type === 'checkbox') {
     return (
       <label
@@ -1039,6 +1064,8 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId }) => {
         placeholder={field.placeholder || 'Enter an item'}
         value={Array.isArray(value) ? value : []}
         onChange={onChange}
+        suggestions={field.key === 'tech' ? _techSuggestions : undefined}
+        onAddSuggestion={field.key === 'tech' ? addGlobalTechTagLocal : undefined}
       />
     );
   }
@@ -1397,6 +1424,17 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
           const field = fields.find((f) => f.key === key);
           const aspect = 'aspect' in (field || {}) ? field.aspect : (key === 'thumbnail' || key === 'image' ? 16/9 : null);
           file = await requestImageCrop(file, aspect);
+
+          // Ensure default resolution of 1920x1080 for key image types
+          const shouldResize = ['thumbnail', 'architectureImage', 'image'].includes(key) || key.startsWith('screenshot') || key === 'heroArtworkUrl';
+          if (shouldResize && file instanceof Blob && file.type.startsWith('image/')) {
+            try {
+              file = await resizeImageTo(file, 1920, 1080);
+            } catch (err) {
+              // ignore resize errors and continue with original blob
+              console.warn('Image resize failed, uploading original', err);
+            }
+          }
         } catch {
           return;
         }
@@ -1411,6 +1449,49 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
       }
     };
     input.click();
+  };
+
+  // Helper: resize an image Blob to target width x height (JPEG output)
+  const resizeImageTo = (blob, targetW, targetH) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = async () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = targetW;
+          canvas.height = targetH;
+          const ctx = canvas.getContext('2d');
+          // Fill with transparent or dark background for non-JPEG
+          ctx.fillStyle = 'rgba(0,0,0,0)';
+          ctx.fillRect(0, 0, targetW, targetH);
+          // Compute cover fit
+          const iw = img.naturalWidth;
+          const ih = img.naturalHeight;
+          const srcRatio = iw / ih;
+          const tgtRatio = targetW / targetH;
+          let sx = 0, sy = 0, sw = iw, sh = ih;
+          if (srcRatio > tgtRatio) {
+            // source is wider — crop sides
+            sw = ih * tgtRatio;
+            sx = (iw - sw) / 2;
+          } else {
+            // source is taller — crop top/bottom
+            sh = iw / tgtRatio;
+            sy = (ih - sh) / 2;
+          }
+          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+          canvas.toBlob((outBlob) => {
+            if (!outBlob) return reject(new Error('Canvas toBlob failed'));
+            const file = new File([outBlob], `resized-${Date.now()}.jpg`, { type: 'image/jpeg' });
+            resolve(file);
+          }, 'image/jpeg', 0.9);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.onerror = (e) => reject(new Error('Image load failed'));
+      img.src = URL.createObjectURL(blob);
+    });
   };
 
   const saveItem = async () => {
@@ -1823,9 +1904,15 @@ const makeEditorRow = (value = '') => ({
   value,
 });
 
-const RepeatableTextEditor = ({ label, helper, placeholder, value, onChange }) => {
+const RepeatableTextEditor = ({ label, helper, placeholder, value, onChange, suggestions = [], onAddSuggestion }) => {
   const items = Array.isArray(value) ? value : [];
   const [rows, setRows] = useState(() => items.map((item) => makeEditorRow(item)));
+  const [activeSuggestId, setActiveSuggestId] = useState(null);
+  const [filterText, setFilterText] = useState('');
+  const currentValuesLower = useMemo(
+    () => new Set(rows.map((r) => String(r.value || '').trim().toLowerCase()).filter(Boolean)),
+    [rows]
+  );
 
   useEffect(() => {
     const nextItems = Array.isArray(value) ? value : [];
@@ -1890,11 +1977,23 @@ const RepeatableTextEditor = ({ label, helper, placeholder, value, onChange }) =
           </div>
         ) : (
           rows.map((item, index) => (
-            <div key={item.id} className="flex gap-2">
+            <div key={item.id} className="relative flex gap-2">
               <input
                 type="text"
                 value={item.value}
-                onChange={(e) => updateItem(item.id, e.target.value)}
+                onChange={(e) => {
+                  updateItem(item.id, e.target.value);
+                  setFilterText(e.target.value);
+                  setActiveSuggestId(item.id);
+                }}
+                onFocus={() => {
+                  setFilterText(item.value || '');
+                  setActiveSuggestId(item.id);
+                }}
+                onBlur={() => {
+                  // small timeout to allow click on suggestion
+                  setTimeout(() => setActiveSuggestId(null), 150);
+                }}
                 placeholder={placeholder}
                 className="w-full rounded-xl border border-secondary/50 bg-secondary/20 px-4 py-3 text-text outline-none transition-colors focus:border-accent"
               />
@@ -1906,6 +2005,63 @@ const RepeatableTextEditor = ({ label, helper, placeholder, value, onChange }) =
               >
                 <Trash2 size={16} />
               </button>
+
+              {activeSuggestId === item.id && (
+                <div className="absolute left-0 top-full z-30 mt-2 w-full max-h-44 overflow-auto rounded-lg border border-white/10 bg-primary/95 shadow-lg">
+                  {Array.isArray(suggestions) && suggestions.length > 0 && (
+                    <div>
+                          {suggestions
+                            .filter((s) => s.toLowerCase().includes((filterText || '').toLowerCase()))
+                            .slice(0, 50)
+                            .map((s) => {
+                              const sLower = String(s).toLowerCase();
+                              const alreadyUsed = currentValuesLower.has(sLower) && sLower !== String(item.value || '').toLowerCase();
+                              const isCurrent = sLower === String(item.value || '').toLowerCase();
+                              return (
+                                <button
+                                  key={s}
+                                  type="button"
+                                  onMouseDown={(e) => {
+                                    if (alreadyUsed) return;
+                                    e.preventDefault();
+                                    updateItem(item.id, s);
+                                    setActiveSuggestId(null);
+                                  }}
+                                  disabled={alreadyUsed}
+                                  className={`w-full flex items-center justify-between text-left px-3 py-2 text-sm transition-colors ${
+                                    alreadyUsed
+                                      ? 'text-text-muted opacity-60 cursor-not-allowed'
+                                      : 'text-text-muted hover:bg-accent/10'
+                                  }`}
+                                >
+                                  <span className={`${isCurrent ? 'font-semibold text-text' : ''}`}>{s}</span>
+                                  {isCurrent && <CheckCircle2 size={14} className="text-accent" />}
+                                </button>
+                              );
+                            })}
+                    </div>
+                  )}
+
+                  {onAddSuggestion && (filterText || '').trim() !== '' && !(Array.isArray(suggestions) && suggestions.some((s) => s.toLowerCase() === (filterText || '').toLowerCase())) && (
+                    <div className="border-t border-white/5">
+                      <button
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          const v = (filterText || '').trim();
+                          if (!v) return;
+                          updateItem(item.id, v);
+                          onAddSuggestion(v);
+                          setActiveSuggestId(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm font-medium text-accent hover:bg-accent/5"
+                      >
+                        Add “{filterText}” to dropdown
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))
         )}
@@ -3369,6 +3525,29 @@ const GeoChartLoader = ({ activeCountries = [] }) => {
 
 const AdminPage = () => {
   const { user, loading } = useAuthState();
+  const { data: projectsDoc } = useCmsDoc(CMS_DOCS.projects, { items: [] });
+  const { data: siteDoc } = useCmsDoc(CMS_DOCS.site, {});
+  const techSuggestions = useMemo(() => {
+    const fromProjects = Array.isArray(projectsDoc?.items)
+      ? projectsDoc.items.flatMap((p) => (Array.isArray(p.tech) ? p.tech : []))
+      : [];
+    const fromSite = Array.isArray(siteDoc?.techTags) ? siteDoc.techTags : [];
+    return [...new Set([...fromSite.filter(Boolean), ...fromProjects.filter(Boolean)])].sort((a, b) =>
+      String(a).localeCompare(String(b))
+    );
+  }, [projectsDoc, siteDoc]);
+
+  const addGlobalTechTag = async (tag) => {
+    if (!tag || !tag.trim()) return;
+    const normalized = String(tag).trim();
+    const existing = Array.isArray(siteDoc?.techTags) ? siteDoc.techTags : [];
+    if (existing.includes(normalized)) return;
+    try {
+      await saveCmsDoc(CMS_DOCS.site, { techTags: [...existing, normalized] });
+    } catch (err) {
+      console.error('Failed to save global tech tag', err);
+    }
+  };
   const [activeTab, setActiveTab] = useState('site');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

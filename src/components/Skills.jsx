@@ -1,6 +1,7 @@
 import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Sparkles } from '@react-three/drei';
+import DisposeOnUnmount from './DisposeOnUnmount';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SectionWrapper from './SectionWrapper';
@@ -361,6 +362,7 @@ const Skills = () => {
                      gl={{ antialias: antialias, powerPreference: 'low-power' }}
                      frameloop={shouldAnimate ? "always" : "never"}
                    >
+                     <DisposeOnUnmount />
                      <PerformanceMonitor onLowPerformance={handleLowPerformance} />
                      <ambientLight intensity={0.8} />
                      <directionalLight

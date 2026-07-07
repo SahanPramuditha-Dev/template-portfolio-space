@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Float, Stage } from '@react-three/drei';
+import DisposeOnUnmount from './DisposeOnUnmount';
 
 const Rocket = (props) => {
   const group = useRef();
@@ -49,6 +50,7 @@ const RocketLaunch = () => {
   return (
     <div className="w-full h-full">
       <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
+        <DisposeOnUnmount />
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} />
         <Float

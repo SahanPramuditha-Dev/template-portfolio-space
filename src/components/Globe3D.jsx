@@ -1,6 +1,7 @@
 import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Line } from '@react-three/drei';
+import DisposeOnUnmount from './DisposeOnUnmount';
 import * as THREE from 'three';
 import { WORLD_MAP_PATHS } from './WorldMapPaths';
 
@@ -593,6 +594,7 @@ const Globe3D = ({ activeCountries = [], selectedCountry, onSelectCountry, onHov
           minDistance={3.2}
           maxDistance={5.8}
           rotateSpeed={0.7}
+            <DisposeOnUnmount />
         />
       </Canvas>
     </div>

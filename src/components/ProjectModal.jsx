@@ -125,7 +125,7 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
   const impactMetrics = getImpactMetrics(project);
 
   const stepMedia = (direction) => {
-    if (!slides.length) return;
+                  <div className="mb-10 grid grid-cols-2 gap-4 rounded-2xl border border-white/5 bg-secondary/10 p-5 lg:grid-cols-4 auto-rows-fr">
     setActiveMedia((prev) => {
       const next = prev + direction;
       if (next < 0) return slides.length - 1;
@@ -163,7 +163,7 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
   const role = String(project.role || '').trim();
   const lessonsLearned = String(project.lessonsLearned || '').trim();
   const nextSteps = String(project.nextSteps || '').trim();
-
+                    <div className="grid gap-3 sm:grid-cols-3 auto-rows-fr">
   return (
     <AnimatePresence>
       {isOpen && (
@@ -336,7 +336,7 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
                             VIDEO
                           </div>
                         ) : (
-                          <img src={s.url} alt="" className="h-full w-full object-cover" loading="lazy" />
+                          <img src={s.url} alt="" className="h-full w-full object-cover smooth-img" loading="lazy" onLoad={(e) => e.currentTarget.classList.add('loaded')} />
                         )}
                       </button>
                     ))}
@@ -506,21 +506,32 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
                     {impactMetrics.length > 0 && (
                       <div className="mt-6 rounded-2xl border border-secondary/50 bg-secondary/10 p-5">
                         <h3 className="mb-4 font-bold text-text">Impact Metrics</h3>
-                        <div className="grid gap-3 sm:grid-cols-3">
-                          {impactMetrics.map((metric) => (
-                            <div
-                              key={`${metric.label}-${metric.value}`}
-                              className="rounded-xl border border-secondary/40 bg-primary/50 p-4 text-center"
-                            >
-                              <div className="text-xl font-bold text-accent">
-                                {metric.value}
-                                {metric.suffix ? ` ${metric.suffix}` : ''}
+                        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+                          {(() => {
+                            const orderKeys = [/pages?/i, /interactive/i, /3d|three|experience/i, /seo/i];
+                            const ordered = impactMetrics.slice().sort((a, b) => {
+                              const ai = orderKeys.findIndex((r) => r.test(a.label));
+                              const bi = orderKeys.findIndex((r) => r.test(b.label));
+                              const aiIdx = ai === -1 ? Number.POSITIVE_INFINITY : ai;
+                              const biIdx = bi === -1 ? Number.POSITIVE_INFINITY : bi;
+                              if (aiIdx !== biIdx) return aiIdx - biIdx;
+                              return 0;
+                            });
+                            return ordered.map((metric) => (
+                              <div
+                                key={`${metric.label}-${metric.value}`}
+                                className="rounded-xl border border-secondary/40 bg-primary/50 p-4 text-center"
+                              >
+                                <div className="text-xl font-bold text-accent">
+                                  {metric.value}
+                                  {metric.suffix ? ` ${metric.suffix}` : ''}
+                                </div>
+                                <div className="mt-1 text-[11px] uppercase tracking-[0.14em] text-text-muted">
+                                  {metric.label}
+                                </div>
                               </div>
-                              <div className="mt-1 text-[11px] uppercase tracking-[0.14em] text-text-muted">
-                                {metric.label}
-                              </div>
-                            </div>
-                          ))}
+                            ));
+                          })()}
                         </div>
                       </div>
                     )}

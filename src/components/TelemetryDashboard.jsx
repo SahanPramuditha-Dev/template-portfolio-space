@@ -184,6 +184,7 @@ const TelemetryDashboard = () => {
   const [secondsSinceSync, setSecondsSinceSync] = useState(0);
   const [liveActivities, setLiveActivities] = useState([]);
   const [showMapModal, setShowMapModal] = useState(false);
+  const [modalTab, setModalTab] = useState('🗺 World Map');
   const [hoveredCountry, setHoveredCountry] = useState(null);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [terminalFilter, setTerminalFilter] = useState('ALL');
@@ -707,6 +708,7 @@ const TelemetryDashboard = () => {
         <div 
           onDoubleClick={() => {
             setShowMapModal(true);
+            setModalTab('🗺 World Map');
           }}
           className="p-6 bg-secondary/35 rounded-lg border border-secondary/40 overflow-hidden cursor-zoom-in group/map relative min-w-0"
           title="Double click to enlarge"
@@ -816,187 +818,302 @@ const TelemetryDashboard = () => {
                 className="bg-primary/95 border border-secondary/60 rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto font-mono flex flex-col relative shadow-[0_0_50px_rgba(var(--color-accent-rgb),0.15)] animate-fadeIn"
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* Title */}
-                <div className="font-bold text-accent mb-4 uppercase tracking-wider text-xs border-b border-white/5 pb-2.5 flex items-center justify-between gap-4">
-                  <span>Geo Telemetry - High-Resolution World Map</span>
-                  <div className="flex items-center gap-4">
-                    <span className="text-[10px] text-text-muted animate-pulse select-none">
-                      📍 Hover country for stats • Click for focus
+                {/* Modal Header with tabs */}
+                <div className="mb-4 border-b border-white/5 pb-3">
+                  <div className="flex items-center justify-between gap-4 mb-3">
+                    <span className="font-bold text-accent uppercase tracking-wider text-xs flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                      Geo Telemetry — Deep Analytics
                     </span>
-                    <button 
-                      onClick={() => setShowMapModal(false)}
-                      className="text-text-muted hover:text-text cursor-pointer transition-colors text-base leading-none translate-y-[-1px]"
-                      aria-label="Close modal"
-                    >
-                      ✕
-                    </button>
+                    <div className="flex items-center gap-4">
+                      <span className="text-[9px] text-text-muted select-none animate-pulse">
+                        📍 Hover beacon • Click to focus country
+                      </span>
+                      <button
+                        onClick={() => setShowMapModal(false)}
+                        className="text-text-muted hover:text-text cursor-pointer transition-colors text-base leading-none"
+                        aria-label="Close modal"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                  {/* Tab Bar */}
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {['🗺 World Map', '📊 Country Stats', '🖥 Tech Stack', '🔗 Traffic Sources'].map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setModalTab(tab)}
+                        className={`px-3 py-1 rounded text-[10px] font-mono tracking-wide transition-all ${
+                          modalTab === tab
+                            ? 'bg-cyan-500/20 border border-cyan-400/60 text-cyan-300'
+                            : 'border border-white/10 text-text-muted hover:text-text hover:border-white/20'
+                        }`}
+                      >
+                        {tab}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* SVG Map Container */}
-                <div className="w-full flex items-center justify-center p-4 bg-black/45 rounded-lg border border-white/5 relative overflow-hidden group/modalmap">
-                  <svg 
-                    className="w-full h-auto text-white/10 max-h-[55vh]" 
-                    viewBox="30.767 241.591 784.077 458.627" 
-                    fill="currentColor"
-                  >
-                    {WORLD_MAP_PATHS.map((country, idx) => {
-                      const countryCode = country.id;
-                      const activeCountry = metrics.topCountriesList.find(
-                        c => COUNTRY_CODE_MAP[c.name]?.toLowerCase() === countryCode
-                      );
-                      
-                      const isSelected = selectedCountry?.name === activeCountry?.name;
-                      
-                      return (
-                        <path
-                          key={`modal-${countryCode}-${idx}`}
-                          d={country.d}
-                          onClick={() => {
-                            if (activeCountry) setSelectedCountry(activeCountry);
-                          }}
-                          onMouseEnter={(e) => {
-                            if (activeCountry) {
-                              handleCountryHover(e, activeCountry);
-                            }
-                          }}
-                          onMouseLeave={() => handleCountryHover(null, null)}
-                          className={`${
-                            activeCountry 
-                              ? isSelected
-                                ? 'fill-cyan-400 stroke-cyan-300 stroke-2 cursor-pointer shadow-[0_0_24px_rgba(var(--color-accent-rgb),0.8)]'
-                                : 'fill-cyan-500/80 stroke-cyan-400/45 hover:fill-cyan-400 hover:stroke-cyan-300 cursor-pointer'
-                              : 'fill-white/5 stroke-white/10 hover:fill-white/10'
-                          } transition-all duration-300`}
-                        />
-                      );
-                    })}
-
-                    {/* Animated Traveling Signal Pulse Bezier Curves on Flat Map (Sri Lanka to active countries) */}
-                    {metrics.topCountriesList.map((c) => {
-                      const code = COUNTRY_CODE_MAP[c.name]?.toLowerCase();
-                      const center = getCountryCenter(code);
-                      if (!center || code === 'lk') return null; // skip server center
-                      
-                      return (
-                        <g key={`arcs-modal-${code}`} className="pointer-events-none">
-                          {/* Curved signal line */}
-                          <path 
-                            d={`M 605 512 Q ${(605 + center.x) / 2} ${Math.min(512, center.y) - 60} ${center.x} ${center.y}`}
-                            fill="none" 
-                            stroke="#22d3ee" 
-                            strokeWidth="1" 
-                            strokeDasharray="4,4" 
-                            className="opacity-30"
-                          />
-                          {/* Traveling pulse dot */}
-                          <circle r="3" fill="#22d3ee" className="shadow-[0_0_8px_#22d3ee]">
-                            <animateMotion 
-                              dur="3s" 
-                              repeatCount="indefinite" 
-                              path={`M 605 512 Q ${(605 + center.x) / 2} ${Math.min(512, center.y) - 60} ${center.x} ${center.y}`} 
-                            />
-                          </circle>
-                        </g>
-                      );
-                    })}
-
-                    {/* Dynamic Beacons / Pulsing Dots on Map overlay */}
-                    {metrics.topCountriesList.map((c) => {
-                      const code = COUNTRY_CODE_MAP[c.name]?.toLowerCase();
-                      const center = getCountryCenter(code);
-                      if (!center) return null;
-                      
-                      const isSelected = selectedCountry?.name === c.name;
-                      
-                      return (
-                        <g 
-                          key={`beacon-modal-${code}`}
-                          onClick={() => {
-                            setSelectedCountry(c);
-                          }}
-                          className="cursor-pointer"
-                        >
-                          <circle
-                            cx={center.x}
-                            cy={center.y}
-                            r={isSelected ? 16 : 12}
-                            className={`${isSelected ? 'fill-cyan-400/30 stroke-cyan-300' : 'fill-accent/25 stroke-accent/40'} animate-ping`}
-                          />
-                          <circle
-                            cx={center.x}
-                            cy={center.y}
-                            r={isSelected ? 6 : 4.5}
-                            className="fill-cyan-400 stroke-white/90 stroke-1"
-                            onMouseEnter={(e) => handleCountryHover(e, c)}
-                            onMouseLeave={() => handleCountryHover(null, null)}
-                          />
-                        </g>
-                      );
-                    })}
-                  </svg>
-                </div>
-
-                {/* Redesigned Country Metrics List */}
-                <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-[11px]">
-                  {metrics.topCountriesList.map((c) => {
-                    const isSelected = selectedCountry?.name === c.name;
-                    const trend = c.name === 'Sri Lanka' ? '+14%' : c.name === 'United States' ? '+8%' : c.name === 'India' ? '+5%' : '-2%';
-                    const lastVisit = c.name === 'Sri Lanka' ? '12 sec ago' : c.name === 'United States' ? '3 min ago' : c.name === 'India' ? '9 min ago' : '15 min ago';
-                    const avgSession = c.name === 'Sri Lanka' ? '3m 21s' : c.name === 'United States' ? '2m 14s' : c.name === 'India' ? '1m 45s' : '0m 52s';
-                    
-                    return (
-                      <div 
-                        key={c.name} 
-                        onClick={() => {
-                          setSelectedCountry(c);
-                        }}
-                        className={`flex flex-col p-4 rounded-lg border transition-all duration-300 cursor-pointer ${
-                          isSelected
-                            ? 'bg-cyan-950/30 border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.2)]'
-                            : 'bg-secondary/20 border-secondary/50 hover:border-accent/45 hover:shadow-[0_0_12px_rgba(34,211,238,0.05)]'
-                        }`}
+                {/* TAB 1 — World Map */}
+                {modalTab === '🗺 World Map' && (
+                  <div className="space-y-5">
+                    <div className="w-full flex items-center justify-center p-4 bg-black/45 rounded-lg border border-white/5 relative overflow-hidden group/modalmap">
+                      <svg
+                        className="w-full h-auto text-white/10 max-h-[55vh]"
+                        viewBox="30.767 241.591 784.077 458.627"
+                        fill="currentColor"
                       >
-                        <div className="flex items-center justify-between border-b border-white/5 pb-2 mb-2">
-                          <div className="flex items-center gap-2">
-                            <CountryFlag countryName={c.name} className="w-5 h-3.5" />
-                            <span className="text-text font-bold text-xs">{c.name}</span>
-                          </div>
-                          <span className={`text-[10px] font-semibold ${trend.startsWith('+') ? 'text-green-400' : 'text-rose-400'}`}>
-                            {trend.startsWith('+') ? `↑ ${trend}` : `↓ ${trend}`}
-                          </span>
+                        {WORLD_MAP_PATHS.map((country, idx) => {
+                          const countryCode = country.id;
+                          const activeCountry = metrics.topCountriesList.find(
+                            c => COUNTRY_CODE_MAP[c.name]?.toLowerCase() === countryCode
+                          );
+                          const isSelected = selectedCountry?.name === activeCountry?.name;
+                          return (
+                            <path
+                              key={`modal-${countryCode}-${idx}`}
+                              d={country.d}
+                              onClick={() => { if (activeCountry) setSelectedCountry(activeCountry); }}
+                              onMouseEnter={(e) => { if (activeCountry) handleCountryHover(e, activeCountry); }}
+                              onMouseLeave={() => handleCountryHover(null, null)}
+                              className={`${
+                                activeCountry
+                                  ? isSelected
+                                    ? 'fill-cyan-400 stroke-cyan-300 stroke-2 cursor-pointer'
+                                    : 'fill-cyan-500/80 stroke-cyan-400/45 hover:fill-cyan-400 hover:stroke-cyan-300 cursor-pointer'
+                                  : 'fill-white/5 stroke-white/10 hover:fill-white/10'
+                              } transition-all duration-300`}
+                            />
+                          );
+                        })}
+                        {metrics.topCountriesList.map((c) => {
+                          const code = COUNTRY_CODE_MAP[c.name]?.toLowerCase();
+                          const center = getCountryCenter(code);
+                          if (!center || code === 'lk') return null;
+                          return (
+                            <g key={`arcs-modal-${code}`} className="pointer-events-none">
+                              <path
+                                d={`M 605 512 Q ${(605 + center.x) / 2} ${Math.min(512, center.y) - 60} ${center.x} ${center.y}`}
+                                fill="none" stroke="#22d3ee" strokeWidth="1" strokeDasharray="4,4" className="opacity-30"
+                              />
+                              <circle r="3" fill="#22d3ee">
+                                <animateMotion dur="3s" repeatCount="indefinite"
+                                  path={`M 605 512 Q ${(605 + center.x) / 2} ${Math.min(512, center.y) - 60} ${center.x} ${center.y}`}
+                                />
+                              </circle>
+                            </g>
+                          );
+                        })}
+                        {metrics.topCountriesList.map((c) => {
+                          const code = COUNTRY_CODE_MAP[c.name]?.toLowerCase();
+                          const center = getCountryCenter(code);
+                          if (!center) return null;
+                          const isSelected = selectedCountry?.name === c.name;
+                          return (
+                            <g key={`beacon-modal-${code}`} onClick={() => setSelectedCountry(c)} className="cursor-pointer">
+                              <circle cx={center.x} cy={center.y} r={isSelected ? 16 : 12}
+                                className={`${isSelected ? 'fill-cyan-400/30 stroke-cyan-300' : 'fill-accent/25 stroke-accent/40'} animate-ping`} />
+                              <circle cx={center.x} cy={center.y} r={isSelected ? 6 : 4.5}
+                                className="fill-cyan-400 stroke-white/90 stroke-1"
+                                onMouseEnter={(e) => handleCountryHover(e, c)}
+                                onMouseLeave={() => handleCountryHover(null, null)} />
+                            </g>
+                          );
+                        })}
+                      </svg>
+                    </div>
+
+                    {/* Selected Country spotlight under map */}
+                    {selectedCountry ? (
+                      <div className="p-4 bg-cyan-950/20 border border-cyan-400/30 rounded-lg flex flex-wrap items-center gap-6 text-[11px] animate-fadeIn">
+                        <div className="flex items-center gap-2">
+                          <CountryFlag countryName={selectedCountry.name} className="w-7 h-5 rounded border border-white/10" />
+                          <span className="text-text font-bold text-sm">{selectedCountry.name}</span>
                         </div>
-                        
-                        <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-[10px] text-text-muted">
-                          <div>
-                            <div className="text-[8px] uppercase tracking-wider opacity-60">Global Share</div>
-                            <div className="text-sm font-bold text-accent">{c.percent}%</div>
-                          </div>
-                          <div>
-                            <div className="text-[8px] uppercase tracking-wider opacity-60">Total Visits</div>
-                            <div className="text-sm font-bold text-text">{c.count}</div>
-                          </div>
-                          <div>
-                            <div className="text-[8px] uppercase tracking-wider opacity-60">Avg Session</div>
-                            <div className="text-text font-semibold">{avgSession}</div>
-                          </div>
-                          <div>
-                            <div className="text-[8px] uppercase tracking-wider opacity-60">Last Visit</div>
-                            <div className="text-text font-semibold">{lastVisit}</div>
-                          </div>
+                        <div className="flex gap-6 flex-wrap">
+                          <div><div className="text-[8px] uppercase tracking-widest text-text-muted">Sessions</div><div className="text-cyan-300 font-bold text-base">{selectedCountry.count}</div></div>
+                          <div><div className="text-[8px] uppercase tracking-widest text-text-muted">Share</div><div className="text-cyan-300 font-bold text-base">{selectedCountry.percent}%</div></div>
+                          <div><div className="text-[8px] uppercase tracking-widest text-text-muted">Avg Session</div><div className="text-text font-semibold">{metrics.averageSessionText}</div></div>
+                          <div><div className="text-[8px] uppercase tracking-widest text-text-muted">Top Project</div><div className="text-amber-400 font-semibold">{metrics.mostViewedProject}</div></div>
                         </div>
-                        
-                        <div className="mt-2.5 pt-2 border-t border-white/5 flex items-center justify-between text-[9px]">
-                          <span className="opacity-60">Top Project:</span>
-                          <span className="text-amber-500 font-semibold">{metrics.mostViewedProject}</span>
+                        <div className="ml-auto">
+                          <div className="text-[8px] uppercase tracking-widest text-text-muted mb-1">Traffic Share</div>
+                          <div className="w-40 h-2 bg-secondary/50 rounded-full overflow-hidden">
+                            <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${selectedCountry.percent}%` }} />
+                          </div>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    ) : (
+                      <div className="text-center text-[10px] text-text-muted font-mono py-2">
+                        Click a beacon or highlighted country to inspect its metrics
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                <div className="mt-4 text-center text-[9px] text-text-muted opacity-60">
-                  Double-click anywhere on the background to exit.
+                {/* TAB 2 — Country Stats */}
+                {modalTab === '📊 Country Stats' && (
+                  <div className="space-y-4">
+                    {/* Summary bar */}
+                    <div className="grid grid-cols-3 gap-3 text-[10px] font-mono">
+                      <div className="bg-secondary/20 border border-white/5 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-accent">{metrics.countriesCount}</div>
+                        <div className="text-text-muted text-[8px] uppercase tracking-wider mt-1">Active Countries</div>
+                      </div>
+                      <div className="bg-secondary/20 border border-white/5 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-text">{metrics.visitorsCount}</div>
+                        <div className="text-text-muted text-[8px] uppercase tracking-wider mt-1">Total Sessions</div>
+                      </div>
+                      <div className="bg-secondary/20 border border-white/5 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-green-400">{metrics.onlineVisitors}</div>
+                        <div className="text-text-muted text-[8px] uppercase tracking-wider mt-1">Live Right Now</div>
+                      </div>
+                    </div>
+
+                    {/* Country breakdown table */}
+                    <div className="rounded-lg border border-white/5 overflow-hidden">
+                      <div className="grid grid-cols-[2fr_1fr_1fr_2fr] gap-2 px-4 py-2 bg-secondary/30 text-[8px] uppercase tracking-wider text-text-muted font-bold">
+                        <span>Country</span><span className="text-right">Sessions</span><span className="text-right">Share</span><span className="text-right">Traffic Bar</span>
+                      </div>
+                      {metrics.topCountriesList.map((c, i) => (
+                        <div
+                          key={c.name}
+                          onClick={() => { setSelectedCountry(c); setModalTab('🗺 World Map'); }}
+                          className={`grid grid-cols-[2fr_1fr_1fr_2fr] gap-2 px-4 py-3 items-center text-[11px] border-t border-white/[0.04] cursor-pointer transition-colors hover:bg-cyan-950/20 ${i === 0 ? 'bg-secondary/10' : ''}`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <CountryFlag countryName={c.name} className="w-5 h-3.5 rounded-sm flex-shrink-0 border border-white/10" />
+                            <span className="text-text font-medium truncate">{c.name}</span>
+                            {i === 0 && <span className="text-[7px] bg-amber-400/20 border border-amber-400/30 text-amber-300 px-1 rounded">TOP</span>}
+                          </div>
+                          <div className="text-right font-bold text-text">{c.count}</div>
+                          <div className="text-right font-bold text-accent">{c.percent}%</div>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1.5 bg-secondary/50 rounded-full overflow-hidden">
+                              <div className="h-full bg-cyan-400/70 rounded-full transition-all" style={{ width: `${c.percent}%` }} />
+                            </div>
+                            <span className="text-[8px] text-text-muted">{c.percent}%</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="text-[9px] text-text-muted font-mono text-center opacity-60">
+                      Click any row to locate on the world map
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 3 — Tech Stack (Devices & Browsers) */}
+                {modalTab === '🖥 Tech Stack' && (
+                  <div className="grid sm:grid-cols-2 gap-5 text-[11px]">
+                    {/* Devices */}
+                    <div className="bg-secondary/20 border border-white/5 rounded-lg p-4">
+                      <div className="text-[10px] uppercase tracking-wider text-accent mb-4 font-bold">Device Types</div>
+                      <div className="space-y-3">
+                        {(metrics.devices || []).map((d) => (
+                          <div key={d.name}>
+                            <div className="flex justify-between mb-1">
+                              <span className="text-text-muted">{d.icon || '🖥'} {d.name}</span>
+                              <span className="font-bold text-text">{d.percent}%</span>
+                            </div>
+                            <div className="w-full h-2 bg-secondary/50 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full transition-all" style={{ width: `${d.percent}%`, background: 'linear-gradient(90deg, #22d3ee, #38bdf8)' }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Browsers */}
+                    <div className="bg-secondary/20 border border-white/5 rounded-lg p-4">
+                      <div className="text-[10px] uppercase tracking-wider text-accent mb-4 font-bold">Browser Distribution</div>
+                      <div className="space-y-3">
+                        {(metrics.browsers || []).map((b) => (
+                          <div key={b.name}>
+                            <div className="flex justify-between mb-1">
+                              <span className="text-text-muted">{b.name}</span>
+                              <span className="font-bold text-text">{b.percent}%</span>
+                            </div>
+                            <div className="w-full h-2 bg-secondary/50 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full transition-all" style={{ width: `${b.percent}%`, background: 'linear-gradient(90deg, #a78bfa, #818cf8)' }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Page section engagement */}
+                    <div className="bg-secondary/20 border border-white/5 rounded-lg p-4 sm:col-span-2">
+                      <div className="text-[10px] uppercase tracking-wider text-accent mb-4 font-bold">Page Section Engagement</div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {(metrics.sections || []).map((s) => (
+                          <div key={s.name} className="text-center">
+                            <div className="relative mx-auto mb-2 w-14 h-14">
+                              <svg viewBox="0 0 36 36" className="w-14 h-14 -rotate-90">
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="#334155" strokeWidth="3" />
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="#22d3ee" strokeWidth="3"
+                                  strokeDasharray={`${s.percent} 100`} strokeLinecap="round" />
+                              </svg>
+                              <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-accent">{s.percent}%</div>
+                            </div>
+                            <div className="text-[9px] text-text-muted">{s.name}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 4 — Traffic Sources */}
+                {modalTab === '🔗 Traffic Sources' && (
+                  <div className="space-y-4">
+                    <div className="bg-secondary/20 border border-white/5 rounded-lg p-4">
+                      <div className="text-[10px] uppercase tracking-wider text-accent mb-4 font-bold">Referral Traffic Breakdown</div>
+                      <div className="space-y-4">
+                        {(metrics.sources || []).map((s, i) => {
+                          const colors = ['#22d3ee', '#a78bfa', '#34d399', '#f59e0b'];
+                          return (
+                            <div key={s.name} className="flex items-center gap-3">
+                              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: colors[i % colors.length] }} />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex justify-between mb-1">
+                                  <span className="text-text truncate text-[11px]">{s.name}</span>
+                                  <span className="font-bold text-[11px]" style={{ color: colors[i % colors.length] }}>{s.percent}%</span>
+                                </div>
+                                <div className="w-full h-2 bg-secondary/50 rounded-full overflow-hidden">
+                                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${s.percent}%`, background: colors[i % colors.length] }} />
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Top 2 projects */}
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      {[
+                        { label: '🥇 Most Viewed', name: metrics.mostViewedProject, count: metrics.mostViewedProjectCount, diff: metrics.mostViewedProjectDiff, last: metrics.mostViewedProjectLastActive, color: 'amber' },
+                        { label: '📈 Trending', name: metrics.trendingProject, count: metrics.trendingProjectCount, diff: metrics.trendingProjectDiff, last: '5 min ago', color: 'green' }
+                      ].map((p) => (
+                        <div key={p.label} className={`bg-secondary/20 border border-white/5 rounded-lg p-4`}>
+                          <div className="text-[9px] uppercase tracking-wider text-text-muted mb-2">{p.label}</div>
+                          <div className={`text-base font-bold ${p.color === 'amber' ? 'text-amber-400' : 'text-green-400'}`}>{p.name}</div>
+                          <div className="mt-2 grid grid-cols-3 gap-2 text-[10px]">
+                            <div><div className="text-text-muted text-[8px]">Views</div><div className="font-bold text-text">{p.count}</div></div>
+                            <div><div className="text-text-muted text-[8px]">Growth</div><div className={`font-bold ${p.color === 'amber' ? 'text-amber-400' : 'text-green-400'}`}>+{p.diff}%</div></div>
+                            <div><div className="text-text-muted text-[8px]">Last Active</div><div className="font-bold text-text">{p.last}</div></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-5 text-center text-[9px] text-text-muted opacity-50 font-mono">
+                  Double-click anywhere outside to close • Data refreshes every 30s
                 </div>
 
               </motion.div>

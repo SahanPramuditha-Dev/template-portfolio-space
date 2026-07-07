@@ -4,6 +4,7 @@ import { Float, OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { useCanvasLifecycle, useIsMobileCanvas } from '../hooks/useCanvasLifecycle';
 import PerformanceMonitor from './PerformanceMonitor';
+import DisposeOnUnmount from './DisposeOnUnmount';
 
 // High-quality Earth model loaded from GLB
 const EarthModel = ({ paused }) => {
@@ -121,6 +122,7 @@ const Earth3D = ({ className = '' }) => {
           minPolarAngle={Math.PI / 3.4}
           maxPolarAngle={Math.PI / 1.7}
         />
+          <DisposeOnUnmount />
       </Canvas>
     </div>
   );

@@ -193,7 +193,7 @@ const ProjectPage = () => {
                 <div className="relative h-full w-full flex items-center justify-center overflow-hidden">
                   {/* Glowing Ambient Blurred Shadow */}
                   {heroSlide.poster && (
-                    <img src={heroSlide.poster} alt="" className="absolute inset-0 h-full w-full object-cover scale-110 blur-3xl opacity-35 saturate-150" aria-hidden="true" />
+                    <img src={heroSlide.poster} alt="" className="absolute inset-0 h-full w-full object-cover scale-110 blur-3xl opacity-35 saturate-150 smooth-img" aria-hidden="true" onLoad={(e) => e.currentTarget.classList.add('loaded')} />
                   )}
                   {/* MacBook / Browser Frame mockup */}
                   <div className="relative z-10 w-full h-full rounded-2xl border border-white/10 bg-secondary/90 shadow-[0_24px_80px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col">
@@ -217,7 +217,7 @@ const ProjectPage = () => {
               ) : heroSlide ? (
                 <div className="relative h-full w-full flex items-center justify-center overflow-hidden">
                   {/* Glowing Ambient Blurred Shadow */}
-                  <img src={heroSlide.url} alt="" className="absolute inset-0 h-full w-full object-cover scale-115 blur-3xl opacity-40 saturate-150" aria-hidden="true" />
+                  <img src={heroSlide.url} alt="" className="absolute inset-0 h-full w-full object-cover scale-115 blur-3xl opacity-40 saturate-150 smooth-img" aria-hidden="true" onLoad={(e) => e.currentTarget.classList.add('loaded')} />
                   {/* MacBook / Browser Frame mockup */}
                   <div className="relative z-10 w-full h-full rounded-2xl border border-white/10 bg-secondary/90 shadow-[0_24px_80px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col">
                     {/* Browser header bar */}
@@ -751,13 +751,24 @@ const ProjectPage = () => {
                   {impactMetrics.length > 0 && (
                     <section id="impact" className="rounded-3xl border border-white/10 bg-secondary/20 p-6 md:p-8 backdrop-blur-md">
                       <h2 className="mb-6 text-xl font-bold text-text border-b border-white/10 pb-4">Impact Metrics</h2>
-                      <div className="grid gap-4 sm:grid-cols-3">
-                        {impactMetrics.map((metric) => (
-                          <div key={`${metric.label}-${metric.value}`} className="rounded-2xl border border-accent/20 bg-accent/5 p-6 text-center hover:border-accent/40 transition-colors">
-                            <AnimatedCounter value={metric.value} suffix={metric.suffix} />
-                            <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted">{metric.label}</p>
-                          </div>
-                        ))}
+                      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 auto-rows-fr">
+                        {(() => {
+                          const orderKeys = [/pages?/i, /interactive/i, /3d|three|experience/i, /seo/i];
+                          const ordered = impactMetrics.slice().sort((a, b) => {
+                            const ai = orderKeys.findIndex((r) => r.test(a.label));
+                            const bi = orderKeys.findIndex((r) => r.test(b.label));
+                            const aiIdx = ai === -1 ? Number.POSITIVE_INFINITY : ai;
+                            const biIdx = bi === -1 ? Number.POSITIVE_INFINITY : bi;
+                            if (aiIdx !== biIdx) return aiIdx - biIdx;
+                            return 0;
+                          });
+                          return ordered.map((metric) => (
+                            <div key={`${metric.label}-${metric.value}`} className="rounded-2xl border border-accent/20 bg-accent/5 p-6 text-center hover:border-accent/40 transition-colors flex flex-col items-center justify-center h-full">
+                              <AnimatedCounter value={metric.value} suffix={metric.suffix} />
+                              <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted">{metric.label}</p>
+                            </div>
+                          ));
+                        })()}
                       </div>
                     </section>
                   )}

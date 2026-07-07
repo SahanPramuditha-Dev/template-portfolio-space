@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Float, Environment, Sparkles, useGLTF } from '@react-three/drei';
+import { Float, Sparkles, useGLTF } from '@react-three/drei';
+import SafeEnvironment from './SafeEnvironment';
 import * as THREE from 'three';
 
 /**
@@ -57,7 +58,7 @@ const ISS3D = ({ modelPath = DEFAULT_MODEL_PATH, highlightCategory }) => {
 
   return (
     <group>
-      <Environment preset="night" />
+      <SafeEnvironment background={false} blur={0} />
       <Float rotationIntensity={0.1} floatIntensity={0.1} speed={0.4}>
         <ISSModel modelPath={modelPath} />
       </Float>

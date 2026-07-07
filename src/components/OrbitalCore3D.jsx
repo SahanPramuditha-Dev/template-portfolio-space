@@ -175,6 +175,7 @@ const OrbitalCore3D = ({ className = 'w-full h-full' }) => {
           powerPreference: isMobile ? 'low-power' : 'high-performance',
         }}
       >
+        <DisposeOnUnmount />
         <PortfolioCoreScene paused={!shouldAnimate} />
       </Canvas>
 

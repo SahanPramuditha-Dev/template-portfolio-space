@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Float, Icosahedron, Octahedron, Torus, MeshDistortMaterial, Environment } from '@react-three/drei';
+import { Float, Icosahedron, Octahedron, Torus, MeshDistortMaterial } from '@react-three/drei';
+import SafeEnvironment from './SafeEnvironment';
+import DisposeOnUnmount from './DisposeOnUnmount';
 import { useTheme } from '../context/ThemeContext';
 import { shouldDisableHeavyVisuals } from '../utils/runtimeGuards';
 
@@ -91,12 +93,12 @@ const About3D = () => {
     <div className="w-full h-[400px] cursor-pointer">
       <Canvas camera={{ position: [0, 0, 5], fov: 50 }} dpr={[1, 1.5]} gl={{ antialias: false, powerPreference: 'low-power' }}>
         <ambientLight intensity={0.5} />
+        <DisposeOnUnmount />
         <pointLight position={[10, 10, 10]} intensity={1} />
         <pointLight position={[-10, -10, -10]} intensity={0.5} />
         
         <About3DScene />
-        
-        <Environment preset="city" />
+        <SafeEnvironment background={false} blur={0} />
       </Canvas>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { Suspense, useMemo, useState } from 'react';
+import React, { Suspense, useMemo, useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Github,
@@ -103,9 +103,10 @@ const ProjectCard = ({ project, index, compact = false }) => {
                   <img
                     src={cover}
                     alt={project.title}
-                    className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                    className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105 smooth-img"
                     loading="lazy"
                     decoding="async"
+                    onLoad={(e) => e.currentTarget.classList.add('loaded')}
                   />
                 )}
                 {media.length > 1 && (
@@ -117,7 +118,7 @@ const ProjectCard = ({ project, index, compact = false }) => {
                           i === coverIndex ? 'border-accent/60' : 'border-white/20'
                         }`}
                       >
-                        <img src={src} alt="" className="h-full w-full object-cover" loading="lazy" />
+                        <img src={src} alt="" className="h-full w-full object-cover smooth-img" loading="lazy" onLoad={(e) => e.currentTarget.classList.add('loaded')} />
                       </div>
                     ))}
                   </div>
@@ -337,6 +338,12 @@ const Projects = () => {
     [projectsDoc]
   );
 
+  // Refs for drag-to-scroll on the tech options row
+  const techScrollRef = useRef(null);
+  const isPointerDown = useRef(false);
+  const startX = useRef(0);
+  const startScroll = useRef(0);
+
   const categories = useMemo(
     () => ['All', ...new Set(projectsList.map((p) => p.category).filter(Boolean))],
     [projectsList]
@@ -547,7 +554,34 @@ const Projects = () => {
             <Layers size={14} className="text-accent" />
             Tech stack (multi-select)
           </div>
-          <div className="-mx-1 flex max-w-full gap-2 overflow-x-auto overflow-y-hidden px-1 pb-1 [scrollbar-width:thin]">
+          <div
+            ref={(el) => (techScrollRef.current = el)}
+            onPointerDown={(e) => {
+              if (!techScrollRef.current) return;
+              isPointerDown.current = true;
+              techScrollRef.current.setPointerCapture?.(e.pointerId);
+              startX.current = e.clientX;
+              startScroll.current = techScrollRef.current.scrollLeft;
+              techScrollRef.current.style.cursor = 'grabbing';
+            }}
+            onPointerMove={(e) => {
+              if (!isPointerDown.current || !techScrollRef.current) return;
+              const dx = e.clientX - startX.current;
+              techScrollRef.current.scrollLeft = startScroll.current - dx;
+            }}
+            onPointerUp={(e) => {
+              if (!techScrollRef.current) return;
+              isPointerDown.current = false;
+              techScrollRef.current.releasePointerCapture?.(e.pointerId);
+              techScrollRef.current.style.cursor = 'grab';
+            }}
+            onPointerLeave={() => {
+              if (!techScrollRef.current) return;
+              isPointerDown.current = false;
+              techScrollRef.current.style.cursor = 'grab';
+            }}
+            className="-mx-1 flex max-w-full gap-2 overflow-x-auto overflow-y-hidden px-1 pb-1 no-scrollbar cursor-grab select-none"
+          >
             {techOptions.map((tech) => (
               <button
                 key={tech}

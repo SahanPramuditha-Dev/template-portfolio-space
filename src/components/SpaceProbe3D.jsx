@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { useCanvasLifecycle, useIsMobileCanvas } from '../hooks/useCanvasLifecycle';
 import { useAchievements } from '../context/AchievementsContext';
 import PerformanceMonitor from './PerformanceMonitor';
+import DisposeOnUnmount from './DisposeOnUnmount';
 
 // Space Shuttle Model loaded from GLB
 const SpaceShuttleModel = ({ paused }) => {
@@ -112,6 +113,7 @@ const SpaceProbe3D = ({ className = 'w-full h-full min-h-[400px]' }) => {
         gl={{ antialias: antialias, powerPreference: 'low-power', alpha: true }}
         frameloop={shouldAnimate ? "always" : "never"}
       >
+        <DisposeOnUnmount />
         <PerformanceMonitor onLowPerformance={handleLowPerformance} />
         <ambientLight intensity={0.4} />
         <hemisphereLight args={['#ffffff', '#0b1329', 0.8]} />

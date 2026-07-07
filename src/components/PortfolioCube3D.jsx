@@ -1,6 +1,7 @@
 import React, { useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Edges, Float } from '@react-three/drei';
+import DisposeOnUnmount from './DisposeOnUnmount';
 import { useTheme } from '../context/ThemeContext';
 import { useCanvasLifecycle, useIsMobileCanvas } from '../hooks/useCanvasLifecycle';
 
@@ -57,6 +58,7 @@ const PortfolioCube3D = ({ className = 'h-44 w-full' }) => {
         dpr={isMobile ? [1, 1] : [1, 1.35]}
         gl={{ antialias: false, powerPreference: 'low-power', alpha: true }}
       >
+        <DisposeOnUnmount />
         <ambientLight intensity={0.55} />
         <directionalLight position={[2, 3, 4]} intensity={0.95} />
         <PortfolioCubeScene paused={!shouldAnimate} />
