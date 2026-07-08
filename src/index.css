@@ -89,10 +89,11 @@ html {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
   overflow: hidden;
-  will-change: transform, opacity;
 }
 
 .light .glass-card {
@@ -533,7 +534,6 @@ img[loading="lazy"] {
   /* Momentum / native smooth scrolling on iOS */
   html, body {
     -webkit-overflow-scrolling: touch;
-    scroll-behavior: auto; /* avoid jank from CSS smooth scroll on mobile */
   }
 
   /* Reduce expensive backdrop-blur on mobile GPU */
@@ -543,20 +543,8 @@ img[loading="lazy"] {
     -webkit-backdrop-filter: blur(8px) !important;
   }
 
-  /* Kill heavy box shadows on mobile — pure GPU fill cost */
-  [class*="shadow-[0_0_"] {
-    box-shadow: none !important;
-  }
-
-  /* Halve animation durations on mobile for snappier feel */
-  *, *::before, *::after {
-    animation-duration: calc(var(--tw-animation-duration, 300ms) * 0.6) !important;
-    transition-duration: 0.15s !important;
-  }
-
   /* Promote scrollable containers to their own compositor layer */
   main, section {
-    will-change: auto;
     contain: content;
   }
 

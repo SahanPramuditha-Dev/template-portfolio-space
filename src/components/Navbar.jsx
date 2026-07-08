@@ -119,11 +119,15 @@ const Navbar = () => {
     setMoreOpen(false);
 
     if (href.startsWith('#')) {
-      // Anchor link — smooth scroll to section
+      // Anchor link — smooth scroll to section via Lenis (if available)
       const element = document.querySelector(href);
       if (element) {
-        const offsetTop = element.getBoundingClientRect().top + window.scrollY;
-        window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+        if (window.__lenis) {
+          window.__lenis.scrollTo(element, { offset: -80, duration: 1.2 });
+        } else {
+          const offsetTop = element.getBoundingClientRect().top + window.scrollY - 80;
+          window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+        }
       }
     } else if (href.startsWith('/')) {
       // Page link — navigate

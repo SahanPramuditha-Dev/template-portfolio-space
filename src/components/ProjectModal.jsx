@@ -172,6 +172,7 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             onClick={onClose}
             className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
           />
@@ -181,8 +182,8 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
               ref={dialogRef}
               initial={{ opacity: 0, y: '100%' }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 260 }}
+              exit={{ opacity: 0, y: '60%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 320, mass: 0.85 }}
               onTouchStart={handleModalTouchStart}
               onTouchEnd={handleModalTouchEnd}
               className="relative flex h-[92dvh] w-full max-w-6xl flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-primary shadow-2xl sm:h-[90vh] sm:rounded-3xl md:flex-row"

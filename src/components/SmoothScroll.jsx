@@ -5,18 +5,21 @@ const SmoothScroll = () => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
-    if (prefersReducedMotion || isCoarsePointer) return;
+    if (prefersReducedMotion) return;
+
+    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
 
     const lenis = new Lenis({
-      duration: 1.1,
-      easing: (t) => 1 - Math.pow(1 - t, 3), // smoother, more natural cubic ease-out
+      duration: isTouchDevice ? 0.8 : 1.2,
+      easing: (t) => 1 - Math.pow(1 - t, 4), // quartic ease-out — smoother than cubic
       direction: 'vertical',
       gestureDirection: 'vertical',
       smooth: true,
       mouseMultiplier: 0.9,
-      smoothTouch: true,
-      touchMultiplier: 1.5,
+      smoothTouch: isTouchDevice,
+      touchMultiplier: isTouchDevice ? 1.8 : 1.5,
+      lerp: isTouchDevice ? 0.12 : 0.1,
+      wheelMultiplier: 1.0,
     });
 
     let rafId;
@@ -36,10 +39,14 @@ const SmoothScroll = () => {
     };
     window.addEventListener('modal-toggle', handleModalToggle);
 
+    // Expose lenis globally so other components can use scrollTo
+    window.__lenis = lenis;
+
     return () => {
       window.removeEventListener('modal-toggle', handleModalToggle);
       if (rafId) cancelAnimationFrame(rafId);
       lenis.destroy();
+      delete window.__lenis;
     };
   }, []);
 

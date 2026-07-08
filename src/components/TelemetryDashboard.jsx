@@ -807,15 +807,17 @@ const TelemetryDashboard = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 sm:p-6"
               onDoubleClick={() => setShowMapModal(false)}
               onMouseMove={handleCountryMouseMove}
             >
               <motion.div
-                initial={{ scale: 0.95, y: 15 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.95, y: 15 }}
-                className="bg-primary/95 border border-secondary/60 rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto font-mono flex flex-col relative shadow-[0_0_50px_rgba(var(--color-accent-rgb),0.15)] animate-fadeIn"
+                initial={{ scale: 0.92, y: 30, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                exit={{ scale: 0.92, y: 30, opacity: 0 }}
+                transition={{ type: 'spring', damping: 28, stiffness: 300, mass: 0.8 }}
+                className="bg-primary/95 border border-secondary/60 rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto font-mono flex flex-col relative shadow-[0_0_50px_rgba(var(--color-accent-rgb),0.15)]"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Modal Header with tabs */}
