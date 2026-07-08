@@ -1230,7 +1230,7 @@ const DraftPreview = ({ draft, fields, title }) => {
   const tags = ['tech', 'tags', 'skills']
     .flatMap((key) => (Array.isArray(draft[key]) ? draft[key] : []))
     .slice(0, 8);
-  const imageUrl = draft.thumbnail || (Array.isArray(draft.screenshots) && draft.screenshots[0]?.url) || draft.architectureImage || '';
+  const imageUrl = draft.image || draft.thumbnail || (Array.isArray(draft.screenshots) && draft.screenshots[0]?.url) || draft.architectureImage || '';
   const hasImageFieldInSchema = fields.some((field) => field.type === 'image' || field.key === 'screenshots') || imageUrl;
   const pdfFieldWithValue = fields.find((field) => field.type === 'pdf' && draft[field.key]);
   const pdfUrl = pdfFieldWithValue ? draft[pdfFieldWithValue.key] : '';
@@ -1247,8 +1247,8 @@ const DraftPreview = ({ draft, fields, title }) => {
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-primary/40">
         {hasImageFieldInSchema ? (
           imageUrl ? (
-            <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-white/5 bg-black/40">
-              <img src={imageUrl} alt="" className="h-full w-full object-cover object-top" />
+            <div className="w-full overflow-hidden border-b border-white/5 bg-black/40 h-32 flex items-center justify-center">
+              <img src={imageUrl} alt="" className="max-w-full max-h-full object-contain" />
             </div>
           ) : (
             <div className="flex h-32 items-center justify-center bg-secondary/30 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
@@ -1422,11 +1422,16 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
       if (file.type.startsWith('image/') && file.type !== 'image/gif') {
         try {
           const field = fields.find((f) => f.key === key);
-          const aspect = 'aspect' in (field || {}) ? field.aspect : (key === 'thumbnail' || key === 'image' ? 16/9 : null);
+          const isCertificateImage = section.uploadFolder === 'certificates' && key === 'image';
+          const aspect = 'aspect' in (field || {})
+            ? field.aspect
+            : isCertificateImage
+              ? null
+              : (key === 'thumbnail' || key === 'image' ? 16/9 : null);
           file = await requestImageCrop(file, aspect);
 
-          // Ensure default resolution of 1920x1080 for key image types
-          const shouldResize = ['thumbnail', 'architectureImage', 'image'].includes(key) || key.startsWith('screenshot') || key === 'heroArtworkUrl';
+          // Disable forced resize for certificate image uploads to preserve the full certificate aspect ratio.
+          const shouldResize = !isCertificateImage && (['thumbnail', 'architectureImage', 'image'].includes(key) || key.startsWith('screenshot') || key === 'heroArtworkUrl');
           if (shouldResize && file instanceof Blob && file.type.startsWith('image/')) {
             try {
               file = await resizeImageTo(file, 1920, 1080);

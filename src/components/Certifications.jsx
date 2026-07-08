@@ -159,7 +159,7 @@ const AllCertsModal = ({ certs, onClose, onViewPdf }) => {
                     className="flex flex-col gap-3 rounded-xl border border-white/10 bg-secondary/20 p-4 hover:border-accent/30 transition-colors"
                   >
                     {cert.image && (
-                      <div className="w-full h-28 rounded-lg overflow-hidden bg-black/45 flex items-center justify-center p-2">
+                      <div className="w-full h-20 rounded-lg overflow-hidden bg-black/45 flex items-center justify-center p-2">
                         <img src={cert.image} alt={cert.title} className="w-full h-full object-contain" />
                       </div>
                     )}
@@ -279,8 +279,8 @@ const CertificationCard = ({ cert, index, onViewPdf }) => (
     className="glass-card flex flex-col rounded-xl border border-secondary/50 hover:border-accent/50 transition-all duration-300 group bg-secondary/20 hover:bg-secondary/30 overflow-hidden"
   >
     {cert.image && (
-      <div className="w-full h-48 overflow-hidden bg-black/45 border-b border-white/5 shrink-0 flex items-center justify-center p-4">
-        <img src={cert.image} alt={`${cert.title} badge`} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+      <div className="w-full overflow-hidden bg-black/45 border-b border-white/5 shrink-0 flex items-center justify-center p-3 h-[120px]">
+        <img src={cert.image} alt={`${cert.title} badge`} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500" />
       </div>
     )}
 
@@ -320,11 +320,11 @@ const CertificationCard = ({ cert, index, onViewPdf }) => (
       {Array.isArray(cert.skills) && cert.skills.length > 0 && (
         <div className="mb-4">
           <div className="flex flex-wrap gap-1.5">
-            {cert.skills.slice(0, 4).map((skill) => (
+            {cert.skills.slice(0, 3).map((skill) => (
               <span key={skill} className="px-2 py-0.5 bg-primary/50 text-accent rounded text-[10px] font-mono border border-accent/20">{skill}</span>
             ))}
-            {cert.skills.length > 4 && (
-              <span className="px-2 py-0.5 text-text-muted text-[10px] font-mono">+{cert.skills.length - 4} more</span>
+            {cert.skills.length > 3 && (
+              <span className="px-2 py-0.5 text-text-muted text-[10px] font-mono">+{cert.skills.length - 3} more</span>
             )}
           </div>
         </div>
