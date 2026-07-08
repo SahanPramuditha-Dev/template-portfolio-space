@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import About from './components/About';
-import NowAvailability from './components/NowAvailability';
+
 import Preloader from './components/Preloader';
 import SEO from './components/SEO';
 import StructuredData from './components/StructuredData';
@@ -26,11 +26,7 @@ const Skills = lazy(() => import('./components/Skills'));
 const Experience = lazy(() => import('./components/Experience'));
 const Projects = lazy(() => import('./components/Projects'));
 const Certifications = lazy(() => import('./components/Certifications'));
-const Services = lazy(() => import('./components/Services'));
-const Testimonials = lazy(() => import('./components/Testimonials'));
-const Blog = lazy(() => import('./components/Blog'));
 const Contact = lazy(() => import('./components/Contact'));
-const Resources = lazy(() => import('./components/Resources'));
 const Footer = lazy(() => import('./components/Footer'));
 
 function App() {
@@ -135,7 +131,6 @@ function App() {
             <main id="main-content" className="pb-16 md:pb-0 overflow-x-hidden">
               <Hero />
               <About />
-              <NowAvailability />
               <Suspense fallback={<CmsSectionSkeleton id="skills" />}>
                 <Skills />
               </Suspense>
@@ -145,20 +140,8 @@ function App() {
               <Suspense fallback={<CmsSectionSkeleton id="projects" />}>
                 <Projects />
               </Suspense>
-              <Suspense fallback={<CmsSectionSkeleton id="services" />}>
-                <Services />
-              </Suspense>
               <Suspense fallback={<CmsSectionSkeleton id="certifications" />}>
                 <Certifications />
-              </Suspense>
-              <Suspense fallback={<CmsSectionSkeleton id="testimonials" />}>
-                <Testimonials />
-              </Suspense>
-              <Suspense fallback={<CmsSectionSkeleton id="blog" />}>
-                <Blog />
-              </Suspense>
-              <Suspense fallback={<CmsSectionSkeleton id="resources" />}>
-                <Resources />
               </Suspense>
               <Suspense fallback={<CmsSectionSkeleton id="contact" />}>
                 <Contact />

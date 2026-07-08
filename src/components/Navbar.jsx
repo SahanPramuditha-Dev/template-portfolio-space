@@ -59,7 +59,7 @@ const Navbar = () => {
 
   // Active section highlighting on scroll
   useEffect(() => {
-    const sections = ['home', 'about', 'now', 'skills', 'experience', 'projects', 'certifications', 'testimonials', 'blog', 'contact'];
+    const sections = ['home', 'about', 'skills', 'experience', 'projects', 'certifications', 'contact'];
     const sectionElements = sections.map(id => document.getElementById(id)).filter(Boolean);
     let activeRatios = new Map();
 
@@ -102,14 +102,13 @@ const Navbar = () => {
   ];
 
   const moreLinks = [
-    { name: 'Now', href: '#now', id: 'now' },
     { name: 'Skills', href: '#skills', id: 'skills' },
     { name: 'Experience', href: '#experience', id: 'experience' },
     { name: 'Certifications', href: '#certifications', id: 'certifications' },
-    { name: 'Testimonials', href: '#testimonials', id: 'testimonials' },
-    { name: 'Blog', href: '#blog', id: 'blog' },
-    { name: 'Services', href: '#services', id: 'services' },
-    { name: 'Resources', href: '#resources', id: 'resources' },
+    { name: 'Services', href: '/services', id: 'services' },
+    { name: 'Testimonials', href: '/testimonials', id: 'testimonials' },
+    { name: 'Blog', href: '/blog', id: 'blog' },
+    { name: 'Resources', href: '/resources', id: 'resources' },
     { name: 'Resume', href: '/resume', id: 'resume' },
   ];
 
