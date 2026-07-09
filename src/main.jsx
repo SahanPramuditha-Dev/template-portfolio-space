@@ -18,6 +18,11 @@ import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import RouteAnalytics from './components/RouteAnalytics.jsx'
 import RouteFallback from './components/RouteFallback.jsx'
+import SmoothScroll from './components/SmoothScroll.jsx'
+import ScrollProgress from './components/ScrollProgress.jsx'
+import ScrollToTop from './components/ScrollToTop.jsx'
+import { AccessibilityProvider } from './context/AccessibilityContext.jsx'
+import { AchievementsProvider } from './context/AchievementsContext.jsx'
 
 const AdminPage = lazy(() => import('./pages/AdminPage.jsx'))
 const BlogPage = lazy(() => import('./pages/BlogPage.jsx'))
@@ -68,25 +73,32 @@ createRoot(document.getElementById('root')).render(
       <ErrorBoundary>
         <ThemeProvider>
           <BrowserRouter>
-            <RouteAnalytics />
-            <Suspense fallback={<RouteFallback />}>
-              <Routes>
-                <Route path="/" element={<App />} />
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="/blog" element={<BlogPage />} />
-                <Route path="/blog/:slug" element={<BlogPostPage />} />
-                <Route path="/projects/:slug" element={<ProjectPage />} />
-                <Route path="/resume" element={<ResumePage />} />
-                <Route path="/resources" element={<ResourcesPage />} />
-                <Route path="/testimonials" element={<TestimonialsPage />} />
-                <Route path="/services" element={<ServicesPage />} />
-                <Route path="/opensource" element={<OpenSourcePage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/cookies" element={<CookiePolicyPage />} />
-                <Route path="*" element={<NotFoundPage />} />
-              </Routes>
-            </Suspense>
+            <AccessibilityProvider>
+              <AchievementsProvider>
+                <RouteAnalytics />
+                <SmoothScroll />
+                <ScrollProgress />
+                <ScrollToTop />
+                <Suspense fallback={<RouteFallback />}>
+                  <Routes>
+                    <Route path="/" element={<App />} />
+                    <Route path="/admin" element={<AdminPage />} />
+                    <Route path="/blog" element={<BlogPage />} />
+                    <Route path="/blog/:slug" element={<BlogPostPage />} />
+                    <Route path="/projects/:slug" element={<ProjectPage />} />
+                    <Route path="/resume" element={<ResumePage />} />
+                    <Route path="/resources" element={<ResourcesPage />} />
+                    <Route path="/testimonials" element={<TestimonialsPage />} />
+                    <Route path="/services" element={<ServicesPage />} />
+                    <Route path="/opensource" element={<OpenSourcePage />} />
+                    <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/privacy" element={<PrivacyPage />} />
+                    <Route path="/cookies" element={<CookiePolicyPage />} />
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Routes>
+                </Suspense>
+              </AchievementsProvider>
+            </AccessibilityProvider>
           </BrowserRouter>
         </ThemeProvider>
       </ErrorBoundary>

@@ -9,6 +9,7 @@ import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
+import GlowCard from '../components/GlowCard';
 
 /* ── Icon resolver ────────────────────────────────────────── */
 const ICON_MAP = {
@@ -60,18 +61,13 @@ const ServiceFullCard = ({ service, index, bookingUrl }) => {
   const ctaLabel     = service.cta  || "Let's build this";
 
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.45, delay: index * 0.06 }}
-      className={`group relative rounded-3xl border ${colors.border} bg-secondary/20 backdrop-blur-md overflow-hidden`}
+    <GlowCard
+      index={index}
+      className={`border ${colors.border}`}
+      glowColor={colors.accent.replace('text-', 'bg-').replace('400', '500/20')} // Approximating color
     >
       {/* Accent top bar */}
       <div className={`h-1 w-full ${colors.bg} ${colors.border} border-0 border-b`} />
-
-      {/* Glow blob */}
-      <div className={`pointer-events-none absolute -top-16 -right-16 h-52 w-52 rounded-full ${colors.bg} blur-3xl opacity-0 group-hover:opacity-50 transition-opacity duration-700`} />
 
       <div className="p-6 md:p-8">
         {/* Header row */}
@@ -283,7 +279,7 @@ const ServiceFullCard = ({ service, index, bookingUrl }) => {
           </a>
         </div>
       </div>
-    </motion.article>
+    </GlowCard>
   );
 };
 

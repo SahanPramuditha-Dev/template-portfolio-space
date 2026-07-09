@@ -3,12 +3,13 @@ import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 
 import { Link } from 'react-router-dom';
+import DynamicBackground from './backgrounds/DynamicBackground';
 
 const PageShell = ({ eyebrow, title, description, actions, children, backHref = '/' }) => {
   return (
-    <div className="min-h-screen bg-primary text-text">
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.12),transparent_34%),linear-gradient(180deg,rgba(2,6,23,1),rgba(15,23,42,1))]" />
-      <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+    <div className="min-h-screen text-text relative">
+      <DynamicBackground />
+      <div className="relative z-10 container mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <Link
             to={backHref}

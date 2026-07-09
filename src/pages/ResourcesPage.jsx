@@ -9,6 +9,7 @@ import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
+import GlowCard from '../components/GlowCard';
 
 /* ── Type config ──────────────────────────────────────────── */
 const TYPE_CONFIG = {
@@ -110,13 +111,12 @@ const ResourceCard = ({ item, index, onPreview }) => {
   const isVideo = item.type === 'Video' && item.fileUrl;
 
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.4, delay: index * 0.05 }}
-      className="group flex flex-col rounded-2xl border border-white/8 bg-secondary/20 overflow-hidden hover:border-white/20 transition-all duration-300 hover:shadow-[0_4px_24px_rgba(0,0,0,0.4)] backdrop-blur-md"
+    <GlowCard
+      index={index}
+      className="group flex flex-col h-full border-white/8"
+      style={{ borderRadius: '1rem' }}
     >
+      <div className="flex flex-col h-full">
       {/* Thumbnail / Video Preview */}
       {item.thumbnail && (
         <div className="w-full h-40 overflow-hidden border-b border-white/5 bg-black/45 shrink-0 flex items-center justify-center p-4">
@@ -202,7 +202,8 @@ const ResourceCard = ({ item, index, onPreview }) => {
           )}
         </div>
       </div>
-    </motion.article>
+      </div>
+    </GlowCard>
   );
 };
 

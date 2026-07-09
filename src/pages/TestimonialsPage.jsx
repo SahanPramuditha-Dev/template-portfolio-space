@@ -5,6 +5,7 @@ import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
+import GlowCard from '../components/GlowCard';
 
 const TestimonialsPage = () => {
   const { data, loading } = useCmsDoc(CMS_DOCS.testimonials, { items: [] });
@@ -44,13 +45,10 @@ const TestimonialsPage = () => {
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
             {testimonials.map((item, index) => (
-              <motion.article
+              <GlowCard
                 key={item.name || index}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.05 }}
-                className="rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md"
+                index={index}
+                className="p-6 border-white/10"
               >
                 <Quote className="mb-4 text-accent" size={28} />
                 <p className="text-lg leading-relaxed text-text">"{item.content}"</p>
@@ -68,7 +66,7 @@ const TestimonialsPage = () => {
                     ))}
                   </div>
                 </div>
-              </motion.article>
+              </GlowCard>
             ))}
           </div>
         )}

@@ -9,9 +9,6 @@ import SEO from './components/SEO';
 import StructuredData from './components/StructuredData';
 import SkipToContent from './components/SkipToContent';
 import KeyboardShortcuts from './components/KeyboardShortcuts';
-import ScrollProgress from './components/ScrollProgress';
-import ScrollToTop from './components/ScrollToTop';
-import SmoothScroll from './components/SmoothScroll';
 import MobileQuickActions from './components/MobileQuickActions';
 import { isBotUserAgent, shouldDisableHeavyVisuals } from './utils/runtimeGuards';
 import { useIsMobileCanvas } from './hooks/useCanvasLifecycle';
@@ -83,19 +80,15 @@ function App() {
   }, []);
 
   return (
-    <AccessibilityProvider>
-      <AchievementsProvider>
-        <SEO 
-          title={siteDoc?.seoTitle} 
+    <>
+      <SEO 
+        title={siteDoc?.seoTitle} 
           description={siteDoc?.seoDescription} 
           ogImage={siteDoc?.seoImage} 
         />
       <StructuredData />
       <SkipToContent />
       <KeyboardShortcuts />
-      <ScrollProgress />
-      <ScrollToTop />
-      <SmoothScroll />
       <AnimatePresence mode="wait">
         {!isBot && !visualIntroDone && (
           <Preloader
@@ -154,8 +147,7 @@ function App() {
           <MobileQuickActions />
         </motion.div>
       )}
-      </AchievementsProvider>
-    </AccessibilityProvider>
+    </>
   );
 }
 

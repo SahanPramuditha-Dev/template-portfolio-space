@@ -5,6 +5,7 @@ import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
+import GlowCard from '../components/GlowCard';
 
 const splitCsv = (value) =>
   String(value || '')
@@ -70,7 +71,7 @@ const BlogPage = () => {
         )}
       >
         <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-2xl border border-white/10 bg-secondary/20 p-4 backdrop-blur-md">
+          <GlowCard className="p-4 border-white/10" glowColor="rgba(56,189,248,0.15)">
             <label className="sr-only" htmlFor="blog-search">Search posts</label>
             <div className="flex items-center gap-3 rounded-xl border border-secondary/50 bg-primary/50 px-4 py-3">
               <Search size={18} className="text-accent" />
@@ -82,8 +83,8 @@ const BlogPage = () => {
                 placeholder="Search posts"
               />
             </div>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-secondary/20 p-4 backdrop-blur-md">
+          </GlowCard>
+          <GlowCard className="p-4 border-white/10" glowColor="rgba(56,189,248,0.15)">
             <div className="flex items-center gap-2 text-sm font-semibold text-text">
               <Filter size={16} className="text-accent" />
               Filter by tag
@@ -101,7 +102,7 @@ const BlogPage = () => {
                 </button>
               ))}
             </div>
-          </div>
+          </GlowCard>
         </div>
 
         {filteredPosts.length === 0 ? (
@@ -113,13 +114,10 @@ const BlogPage = () => {
             {filteredPosts.map((post, index) => {
               const slug = post.slug || slugify(post.title);
               return (
-              <motion.article
+              <GlowCard
                 key={slug || post.title || index}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.05 }}
-                className="rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md"
+                index={index}
+                className="p-6 border-white/10"
               >
                 <div className="mb-4 flex flex-wrap items-center gap-2">
                   {post.featured && (
@@ -174,7 +172,7 @@ const BlogPage = () => {
                     </a>
                   ) : null}
                 </div>
-              </motion.article>
+              </GlowCard>
               );
             })}
           </div>

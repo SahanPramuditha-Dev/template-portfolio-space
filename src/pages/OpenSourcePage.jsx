@@ -5,6 +5,7 @@ import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
+import GlowCard from '../components/GlowCard';
 
 const OpenSourcePage = () => {
   const { data, loading: osLoading } = useCmsDoc(CMS_DOCS.openSource, { items: [] });
@@ -62,13 +63,10 @@ const OpenSourcePage = () => {
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
             {items.map((item, index) => (
-              <motion.article
+              <GlowCard
                 key={item.name || index}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.05 }}
-                className="rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-md"
+                index={index}
+                className="p-6 border-white/10"
               >
                 <div className="mb-4 flex items-center gap-3">
                   <Github className="text-accent" size={24} />
@@ -97,7 +95,7 @@ const OpenSourcePage = () => {
                     View repository
                   </a>
                 ) : null}
-              </motion.article>
+              </GlowCard>
             ))}
           </div>
         )}

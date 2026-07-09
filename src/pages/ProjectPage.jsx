@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { motion, useScroll, useSpring, useTransform, AnimatePresence, useMotionValueEvent } from 'framer-motion';
+import { motion, useScroll, useSpring, useTransform, AnimatePresence, useMotionValueEvent, useMotionValue } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ExternalLink, Github, Calendar, Layers, Target, Zap, ArrowLeft, ArrowRight, Clock, Code2, Database, Layout, Server, Globe, Boxes, FileText, Download, Lock, Users, Check, ClipboardCopy, Sparkles, Rocket, Lightbulb, Award } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
@@ -182,100 +182,80 @@ const ProjectPage = () => {
         backHref="/#projects"
       >
         <article className="relative z-10 mx-auto w-full max-w-5xl space-y-6 pb-12">
-          {/* Hero Section - Floating Browser Canvas */}
-          <div 
-            className="relative w-full"
-            onMouseEnter={() => setIsAutoplayPaused(true)}
-            onMouseLeave={() => setIsAutoplayPaused(false)}
-          >
-            <motion.div style={{ y: heroY }} className="relative mx-auto w-[94%] max-w-4xl h-[30vh] min-h-[260px] md:h-[45vh] md:min-h-[400px] flex items-center justify-center">
-              {heroSlide?.kind === 'video' ? (
-                <div className="relative h-full w-full flex items-center justify-center overflow-hidden">
-                  {/* Glowing Ambient Blurred Shadow */}
-                  {heroSlide.poster && (
-                    <img src={heroSlide.poster} alt="" className="absolute inset-0 h-full w-full object-cover scale-110 blur-3xl opacity-35 saturate-150 smooth-img" aria-hidden="true" onLoad={(e) => e.currentTarget.classList.add('loaded')} />
-                  )}
-                  {/* MacBook / Browser Frame mockup */}
-                  <div className="relative z-10 w-full h-full rounded-2xl border border-white/10 bg-secondary/90 shadow-[0_24px_80px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col">
-                    {/* Browser header bar */}
-                    <div className="h-7 shrink-0 border-b border-white/5 bg-white/[0.03] px-4 flex items-center justify-between">
-                      <div className="flex gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+          {/* Hero Section - Cinematic Full-Bleed Canvas */}
+          <div className="relative w-[100vw] left-1/2 -translate-x-1/2 mb-12 -mt-4 md:-mt-8 overflow-hidden">
+            <motion.div 
+              style={{ y: heroY }}
+              className="relative w-full"
+              onMouseEnter={() => setIsAutoplayPaused(true)}
+              onMouseLeave={() => setIsAutoplayPaused(false)}
+            >
+              <div className="relative w-full h-[55vh] min-h-[400px] md:h-[70vh] md:min-h-[550px] [mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)]">
+                <AnimatePresence mode="wait">
+                  <motion.div 
+                    key={heroSlide?.url || 'empty'}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="absolute inset-0"
+                  >
+                    {heroSlide?.kind === 'video' ? (
+                      <>
+                        {/* Blurred background to fill space - smoothly masked to remove sharp edges on all sides */}
+                        <video src={heroSlide.url} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover opacity-40 blur-3xl scale-110 saturate-150 [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_75%)]" />
+                        {/* Crisp uncropped video */}
+                        <video src={heroSlide.url} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-contain object-center z-10" />
+                      </>
+                    ) : heroSlide ? (
+                      <>
+                        {/* Blurred background to fill space - smoothly masked to remove sharp edges on all sides */}
+                        <img src={heroSlide.url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40 blur-3xl scale-110 saturate-150 [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_75%)]" aria-hidden="true" />
+                        {/* Crisp uncropped image */}
+                        <img src={heroSlide.url} alt={heroSlide.alt || project.title} className="absolute inset-0 w-full h-full object-contain object-center z-10 drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]" loading="lazy" decoding="async" />
+                      </>
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_top_left,rgb(var(--color-accent-rgb)/0.22),transparent_45%),linear-gradient(135deg,rgba(15,23,42,0.98),rgba(30,41,59,0.82))]">
+                        <Layers size={54} className="text-accent/80" />
                       </div>
-                      <div className="w-1/3 max-w-[200px] h-4 rounded bg-black/30 border border-white/5 flex items-center justify-center text-[9px] text-text-muted font-mono tracking-tight select-none">
-                        {project.title.toLowerCase()}.dev/app
-                      </div>
-                      <div className="w-6" /> {/* spacer balance */}
-                    </div>
-                    <div className="flex-1 w-full h-full overflow-hidden bg-black/60 flex items-center justify-center p-1">
-                      <video src={heroSlide.url} controls playsInline preload="metadata" className="w-full h-full object-contain object-top rounded-lg" />
-                    </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Gallery Navigation Arrows - floating next to the browser mockup */}
+              {slides.length > 1 && (
+                <>
+                  <button
+                    onClick={prevSlide}
+                    className="absolute left-[5vw] top-1/2 -translate-y-1/2 rounded-full bg-black/40 hover:bg-black/75 border border-white/5 p-2 md:p-3 text-white backdrop-blur-md transition-all hover:text-accent z-20"
+                    aria-label="Previous Slide"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button
+                    onClick={nextSlide}
+                    className="absolute right-[5vw] top-1/2 -translate-y-1/2 rounded-full bg-black/40 hover:bg-black/75 border border-white/5 p-2 md:p-3 text-white backdrop-blur-md transition-all hover:text-accent z-20"
+                    aria-label="Next Slide"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                  {/* Dots Navigation below browser */}
+                  <div className="absolute bottom-10 left-1/2 flex -translate-x-1/2 gap-1.5 z-20">
+                    {slides.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setActiveSlideIndex(i)}
+                        className={`h-1.5 rounded-full transition-all ${
+                          i === activeSlideIndex ? 'w-5 bg-accent shadow-[0_0_10px_rgb(var(--color-accent-rgb))]' : 'w-1.5 bg-white/40 hover:bg-white/70'
+                        }`}
+                        aria-label={`Go to slide ${i + 1}`}
+                      />
+                    ))}
                   </div>
-                </div>
-              ) : heroSlide ? (
-                <div className="relative h-full w-full flex items-center justify-center overflow-hidden">
-                  {/* Glowing Ambient Blurred Shadow */}
-                  <img src={heroSlide.url} alt="" className="absolute inset-0 h-full w-full object-cover scale-115 blur-3xl opacity-40 saturate-150 smooth-img" aria-hidden="true" onLoad={(e) => e.currentTarget.classList.add('loaded')} />
-                  {/* MacBook / Browser Frame mockup */}
-                  <div className="relative z-10 w-full h-full rounded-2xl border border-white/10 bg-secondary/90 shadow-[0_24px_80px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col">
-                    {/* Browser header bar */}
-                    <div className="h-7 shrink-0 border-b border-white/5 bg-white/[0.03] px-4 flex items-center justify-between">
-                      <div className="flex gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
-                      </div>
-                      <div className="w-1/3 max-w-[200px] h-4 rounded bg-black/30 border border-white/5 flex items-center justify-center text-[9px] text-text-muted font-mono tracking-tight select-none">
-                        {project.title.toLowerCase()}.dev/app
-                      </div>
-                      <div className="w-6" /> {/* spacer balance */}
-                    </div>
-                    <div className="flex-1 w-full h-full overflow-hidden bg-black/60 flex items-center justify-center p-1">
-                      <img src={heroSlide.url} alt={heroSlide.alt || project.title} className="w-full h-full object-contain object-top rounded-lg" loading="lazy" decoding="async" />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,rgb(var(--color-accent-rgb)/0.22),transparent_45%),linear-gradient(135deg,rgba(15,23,42,0.98),rgba(30,41,59,0.82))]">
-                  <Layers size={54} className="text-accent/80" />
-                </div>
+                </>
               )}
             </motion.div>
-
-            {/* Gallery Navigation Arrows - floating next to the browser mockup */}
-            {slides.length > 1 && (
-              <>
-                <button
-                  onClick={prevSlide}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-black/40 hover:bg-black/75 border border-white/5 p-2 md:p-3 text-white backdrop-blur-md transition-all hover:text-accent z-20"
-                  aria-label="Previous Slide"
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <button
-                  onClick={nextSlide}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-black/40 hover:bg-black/75 border border-white/5 p-2 md:p-3 text-white backdrop-blur-md transition-all hover:text-accent z-20"
-                  aria-label="Next Slide"
-                >
-                  <ChevronRight size={20} />
-                </button>
-                {/* Dots Navigation below browser */}
-                <div className="absolute -bottom-6 left-1/2 flex -translate-x-1/2 gap-1.5 z-20">
-                  {slides.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setActiveSlideIndex(i)}
-                      className={`h-1.5 rounded-full transition-all ${
-                        i === activeSlideIndex ? 'w-5 bg-accent shadow-[0_0_10px_rgb(var(--color-accent-rgb))]' : 'w-1.5 bg-white/40 hover:bg-white/70'
-                      }`}
-                      aria-label={`Go to slide ${i + 1}`}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
           </div>
 
           {/* Header & Quick Facts */}
@@ -903,11 +883,11 @@ const ProjectPage = () => {
       <AnimatePresence>
         {showActionBar && (hasLive || hasGithub) && (
           <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
+            initial={{ y: 100, opacity: 0, x: "-50%" }}
+            animate={{ y: 0, opacity: 1, x: "-50%" }}
+            exit={{ y: 100, opacity: 0, x: "-50%" }}
             transition={{ type: "spring", stiffness: 200, damping: 20 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 rounded-full border border-white/10 bg-black/60 p-2 backdrop-blur-xl shadow-2xl"
+            className="fixed bottom-6 left-1/2 z-[100] flex items-center gap-3 rounded-full border border-white/10 bg-black/60 p-2 backdrop-blur-xl shadow-2xl"
           >
             {hasLive && (
               <a href={project.external} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-sm font-bold text-primary transition-transform hover:scale-105">
