@@ -1,0 +1,478 @@
+import React, { useState, useEffect } from 'react';
+import clsx from 'clsx';
+import { Settings2 } from 'lucide-react';
+import { useCmsDoc, CMS_DOCS, saveCmsDoc, uploadCmsAsset } from '../../../lib/cms';
+import AdminStatus from './AdminStatus';
+import SectionBanner from './SectionBanner';
+import SiteSection from './SiteSection';
+import FieldEditor from './fields/FieldEditor';
+import RepeatableTextEditor from './fields/RepeatableTextEditor';
+import HeroWordsEditor from './fields/HeroWordsEditor';
+import RepeatableObjectEditor from './fields/RepeatableObjectEditor';
+import { requestImageCrop } from './CropModalRoot';
+import { initialSiteContent, isLikelyAssetUrl, getCmsErrorMessage } from '../utils/adminConstants';
+
+const parseArrayValue = (value, fallback = []) => {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    const raw = value.trim();
+    if (!raw) return fallback;
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      return raw
+        .split('\n')
+        .map((entry) => entry.trim())
+        .filter(Boolean);
+    }
+  }
+  return fallback;
+};
+
+const normalizeSiteDraft = (source = initialSiteContent) => ({
+  heroTitle: source.heroTitle ?? initialSiteContent.heroTitle,
+  heroSubtitle: source.heroSubtitle ?? initialSiteContent.heroSubtitle,
+  heroIntro: source.heroIntro ?? initialSiteContent.heroIntro,
+  heroWordsJson: parseArrayValue(source.heroWordsJson ?? initialSiteContent.heroWordsJson, JSON.parse(initialSiteContent.heroWordsJson)),
+  currentLearningJson: parseArrayValue(source.currentLearningJson ?? initialSiteContent.currentLearningJson, JSON.parse(initialSiteContent.currentLearningJson)),
+  devEnvironmentJson: parseArrayValue(source.devEnvironmentJson ?? initialSiteContent.devEnvironmentJson, JSON.parse(initialSiteContent.devEnvironmentJson)),
+  careerGoalsJson: parseArrayValue(source.careerGoalsJson ?? initialSiteContent.careerGoalsJson, JSON.parse(initialSiteContent.careerGoalsJson)),
+  hobbiesJson: parseArrayValue(source.hobbiesJson ?? initialSiteContent.hobbiesJson, JSON.parse(initialSiteContent.hobbiesJson)),
+  educationJson: parseArrayValue(source.educationJson ?? initialSiteContent.educationJson, JSON.parse(initialSiteContent.educationJson)),
+  availability: source.availability ?? initialSiteContent.availability,
+  contactEmail: source.contactEmail ?? initialSiteContent.contactEmail,
+  preferredContact: source.preferredContact ?? initialSiteContent.preferredContact,
+  responseSla: source.responseSla ?? initialSiteContent.responseSla,
+  baseLocation: source.baseLocation ?? initialSiteContent.baseLocation,
+  currentFocus: source.currentFocus ?? initialSiteContent.currentFocus,
+  bookingUrl: source.bookingUrl ?? initialSiteContent.bookingUrl,
+  cvVersion: source.cvVersion ?? initialSiteContent.cvVersion,
+  cvUpdatedAt: source.cvUpdatedAt ?? initialSiteContent.cvUpdatedAt,
+  resumeUrl: source.resumeUrl ?? initialSiteContent.resumeUrl,
+  githubUsername: source.githubUsername ?? initialSiteContent.githubUsername,
+  profilePhotoUrl: source.profilePhotoUrl ?? initialSiteContent.profilePhotoUrl,
+  heroArtworkUrl: source.heroArtworkUrl ?? initialSiteContent.heroArtworkUrl,
+  aboutParagraphs: source.aboutParagraphs ?? initialSiteContent.aboutParagraphs,
+  aboutStatsJson: parseArrayValue(source.aboutStatsJson ?? initialSiteContent.aboutStatsJson, JSON.parse(initialSiteContent.aboutStatsJson)),
+  engineeringApproachJson: parseArrayValue(source.engineeringApproachJson ?? initialSiteContent.engineeringApproachJson, JSON.parse(initialSiteContent.engineeringApproachJson)),
+  footerTagline: source.footerTagline ?? initialSiteContent.footerTagline,
+  footerEmail: source.footerEmail ?? initialSiteContent.footerEmail,
+  socialLinksJson: parseArrayValue(source.socialLinksJson ?? initialSiteContent.socialLinksJson, JSON.parse(initialSiteContent.socialLinksJson)),
+  seoTitle: source.seoTitle ?? initialSiteContent.seoTitle,
+  seoDescription: source.seoDescription ?? initialSiteContent.seoDescription,
+  seoImage: source.seoImage ?? initialSiteContent.seoImage,
+  seoFavicon: source.seoFavicon ?? initialSiteContent.seoFavicon,
+});
+
+const stringListConfig = {
+  heroWordsJson: { label: 'Hero Words', helper: 'Short phrases shown in the hero typewriter.', placeholder: 'Enter a phrase', variant: 'hero' },
+  currentLearningJson: { label: 'Current Learning', helper: 'What you are learning right now.', placeholder: 'Enter a topic' },
+  devEnvironmentJson: { label: 'Dev Environment', helper: 'Tools and apps you actually use.', placeholder: 'Enter a tool' },
+  careerGoalsJson: { label: 'Career Goals', helper: 'A few goals or directions for your profile.', placeholder: 'Enter a goal' },
+  hobbiesJson: { label: 'Hobbies', helper: 'Personal interests shown in About.', placeholder: 'Enter a hobby' },
+};
+
+const objectEditorConfigs = {
+  educationJson: {
+    label: 'Education',
+    helper: 'Add one education entry per card.',
+    createItem: () => ({ institution: '', program: '', period: '', note: '' }),
+    fields: [
+      { key: 'institution', label: 'Institution', type: 'text' },
+      { key: 'program', label: 'Program', type: 'text' },
+      { key: 'period', label: 'Period', type: 'text' },
+      { key: 'note', label: 'Note', type: 'textarea' },
+    ],
+  },
+  aboutStatsJson: {
+    label: 'About Stats',
+    helper: 'Numbers and labels for the stat cards on About.',
+    createItem: () => ({ label: '', value: '', suffix: '' }),
+    fields: [
+      { key: 'label', label: 'Label', type: 'text' },
+      { key: 'value', label: 'Value', type: 'number' },
+      { key: 'suffix', label: 'Suffix', type: 'text' },
+    ],
+  },
+  engineeringApproachJson: {
+    label: 'Engineering Approach',
+    helper: 'Cards that describe how you build.',
+    createItem: () => ({ title: '', description: '' }),
+    fields: [
+      { key: 'title', label: 'Title', type: 'text' },
+      { key: 'description', label: 'Description', type: 'textarea' },
+    ],
+  },
+  socialLinksJson: {
+    label: 'Social Links',
+    helper: 'Links shown in the hero and footer.',
+    createItem: () => ({ label: '', href: '' }),
+    fields: [
+      { key: 'label', label: 'Label', type: 'text' },
+      { key: 'href', label: 'URL', type: 'text' },
+    ],
+  },
+};
+
+const SITE_CONTENT_TABS = [
+  { id: 'hero', label: 'Hero', hint: 'Homepage headline & artwork' },
+  { id: 'contact', label: 'Contact', hint: 'Email, availability, résumé' },
+  { id: 'about', label: 'About', hint: 'Bio, lists, education, stats' },
+  { id: 'footer', label: 'Footer', hint: 'Footer copy & social links' },
+  { id: 'seo', label: 'SEO', hint: 'Global site metadata' },
+];
+
+const SiteEditor = () => {
+  const { data, loading } = useCmsDoc(CMS_DOCS.site, initialSiteContent);
+  const [draft, setDraft] = useState(() => normalizeSiteDraft(initialSiteContent));
+  const [status, setStatus] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [siteTab, setSiteTab] = useState('hero');
+
+  useEffect(() => {
+    if (data === undefined) return;
+    setDraft(normalizeSiteDraft(data ?? initialSiteContent));
+  }, [data]);
+
+  const updateField = (key, value) => {
+    setDraft((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const uploadAsset = async (key) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,.gif,.mp4,.webm,.ico,.svg';
+    input.onchange = async () => {
+      let file = input.files?.[0];
+      if (!file) return;
+      const isCropExempt = file.type === 'image/gif' || file.type === 'image/svg+xml' || file.type === 'image/x-icon' || file.name.endsWith('.ico') || file.name.endsWith('.svg');
+      if (file.type.startsWith('image/') && !isCropExempt) {
+        try {
+          const aspect = key === 'profilePhotoUrl' || key === 'ogImage' || key === 'seoFavicon' ? 1 : 16/9;
+          file = await requestImageCrop(file, aspect);
+        } catch {
+          return;
+        }
+      }
+      setBusy(true);
+      try {
+        const url = await uploadCmsAsset(file, `site/${key}`);
+        updateField(key, url);
+        setStatus('Media uploaded.');
+      } finally {
+        setBusy(false);
+      }
+    };
+    input.click();
+  };
+
+  const save = async () => {
+    setBusy(true);
+    try {
+      const mediaErrors = [
+        ['Profile Photo URL', draft.profilePhotoUrl],
+        ['Hero Artwork URL', draft.heroArtworkUrl],
+        ['Resume URL', draft.resumeUrl],
+      ]
+        .filter(([, value]) => value && !isLikelyAssetUrl(value))
+        .map(([label]) => `${label} must be a valid URL or root-relative path.`);
+
+      if (mediaErrors.length > 0) {
+        setStatus(`Please fix media before publishing: ${mediaErrors.join(' ')}`);
+        return;
+      }
+
+      await saveCmsDoc(CMS_DOCS.site, {
+        heroTitle: draft.heroTitle,
+        heroSubtitle: draft.heroSubtitle,
+        heroIntro: draft.heroIntro,
+        heroWordsJson: draft.heroWordsJson,
+        currentLearningJson: draft.currentLearningJson,
+        devEnvironmentJson: draft.devEnvironmentJson,
+        careerGoalsJson: draft.careerGoalsJson,
+        hobbiesJson: draft.hobbiesJson,
+        educationJson: draft.educationJson,
+        availability: draft.availability,
+        contactEmail: draft.contactEmail,
+        preferredContact: draft.preferredContact,
+        responseSla: draft.responseSla,
+        bookingUrl: draft.bookingUrl,
+        cvVersion: draft.cvVersion,
+        cvUpdatedAt: draft.cvUpdatedAt,
+        resumeUrl: draft.resumeUrl,
+        githubUsername: draft.githubUsername,
+        profilePhotoUrl: draft.profilePhotoUrl,
+        heroArtworkUrl: draft.heroArtworkUrl,
+        aboutParagraphs: draft.aboutParagraphs,
+        aboutStatsJson: draft.aboutStatsJson,
+        engineeringApproachJson: draft.engineeringApproachJson,
+        footerTagline: draft.footerTagline,
+        footerEmail: draft.footerEmail,
+        socialLinksJson: draft.socialLinksJson,
+        seoTitle: draft.seoTitle || '',
+        seoDescription: draft.seoDescription || '',
+        seoImage: draft.seoImage || '',
+        seoFavicon: draft.seoFavicon || '',
+      });
+      setStatus('Site content saved.');
+    } catch (error) {
+      setStatus(getCmsErrorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="rounded-3xl border border-white/10 bg-secondary/25 p-10 text-center text-text-muted">
+        Loading site settings…
+      </div>
+    );
+  }
+
+  const labelFromKey = (key) => key.replace(/([A-Z])/g, ' $1').replace(/^./, (char) => char.toUpperCase());
+
+  return (
+    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-secondary/25 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-md">
+      <div className="space-y-6 p-4 pb-20 sm:p-8 sm:pb-28">
+        <SectionBanner
+          icon={Settings2}
+          title="Website Content"
+          help="Configure general website metadata, sections bio text, career statistics, and social handles."
+          onSave={save}
+          onReset={() => setDraft(normalizeSiteDraft(initialSiteContent))}
+          hidePrimarySave
+        />
+
+        <AdminStatus message={status} />
+
+        <div className="flex flex-col gap-6 pt-2">
+          {/* Horizontal Section Index Navigation Menu */}
+          <div className="flex flex-wrap gap-2 pb-4 border-b border-white/5">
+            {SITE_CONTENT_TABS.map((tab) => {
+              const active = siteTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setSiteTab(tab.id)}
+                  className={clsx(
+                    'rounded-full border px-4 py-2 text-xs font-mono whitespace-nowrap transition-colors outline-none focus-visible:ring-1 focus-visible:ring-accent/40',
+                    active
+                      ? 'border-accent/40 bg-accent/15 font-bold text-accent shadow-[0_0_0_1px_rgb(var(--color-accent-rgb)/0.12)]'
+                      : 'border-white/10 bg-primary/30 text-text-muted hover:border-accent/25 hover:text-text'
+                  )}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Configuration Form Pane */}
+          <div className="space-y-6 min-w-0">
+            {siteTab === 'hero' && (
+              <SiteSection
+                title="Hero & intro"
+                description="Headline, intro paragraph, rotating phrases, and hero artwork shown on the homepage."
+              >
+                <div className="grid gap-4 md:grid-cols-2">
+                  {['heroTitle', 'heroSubtitle'].map((key) => (
+                    <FieldEditor
+                      key={key}
+                      field={{ key, label: labelFromKey(key), type: 'text' }}
+                      value={draft[key]}
+                      onChange={(value) => updateField(key, value)}
+                    />
+                  ))}
+                </div>
+                <FieldEditor
+                  field={{ key: 'heroIntro', label: 'Hero Intro', type: 'textarea' }}
+                  value={draft.heroIntro}
+                  onChange={(value) => updateField('heroIntro', value)}
+                />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <FieldEditor
+                    field={{ key: 'heroArtworkUrl', label: 'Hero Artwork URL', type: 'image' }}
+                    value={draft.heroArtworkUrl}
+                    onChange={(value) => updateField('heroArtworkUrl', value)}
+                    onUpload={() => uploadAsset('heroArtworkUrl')}
+                  />
+                </div>
+                {Object.entries(stringListConfig)
+                  .filter(([k]) => k === 'heroWordsJson')
+                  .map(([key, config]) => (
+                    <HeroWordsEditor
+                      key={key}
+                      label={config.label}
+                      helper={config.helper}
+                      placeholder={config.placeholder}
+                      value={draft[key]}
+                      onChange={(value) => updateField(key, value)}
+                    />
+                  ))}
+              </SiteSection>
+            )}
+
+            {siteTab === 'contact' && (
+              <SiteSection
+                title="Contact & availability"
+                description="How visitors reach you, response expectations, and résumé / CV links."
+              >
+                <div className="grid gap-4 md:grid-cols-2">
+                  {['availability', 'contactEmail', 'preferredContact', 'responseSla', 'baseLocation', 'currentFocus', 'bookingUrl', 'cvVersion', 'cvUpdatedAt', 'githubUsername'].map(
+                    (key) => (
+                      <FieldEditor
+                        key={key}
+                        field={{ key, label: labelFromKey(key), type: 'text' }}
+                        value={draft[key]}
+                        onChange={(value) => updateField(key, value)}
+                      />
+                    )
+                  )}
+                </div>
+                <FieldEditor
+                  field={{ key: 'resumeUrl', label: 'Resume PDF URL', type: 'file' }}
+                  value={draft.resumeUrl}
+                  onChange={(value) => updateField('resumeUrl', value)}
+                  onUpload={() => uploadAsset('resumeUrl', 'application/pdf')}
+                />
+              </SiteSection>
+            )}
+
+            {siteTab === 'about' && (
+              <SiteSection
+                title="About & profile"
+                description="Manage your bio, profile photo, lists, and structured cards."
+              >
+                <div className="space-y-12">
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent border-b border-white/5 pb-2">Bio & Photo</h4>
+                    <FieldEditor
+                      field={{ key: 'aboutParagraphs', label: 'About Paragraphs', type: 'textarea' }}
+                      value={draft.aboutParagraphs}
+                      onChange={(value) => updateField('aboutParagraphs', value)}
+                    />
+                    <FieldEditor
+                      field={{ key: 'profilePhotoUrl', label: 'Profile Photo URL', type: 'image' }}
+                      value={draft.profilePhotoUrl}
+                      onChange={(value) => updateField('profilePhotoUrl', value)}
+                      onUpload={() => uploadAsset('profilePhotoUrl')}
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent border-b border-white/5 pb-2">Line-item Lists</h4>
+                    <div className="grid gap-4">
+                      {Object.entries(stringListConfig)
+                        .filter(([k]) => k !== 'heroWordsJson')
+                        .map(([key, config]) => (
+                          <RepeatableTextEditor
+                            key={key}
+                            label={config.label}
+                            helper={config.helper}
+                            placeholder={config.placeholder}
+                            value={draft[key]}
+                            onChange={(value) => updateField(key, value)}
+                          />
+                        ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent border-b border-white/5 pb-2">Structured Cards</h4>
+                    <div className="grid gap-4">
+                      {Object.entries(objectEditorConfigs)
+                        .filter(([key]) => key !== 'socialLinksJson')
+                        .map(([key, config]) => (
+                          <RepeatableObjectEditor
+                            key={key}
+                            label={config.label}
+                            helper={config.helper}
+                            value={draft[key]}
+                            onChange={(value) => updateField(key, value)}
+                            createItem={config.createItem}
+                            fields={config.fields}
+                          />
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              </SiteSection>
+            )}
+
+            {siteTab === 'footer' && (
+              <SiteSection title="Footer & social" description="Footer copy and outbound social links.">
+                <div className="grid gap-4 md:grid-cols-2">
+                  {['footerTagline', 'footerEmail'].map((key) => (
+                    <FieldEditor
+                      key={key}
+                      field={{ key, label: labelFromKey(key), type: 'text' }}
+                      value={draft[key]}
+                      onChange={(value) => updateField(key, value)}
+                    />
+                  ))}
+                </div>
+                {objectEditorConfigs.socialLinksJson && (
+                  <RepeatableObjectEditor
+                    label={objectEditorConfigs.socialLinksJson.label}
+                    helper={objectEditorConfigs.socialLinksJson.helper}
+                    value={draft.socialLinksJson}
+                    onChange={(value) => updateField('socialLinksJson', value)}
+                    createItem={objectEditorConfigs.socialLinksJson.createItem}
+                    fields={objectEditorConfigs.socialLinksJson.fields}
+                  />
+                )}
+              </SiteSection>
+            )}
+
+            {siteTab === 'seo' && (
+              <SiteSection title="SEO & Metadata" description="Manage global title tags, descriptions, and social sharing imagery.">
+                <FieldEditor
+                  field={{ key: 'seoTitle', label: 'Global Title Tag', type: 'text' }}
+                  value={draft.seoTitle}
+                  onChange={(value) => updateField('seoTitle', value)}
+                />
+                <FieldEditor
+                  field={{ key: 'seoDescription', label: 'Global Meta Description', type: 'textarea' }}
+                  value={draft.seoDescription}
+                  onChange={(value) => updateField('seoDescription', value)}
+                />
+                <FieldEditor
+                  field={{ key: 'seoImage', label: 'Global OG Image URL', type: 'image' }}
+                  value={draft.seoImage}
+                  onChange={(value) => updateField('seoImage', value)}
+                  onUpload={() => uploadAsset('seoImage')}
+                />
+                <FieldEditor
+                  field={{ key: 'seoFavicon', label: 'Favicon URL (.ico, .png, .svg)', type: 'image' }}
+                  value={draft.seoFavicon}
+                  onChange={(value) => updateField('seoFavicon', value)}
+                  onUpload={() => uploadAsset('seoFavicon')}
+                />
+              </SiteSection>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="sticky bottom-0 z-10 border-t border-white/10 bg-primary/85 px-4 py-4 backdrop-blur-md sm:px-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-text-muted">Saving updates the live site content document in Firestore.</p>
+          <button
+            type="button"
+            onClick={save}
+            disabled={busy}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-primary shadow-[0_4px_24px_rgb(var(--color-accent-rgb)/0.25)] transition-transform hover:scale-[1.01] disabled:opacity-60 sm:w-auto"
+          >
+            <Save size={16} />
+            {busy ? 'Saving…' : 'Save site content'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SiteEditor;
