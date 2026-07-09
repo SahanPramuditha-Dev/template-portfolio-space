@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
-import { Settings2 } from 'lucide-react';
+import { Settings2, Save } from 'lucide-react';
 import { useCmsDoc, CMS_DOCS, saveCmsDoc, uploadCmsAsset } from '../../../lib/cms';
 import AdminStatus from './AdminStatus';
 import SectionBanner from './SectionBanner';
