@@ -45,48 +45,36 @@ const OpenSourcePage = () => {
 
   const githubUsername = siteDoc?.githubUsername || 'SahanPramuditha-Dev';
 
-  // 1. Fetch public repos from GitHub with localStorage caching
+  // 1. Load public repos from Firestore Cache with client-side API fallback
   useEffect(() => {
+    if (cmsLoading) return;
+
+    // Check if the Firestore document contains the cached repository data
+    if (Array.isArray(cmsDoc?.githubReposCache) && cmsDoc.githubReposCache.length > 0) {
+      setGithubRepos(cmsDoc.githubReposCache);
+      setReposLoading(false);
+      return;
+    }
+
+    // Fallback to client-side fetch if cache is not populated in Firestore yet
     if (siteLoading || !githubUsername) return;
 
     const fetchRepos = async () => {
       setReposLoading(true);
-      const CACHE_KEY = `github_repos_${githubUsername}`;
-      const CACHE_TIME_KEY = `github_repos_time_${githubUsername}`;
-      const ONE_HOUR = 60 * 60 * 1000;
-
       try {
-        const cachedData = localStorage.getItem(CACHE_KEY);
-        const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
-        const now = Date.now();
-
-        if (cachedData && cachedTime && (now - parseInt(cachedTime, 10) < ONE_HOUR)) {
-          setGithubRepos(JSON.parse(cachedData));
-          setReposLoading(false);
-          return;
-        }
-
         const response = await fetch(`https://api.github.com/users/${githubUsername}/repos?per_page=100&sort=updated`);
         if (!response.ok) throw new Error('API request failed');
         const data = await response.json();
-        
-        // Cache data
-        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-        localStorage.setItem(CACHE_TIME_KEY, now.toString());
         setGithubRepos(data);
       } catch (err) {
-        console.warn('GitHub API fetch error, checking cache fallback:', err);
-        const cachedData = localStorage.getItem(CACHE_KEY);
-        if (cachedData) {
-          setGithubRepos(JSON.parse(cachedData));
-        }
+        console.warn('GitHub API fallback fetch failed:', err);
       } finally {
         setReposLoading(false);
       }
     };
 
     fetchRepos();
-  }, [siteLoading, githubUsername]);
+  }, [cmsLoading, cmsDoc, siteLoading, githubUsername]);
 
   // 2. Merge GitHub Repos with Firestore CMS Overrides & Manual Custom Repos
   const mergedRepos = useMemo(() => {

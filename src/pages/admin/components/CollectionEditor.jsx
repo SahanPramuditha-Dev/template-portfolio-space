@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Save, Search } from 'lucide-react';
-import { useCmsDoc, saveCmsDoc, uploadCmsAsset } from '../../../lib/cms';
+import { Save, Search, RefreshCw, Github } from 'lucide-react';
+import { CMS_DOCS, useCmsDoc, saveCmsDoc, uploadCmsAsset } from '../../../lib/cms';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import AdminStatus from './AdminStatus';
@@ -115,14 +115,43 @@ const itemFromForm = (draft, fields) => {
 
 const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) => {
   const { data, loading } = useCmsDoc(docId, { [collectionKey]: [] });
+  const { data: siteDoc } = useCmsDoc(CMS_DOCS.site, null);
   const [items, setItems] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [draft, setDraft] = useState(null);
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
+  const [syncBusy, setSyncBusy] = useState(false);
   const [listQuery, setListQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  const syncGithubCache = async () => {
+    const githubUsername = siteDoc?.githubUsername || 'SahanPramuditha-Dev';
+    if (!githubUsername) {
+      setStatus('Error: Configure your GitHub username in Website Content first.');
+      return;
+    }
+    setSyncBusy(true);
+    setStatus('Syncing with GitHub API...');
+    try {
+      const response = await fetch(`https://api.github.com/users/${githubUsername}/repos?per_page=100&sort=updated`);
+      if (!response.ok) throw new Error(`GitHub API returned status ${response.status}`);
+      const data = await response.json();
+      
+      // Store in firebase under openSource document
+      await saveCmsDoc(CMS_DOCS.openSource, {
+        githubReposCache: data,
+        githubReposCacheTime: Date.now()
+      });
+      setStatus('GitHub repository cache synced successfully!');
+    } catch (err) {
+      console.error(err);
+      setStatus(`Failed to sync GitHub cache: ${err.message}`);
+    } finally {
+      setSyncBusy(false);
+    }
+  };
   const [selectedIndices, setSelectedIndices] = useState(new Set());
 
   useEffect(() => {
@@ -399,6 +428,31 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
         }
       />
       <AdminStatus message={status} />
+
+      {docId === CMS_DOCS.openSource && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl border border-purple-500/15 bg-purple-500/5 backdrop-blur-sm gap-4 mb-2">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-purple-500/10 text-purple-400 rounded-xl mt-0.5 shrink-0">
+              <Github size={20} />
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-text">GitHub API Repository Cache</h4>
+              <p className="text-xs text-text-muted mt-0.5 max-w-xl leading-relaxed">
+                Pre-fetch and store repositories in Firestore. This speeds up public page loading and ensures immunity from GitHub API rate limiting.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            disabled={syncBusy}
+            onClick={syncGithubCache}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-500 transition-colors disabled:opacity-50 shadow-[0_4px_20px_rgba(168,85,247,0.15)] hover:scale-[1.02] active:scale-[0.98] transition-transform duration-100"
+          >
+            <RefreshCw size={14} className={syncBusy ? 'animate-spin' : ''} />
+            {syncBusy ? 'Syncing...' : 'Sync GitHub Cache'}
+          </button>
+        </div>
+      )}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)] items-start">
         <div className="flex flex-col xl:sticky xl:top-24 xl:h-[calc(100vh-8rem)] rounded-3xl border border-white/5 bg-primary/10 p-4 shadow-inner">
