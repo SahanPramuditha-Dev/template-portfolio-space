@@ -82,101 +82,103 @@ const ProjectCard = ({ project, index, compact = false }) => {
       }`}
     >
       <div className="flex h-full flex-col">
-        <div
-          className="relative shrink-0 overflow-hidden"
-          onMouseEnter={() => setMediaHover(true)}
-          onMouseLeave={() => setMediaHover(false)}
-        >
-          <div className="relative aspect-[16/10] sm:aspect-[2/1] overflow-hidden border-b border-white/10">
-            {hasMedia ? (
-              <>
-                {cover.match(/\.(mp4|webm)(\?|#|$)/i) ? (
-                  <video
-                    src={cover}
-                    autoPlay={mediaHover}
-                    loop
-                    muted
-                    playsInline
-                    className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <img
-                    src={cover}
-                    alt={project.title}
-                    className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105 smooth-img"
-                    loading="lazy"
-                    decoding="async"
-                    onLoad={(e) => e.currentTarget.classList.add('loaded')}
-                  />
-                )}
-                {media.length > 1 && (
-                  <div className="absolute bottom-3 right-3 flex gap-2">
-                    {media.slice(0, 3).map((src, i) => (
-                      <div
-                        key={`${src}-${i}`}
-                        className={`h-12 w-12 overflow-hidden rounded-lg border bg-black/30 shadow-lg backdrop-blur-sm ${
-                          i === coverIndex ? 'border-accent/60' : 'border-white/20'
-                        }`}
-                      >
-                        <img src={src} alt="" className="h-full w-full object-cover smooth-img" loading="lazy" onLoad={(e) => e.currentTarget.classList.add('loaded')} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {media.some(isAnimatedAsset) && (
-                  <div className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full border border-accent/30 bg-black/35 px-2.5 py-1 text-[0.68rem] font-mono uppercase tracking-[0.14em] text-accent">
-                    <Play size={11} />
-                    Motion preview
-                  </div>
-                )}
-                {media.length > 1 && (
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent py-2 text-center text-[0.65rem] font-mono uppercase tracking-[0.14em] text-white/80 opacity-0 transition-opacity group-hover:opacity-100">
-                    Hover to preview another frame
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="h-full w-full bg-[radial-gradient(circle_at_top_left,rgb(var(--color-accent-rgb)/0.24),transparent_40%),linear-gradient(135deg,rgba(15,23,42,0.95),rgba(15,23,42,0.7))]">
-                <div className="absolute inset-0 opacity-30 bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:28px_28px]" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <ImageIcon size={48} className="mx-auto mb-3 text-accent/75" />
-                    <p className="font-mono text-xs uppercase tracking-[0.18em] text-text-muted">
-                      Visual preview available on click
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent" />
-
-            <div className="absolute left-4 top-4 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.16em] text-accent">
-                <Folder size={12} />
-                {project.missionCode}
-              </span>
-              <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.12em] text-white/80">
-                {project.category}
-              </span>
-              {statusLabel && (
-                <span className="rounded-full border border-emerald-400/25 bg-emerald-500/15 px-3 py-1 text-[0.65rem] font-mono uppercase tracking-[0.12em] text-emerald-200/90">
-                  {statusLabel}
-                </span>
+        {hasMedia && (
+          <div
+            className="relative shrink-0 overflow-hidden"
+            onMouseEnter={() => setMediaHover(true)}
+            onMouseLeave={() => setMediaHover(false)}
+          >
+            <div className="relative aspect-[16/10] sm:aspect-[2/1] overflow-hidden border-b border-white/10">
+              {cover.match(/\.(mp4|webm)(\?|#|$)/i) ? (
+                <video
+                  src={cover}
+                  autoPlay={mediaHover}
+                  loop
+                  muted
+                  playsInline
+                  className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                />
+              ) : (
+                <img
+                  src={cover}
+                  alt={project.title}
+                  className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105 smooth-img"
+                  loading="lazy"
+                  decoding="async"
+                  onLoad={(e) => e.currentTarget.classList.add('loaded')}
+                />
               )}
-            </div>
+              {media.length > 1 && (
+                <div className="absolute bottom-3 right-3 flex gap-2">
+                  {media.slice(0, 3).map((src, i) => (
+                    <div
+                      key={`${src}-${i}`}
+                      className={`h-12 w-12 overflow-hidden rounded-lg border bg-black/30 shadow-lg backdrop-blur-sm ${
+                        i === coverIndex ? 'border-accent/60' : 'border-white/20'
+                      }`}
+                    >
+                      <img src={src} alt="" className="h-full w-full object-cover smooth-img" loading="lazy" onLoad={(e) => e.currentTarget.classList.add('loaded')} />
+                    </div>
+                  ))}
+                </div>
+              )}
+              {media.some(isAnimatedAsset) && (
+                <div className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full border border-accent/30 bg-black/35 px-2.5 py-1 text-[0.68rem] font-mono uppercase tracking-[0.14em] text-accent">
+                  <Play size={11} />
+                  Motion preview
+                </div>
+              )}
+              {media.length > 1 && (
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent py-2 text-center text-[0.65rem] font-mono uppercase tracking-[0.14em] text-white/80 opacity-0 transition-opacity group-hover:opacity-100">
+                  Hover to preview another frame
+                </div>
+              )}
 
-            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3">
-              <p className="text-[0.7rem] font-mono uppercase tracking-[0.2em] text-white/70">{project.year}</p>
-              <p className="text-[0.7rem] font-mono uppercase tracking-[0.16em] text-white/70">
-                {hasMedia ? 'Preview ready' : 'Concept card'}
-              </p>
+              <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent" />
+
+              <div className="absolute left-4 top-4 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.16em] text-accent">
+                  <Folder size={12} />
+                  {project.missionCode}
+                </span>
+                <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.12em] text-white/80">
+                  {project.category}
+                </span>
+                {statusLabel && (
+                  <span className="rounded-full border border-emerald-400/25 bg-emerald-500/15 px-3 py-1 text-[0.65rem] font-mono uppercase tracking-[0.12em] text-emerald-200/90">
+                    {statusLabel}
+                  </span>
+                )}
+              </div>
+
+              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3">
+                <p className="text-[0.7rem] font-mono uppercase tracking-[0.2em] text-white/70">{project.year}</p>
+                <p className="text-[0.7rem] font-mono uppercase tracking-[0.16em] text-white/70">
+                  Preview ready
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="flex flex-1 flex-col p-6 sm:p-7">
           <div className="mb-3 flex flex-wrap items-center gap-2">
+            {!hasMedia && (
+              <>
+                <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.16em] text-accent">
+                  <Folder size={12} />
+                  {project.missionCode}
+                </span>
+                <span className="rounded-full border border-secondary/50 bg-secondary/30 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.12em] text-text-muted">
+                  {project.category}
+                </span>
+                {statusLabel && (
+                  <span className="rounded-full border border-emerald-400/25 bg-emerald-500/15 px-3 py-1 text-[0.65rem] font-mono uppercase tracking-[0.12em] text-emerald-200/90">
+                    {statusLabel}
+                  </span>
+                )}
+              </>
+            )}
             {project.featured && (
               <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.12em] text-amber-300">
                 <Sparkles size={12} />
@@ -406,7 +408,7 @@ const Projects = () => {
     // 1. Get all featured projects (published only)
     const featured = filteredProjects.filter((project) => project.featured);
     if (featured.length >= 3) {
-      return featured.slice(0, 3);
+      return featured;
     }
     // 2. Get non-featured projects
     const nonFeatured = filteredProjects.filter((project) => !project.featured);
@@ -423,7 +425,8 @@ const Projects = () => {
 
   const timelineProjects = useMemo(() => {
     const displayIds = new Set(displayProjects.map(p => p.id));
-    const list = filteredProjects.filter((project) => !displayIds.has(project.id));
+    // Exclude ALL featured projects from timeline, and exclude displayed non-featured ones
+    const list = filteredProjects.filter((project) => !project.featured && !displayIds.has(project.id));
     const mult = sortOrder === 'desc' ? -1 : 1;
     return [...list].sort((a, b) => {
       const ya = Number(a.year) || 0;
@@ -725,31 +728,30 @@ const Projects = () => {
                         <div className="sticky top-20 z-20 -ml-2 mb-4 inline-flex items-center rounded-full border border-accent/25 bg-primary/90 px-4 py-2 font-mono text-sm font-bold text-accent shadow-lg backdrop-blur-md">
                           {year}
                         </div>
-                        <div className="columns-1 lg:columns-2 gap-8 space-y-8">
-                          {items.map((project, index) => (
-                            <div
-                              key={project.id || project.title || index}
-                              id={`project-${project.id || project.title}`}
-                              className="relative scroll-mt-32 break-inside-avoid"
-                            >
-                              <div className="absolute left-[-0.35rem] top-8 h-3.5 w-3.5 rounded-full border-2 border-primary bg-accent shadow-[0_0_18px_rgb(var(--color-accent-rgb)/0.6)] md:left-[0.1rem]" />
-                              <div className="mb-3 flex items-center gap-3">
-                                <span className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.14em] text-accent">
-                                  <Calendar size={11} />
-                                  {project.year}
-                                </span>
-                                <span className="rounded-full border border-secondary/50 bg-secondary/30 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.12em] text-text-muted">
-                                  {project.category}
-                                </span>
-                              </div>
-
-                              <ProjectCard
-                                project={project}
-                                index={index}
-                              />
-                            </div>
-                          ))}
-                        </div>
+                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                           {items.map((project, index) => (
+                             <div
+                               key={project.id || project.title || index}
+                               id={`project-${project.id || project.title}`}
+                               className="relative scroll-mt-32"
+                             >
+                               <div className="mb-3 flex items-center gap-3">
+                                 <span className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.14em] text-accent">
+                                   <Calendar size={11} />
+                                   {project.year}
+                                 </span>
+                                 <span className="rounded-full border border-secondary/50 bg-secondary/30 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.12em] text-text-muted">
+                                   {project.category}
+                                 </span>
+                               </div>
+ 
+                               <ProjectCard
+                                 project={project}
+                                 index={index}
+                               />
+                             </div>
+                           ))}
+                         </div>
                       </div>
                     ))}
                   </div>
