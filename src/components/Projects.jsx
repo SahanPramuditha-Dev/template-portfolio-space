@@ -433,11 +433,14 @@ const Projects = ({ isHomepage = false }) => {
     setSortOrder('desc');
   };
 
+  const ContainerWrapper = isHomepage ? SectionWrapper : 'section';
+  const wrapperProps = isHomepage ? { id: 'projects' } : { id: 'projects', className: 'relative z-10' };
+
   return (
-    <SectionWrapper id="projects">
+    <ContainerWrapper {...wrapperProps}>
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative">
         {/* Header title (spacing fixed, 05. prefix hidden on subpage) */}
-        <div className={`mb-6 flex flex-wrap items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold text-text font-display gradient-text ${!isHomepage ? 'mt-8 md:mt-12' : ''}`}>
+        <div className="mb-6 flex flex-wrap items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold text-text font-display gradient-text">
           {isHomepage && (
             <span className="text-accent font-mono text-lg sm:text-xl mr-0 sm:mr-2">05.</span>
           )}
@@ -729,7 +732,7 @@ const Projects = ({ isHomepage = false }) => {
           </>
         )}
       </div>
-    </SectionWrapper>
+    </ContainerWrapper>
   );
 };
 
