@@ -1,4 +1,4 @@
-/* global process */
+/* global process, Buffer */
 import crypto from 'crypto';
 
 // In-memory caching for GA4 telemetry report

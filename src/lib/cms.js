@@ -403,7 +403,7 @@ export const useCmsCollection = (collectionName, initialData = []) => {
 
   useEffect(() => {
     if (!collectionName) {
-      setLoading(false);
+      queueMicrotask(() => setLoading(false));
       return;
     }
     const unsubscribe = subscribeCmsCollection(

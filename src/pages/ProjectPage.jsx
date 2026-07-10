@@ -1472,7 +1472,7 @@ export const SectionProductOverview = ({ project, techList, hasLive, hasGithub, 
                 {project.overviewParagraphs ? (
                   project.overviewParagraphs.split('\n\n').map((p, idx) => <p key={idx}>{p}</p>)
                 ) : (
-                  <p>{project.description || description}</p>
+                  <p>{project.description || project.shortDescription || ''}</p>
                 )}
               </div>
               

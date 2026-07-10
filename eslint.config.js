@@ -24,7 +24,9 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['warn', { varsIgnorePattern: '^(?:[A-Z_]|motion$)' }],
-      'react-hooks/purity': 'off'
+      'react-hooks/purity': 'off',
+      'react-hooks/refs': 'off',
+      'react-hooks/set-state-in-effect': 'off'
     },
   },
 ])

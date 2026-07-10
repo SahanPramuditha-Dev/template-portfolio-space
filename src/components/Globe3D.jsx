@@ -111,7 +111,7 @@ const createEarthTextures = () => {
       ctx.fill(path);
       ctx.stroke(path);
       ctx.restore();
-    } catch (e) {}
+    } catch (e) { /* ignore */ }
   });
 
   // Night Side Canvas
@@ -137,7 +137,7 @@ const createEarthTextures = () => {
       nCtx.fill(path);
       nCtx.stroke(path);
       nCtx.restore();
-    } catch (e) {}
+    } catch (e) { /* ignore */ }
   });
 
   // Draw clusters of city lights in night canvas
@@ -594,8 +594,9 @@ const Globe3D = ({ activeCountries = [], selectedCountry, onSelectCountry, onHov
           minDistance={3.2}
           maxDistance={5.8}
           rotateSpeed={0.7}
-            <DisposeOnUnmount />
-        />
+        >
+          <DisposeOnUnmount />
+        </OrbitControls>
       </Canvas>
     </div>
   );

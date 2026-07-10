@@ -125,7 +125,6 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
   const impactMetrics = getImpactMetrics(project);
 
   const stepMedia = (direction) => {
-                  <div className="mb-10 grid grid-cols-2 gap-4 rounded-2xl border border-white/5 bg-secondary/10 p-5 lg:grid-cols-4 auto-rows-fr">
     setActiveMedia((prev) => {
       const next = prev + direction;
       if (next < 0) return slides.length - 1;
@@ -163,7 +162,6 @@ const ProjectModalInner = ({ project, isOpen, onClose }) => {
   const role = String(project.role || '').trim();
   const lessonsLearned = String(project.lessonsLearned || '').trim();
   const nextSteps = String(project.nextSteps || '').trim();
-                    <div className="grid gap-3 sm:grid-cols-3 auto-rows-fr">
   return (
     <AnimatePresence>
       {isOpen && (

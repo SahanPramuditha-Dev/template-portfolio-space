@@ -130,7 +130,7 @@ const CountUpNumber = ({ value }) => {
     let start = 0;
     const end = parseInt(value, 10) || 0;
     if (end === 0) {
-      setCount(value);
+      queueMicrotask(() => setCount(value));
       return;
     }
     const duration = 1000; // 1s

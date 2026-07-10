@@ -9,12 +9,6 @@ const Projects = lazy(() => import('../components/Projects'));
 const Certifications = lazy(() => import('../components/Certifications'));
 const Contact = lazy(() => import('../components/Contact'));
 
-const FallbackBlock = ({ block }) => (
-  <div className="p-8 border border-dashed border-red-500/50 text-center text-red-400 bg-red-500/10 rounded-xl my-4">
-    Unregistered Block Type: {block.type}
-  </div>
-);
-
 export const BlockRegistry = {
   'Hero': {
     id: 'Hero',
@@ -88,5 +82,11 @@ export const BlockRegistry = {
 };
 
 export const getBlockDefinition = (type) => {
-  return BlockRegistry[type] || { Component: FallbackBlock };
+  return BlockRegistry[type] || { 
+    Component: ({ block }) => (
+      <div className="p-8 border border-dashed border-red-500/50 text-center text-red-400 bg-red-500/10 rounded-xl my-4">
+        Unregistered Block Type: {block.type}
+      </div>
+    )
+  };
 };

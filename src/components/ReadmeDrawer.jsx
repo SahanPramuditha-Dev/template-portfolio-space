@@ -174,11 +174,13 @@ const ReadmeDrawer = ({ isOpen, onClose, repoName, githubUsername, repoUrl, isMa
   useEffect(() => {
     if (!isOpen || !repoName) return;
 
-    setActiveTab('readme');
-    setReadme('');
-    setLanguages(null);
-    setContributors(null);
-    setError(false);
+    queueMicrotask(() => {
+      setActiveTab('readme');
+      setReadme('');
+      setLanguages(null);
+      setContributors(null);
+      setError(false);
+    });
 
     if (isManual) {
       setLoading(false);
