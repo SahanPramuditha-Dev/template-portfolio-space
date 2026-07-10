@@ -150,16 +150,25 @@ const About = () => {
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative">
         <div className="flex flex-col md:flex-row gap-10 sm:gap-12 items-center mb-12 md:mb-20">
           <div className="md:w-1/3 flex justify-center w-full">
-            <div 
+            <motion.div 
               onClick={() => setIsFlipped(!isFlipped)}
               className="relative w-56 h-56 sm:w-64 sm:h-64 group mx-auto cursor-pointer [perspective:1000px] select-none"
+              initial={{ opacity: 0, scale: 0.85 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: "-100px" }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.4 }}
             >
-              {/* Circular border-glow shadow ring behind the coin */}
-              <div className="absolute inset-0 rounded-full border-2 border-accent/40 translate-x-2 translate-y-2 group-hover:translate-x-1 group-hover:translate-y-1 transition-all duration-500 -z-10 shadow-[0_0_24px_rgba(var(--color-accent-rgb),0.25)] bg-accent/5 backdrop-blur-sm" />
+              {/* Circular border-glow shadow ring behind the coin (Centered, scales on hover) */}
+              <div className="absolute inset-0 rounded-full border-2 border-accent/30 -z-10 shadow-[0_0_24px_rgba(var(--color-accent-rgb),0.2)] bg-accent/5 group-hover:scale-105 transition-transform duration-500" />
               
-              {/* Flipping Coin Wrapper */}
-              <div 
-                className={`relative w-full h-full rounded-full transition-transform duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}
+              {/* Flipping Coin Wrapper (Framer Motion rotation control) */}
+              <motion.div 
+                className="relative w-full h-full rounded-full [transform-style:preserve-3d]"
+                initial={{ rotateY: -360 }}
+                animate={{ rotateY: isFlipped ? 180 : 0 }}
+                transition={{ type: "spring", damping: 18, stiffness: 85 }}
               >
                 {/* FRONT SIDE (Real Photo) */}
                 <div className="absolute inset-0 w-full h-full rounded-full overflow-hidden border-4 border-accent/30 bg-secondary [backface-visibility:hidden] [webkit-backface-visibility:hidden]">
@@ -195,8 +204,8 @@ const About = () => {
                     </span>
                   </div>
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
 
           <div className="md:w-2/3">
