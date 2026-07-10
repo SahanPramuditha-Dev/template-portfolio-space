@@ -1,20 +1,17 @@
 import React, { Suspense, useMemo, useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Github,
   ExternalLink,
   Folder,
   Search,
-  ArrowUpDown,
   Sparkles,
   X,
   ChevronRight,
   Calendar,
-  Image as ImageIcon,
   Play,
-  Filter,
   Layers,
-  Target,
+  SlidersHorizontal,
 } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
 import { trackProjectView } from '../utils/analytics';
@@ -28,7 +25,6 @@ import {
   getOutcomeBadge,
   getProjectStatusLabel,
 } from '../utils/projectNormalize';
-
 
 const isAnimatedAsset = (src) => /\.(gif|mp4|webm)(\?|#|$)/i.test(src);
 
@@ -212,7 +208,7 @@ const ProjectCard = ({ project, index, compact = false }) => {
                   key={`${m.label}-${m.value}`}
                   className="flex flex-wrap items-baseline justify-between gap-2 text-xs text-text-muted"
                 >
-                  <span className="font-mono uppercase tracking-[0.1em] text-text-muted/90 line-clamp-1 flex-1">{m.label}</span>
+                  <span className="font-mono uppercase tracking-[0.15em] text-text-muted/90 line-clamp-1 flex-1">{m.label}</span>
                   <span className="font-semibold text-accent shrink-0">
                     {m.value}
                     {m.suffix ? ` ${m.suffix}` : ''}
@@ -284,10 +280,6 @@ const ProjectCard = ({ project, index, compact = false }) => {
   );
 };
 
-const TimelineRail = () => (
-  <div className="pointer-events-none absolute left-4 top-0 h-full w-px bg-gradient-to-b from-transparent via-secondary/80 to-transparent md:left-7" />
-);
-
 const ChipToggle = ({ active, label, onClick }) => (
   <button
     type="button"
@@ -301,14 +293,6 @@ const ChipToggle = ({ active, label, onClick }) => (
     {label}
   </button>
 );
-
-const QUICK_GOALS = [
-  { id: 'ecommerce', label: 'E-commerce', terms: ['e-commerce', 'ecommerce', 'commerce', 'shop', 'store'] },
-  { id: 'dashboard', label: 'Dashboards', terms: ['dashboard', 'admin', 'analytics', 'cms'] },
-  { id: 'landing', label: 'Landing pages', terms: ['landing', 'marketing', 'website'] },
-  { id: 'api', label: 'APIs', terms: ['api', 'backend', 'server', 'firebase', 'node'] },
-  { id: 'creative', label: '3D / creative', terms: ['3d', 'three', 'animation', 'creative', 'interactive'] },
-];
 
 const ProjectsSkeleton = () => (
   <div className="space-y-8 animate-pulse" aria-hidden>
@@ -334,6 +318,7 @@ const Projects = ({ isHomepage = false }) => {
   const [onlyFeatured, setOnlyFeatured] = useState(false);
   const [query, setQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const projectsList = useMemo(
     () => (Array.isArray(projectsDoc?.items) ? projectsDoc.items : []),
@@ -451,22 +436,27 @@ const Projects = ({ isHomepage = false }) => {
   return (
     <SectionWrapper id="projects">
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative">
-        <div className="mb-6 flex flex-wrap items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold text-text font-display gradient-text">
-          <span className="text-accent font-mono text-lg sm:text-xl mr-0 sm:mr-2">05.</span>
+        {/* Header title (spacing fixed, 05. prefix hidden on subpage) */}
+        <div className={`mb-6 flex flex-wrap items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold text-text font-display gradient-text ${!isHomepage ? 'mt-8 md:mt-12' : ''}`}>
+          {isHomepage && (
+            <span className="text-accent font-mono text-lg sm:text-xl mr-0 sm:mr-2">05.</span>
+          )}
           <span className="flex-grow min-w-0">
             {isHomepage ? 'Some Things I’ve Built' : 'All Projects'}
           </span>
           <span className="h-px bg-secondary flex-grow min-w-[60px] ml-0 sm:ml-4 opacity-50 w-full sm:w-auto order-3 sm:order-none"></span>
         </div>
 
+        {/* 1. Conditionally render search and collapsible filters for subpage archive only */}
         {!isHomepage && (
           <>
-            <div className="mb-8 grid gap-4 lg:grid-cols-[1.35fr_0.85fr] items-stretch">
-              <div className="rounded-2xl border border-white/10 bg-secondary/20 p-3 sm:p-4 backdrop-blur-md h-full flex flex-col justify-center">
+            <div className="mb-6 grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-3 items-stretch">
+              {/* Search Box */}
+              <div className="rounded-2xl border border-white/10 bg-secondary/20 p-3 sm:p-4 backdrop-blur-md flex flex-col justify-center flex-grow">
                 <label className="sr-only" htmlFor="project-search">
                   Search projects
                 </label>
-                <div className="flex items-center gap-3 rounded-xl border border-secondary/50 bg-primary/50 px-4 py-3">
+                <div className="flex items-center gap-3 rounded-xl border border-secondary/50 bg-primary/50 px-4 py-2.5">
                   <Search size={18} className="text-accent shrink-0" />
                   <input
                     id="project-search"
@@ -474,7 +464,7 @@ const Projects = ({ isHomepage = false }) => {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search title, description, tech, tags, role, client, industry…"
-                    className="w-full bg-transparent text-text placeholder:text-text-muted outline-none"
+                    className="w-full bg-transparent text-text placeholder:text-text-muted outline-none text-sm"
                   />
                   {query && (
                     <button
@@ -489,122 +479,157 @@ const Projects = ({ isHomepage = false }) => {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-secondary/20 p-3 sm:p-4 backdrop-blur-md h-full flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-sm font-semibold text-text">
-                  <ArrowUpDown size={16} className="text-accent shrink-0" />
-                  <span className="hidden sm:inline">Sort projects</span>
-                  <span className="sm:hidden">Sort</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSortOrder('desc')}
-                    className={`rounded-full px-3 py-1.5 text-xs font-mono transition-colors ${
-                      sortOrder === 'desc'
-                        ? 'bg-accent/15 text-accent border border-accent/30'
-                        : 'bg-primary/50 text-text-muted border border-secondary/40 hover:border-accent/25 hover:text-text'
-                    }`}
-                  >
-                    Newest first
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSortOrder('asc')}
-                    className={`rounded-full px-3 py-1.5 text-xs font-mono transition-colors ${
-                      sortOrder === 'asc'
-                        ? 'bg-accent/15 text-accent border border-accent/30'
-                        : 'bg-primary/50 text-text-muted border border-secondary/40 hover:border-accent/25 hover:text-text'
-                    }`}
-                  >
-                    Oldest first
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="mb-5">
-              <div className="mb-2 flex items-center gap-2 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
-                <Layers size={14} className="text-accent" />
-                Category
-              </div>
-              <div className="flex flex-wrap gap-3">
-                {categories.map((category) => (
-                  <motion.button
-                    key={category}
-                    type="button"
-                    onClick={() => setActiveCategory(category)}
-                    className={`rounded-full px-4 py-2 text-sm font-mono transition-all duration-300 ${
-                      activeCategory === category
-                        ? 'bg-accent text-primary font-bold shadow-lg shadow-accent/25'
-                        : 'border border-secondary/50 bg-secondary/30 text-text-muted hover:border-accent/40 hover:text-text'
-                    }`}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                  >
-                    {category}
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <div className="mb-2 flex items-center gap-2 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
-                <Layers size={14} className="text-accent" />
-                Tech stack (multi-select)
-              </div>
-              <div
-                ref={(el) => (techScrollRef.current = el)}
-                onPointerDown={(e) => {
-                  if (!techScrollRef.current) return;
-                  isPointerDown.current = true;
-                  techScrollRef.current.setPointerCapture?.(e.pointerId);
-                  startX.current = e.pageX - techScrollRef.current.offsetLeft;
-                  startScroll.current = techScrollRef.current.scrollLeft;
-                  techScrollRef.current.style.cursor = 'grabbing';
-                }}
-                onPointerMove={(e) => {
-                  if (!isPointerDown.current || !techScrollRef.current) return;
-                  e.preventDefault();
-                  const x = e.pageX - techScrollRef.current.offsetLeft;
-                  const walk = (x - startX.current) * 1.5;
-                  techScrollRef.current.scrollLeft = startScroll.current - walk;
-                }}
-                onPointerUp={(e) => {
-                  if (!isPointerDown.current || !techScrollRef.current) return;
-                  isPointerDown.current = false;
-                  techScrollRef.current.releasePointerCapture?.(e.pointerId);
-                  techScrollRef.current.style.cursor = 'grab';
-                }}
-                onPointerCancel={(e) => {
-                  if (!isPointerDown.current || !techScrollRef.current) return;
-                  isPointerDown.current = false;
-                  techScrollRef.current.releasePointerCapture?.(e.pointerId);
-                  techScrollRef.current.style.cursor = 'grab';
-                }}
-                className="-mx-1 flex max-w-full gap-2 overflow-x-auto overflow-y-hidden px-1 pb-1 no-scrollbar cursor-grab select-none"
+              {/* Filters Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(!filtersOpen)}
+                className={`flex items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold transition-all duration-300 backdrop-blur-md ${
+                  filtersOpen || filterCount > 0
+                    ? 'border-accent/40 bg-accent/10 text-accent'
+                    : 'border-white/10 bg-secondary/20 text-text-muted hover:border-accent/30 hover:text-text'
+                }`}
               >
-                {techOptions.map((tech) => (
-                  <button
-                    key={tech}
-                    type="button"
-                    onClick={() => toggleTech(tech)}
-                    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-mono transition-colors ${
-                      selectedTech.includes(tech)
-                        ? 'bg-accent/15 text-accent border border-accent/30'
-                        : 'bg-primary/50 text-text-muted border border-secondary/40 hover:border-accent/25 hover:text-text'
-                    }`}
-                  >
-                    {tech}
-                  </button>
-                ))}
+                <SlidersHorizontal size={16} />
+                <span>Filters</span>
+                {filterCount > 0 && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-primary">
+                    {filterCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Sort Controls */}
+              <div className="rounded-2xl border border-white/10 bg-secondary/20 p-3 sm:p-4 backdrop-blur-md flex items-center gap-2 shrink-0 justify-center">
+                <button
+                  type="button"
+                  onClick={() => setSortOrder('desc')}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-mono transition-colors ${
+                    sortOrder === 'desc'
+                      ? 'bg-accent/15 text-accent border border-accent/30'
+                      : 'bg-primary/50 text-text-muted border border-secondary/40 hover:border-accent/25 hover:text-text'
+                  }`}
+                >
+                  Newest
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSortOrder('asc')}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-mono transition-colors ${
+                    sortOrder === 'asc'
+                      ? 'bg-accent/15 text-accent border border-accent/30'
+                      : 'bg-primary/50 text-text-muted border border-secondary/40 hover:border-accent/25 hover:text-text'
+                  }`}
+                >
+                  Oldest
+                </button>
               </div>
             </div>
 
-            <div className="mb-8 flex flex-wrap gap-2">
-              <ChipToggle active={onlyLive} label="Has live demo" onClick={() => setOnlyLive((v) => !v)} />
-              <ChipToggle active={onlySource} label="Has source code" onClick={() => setOnlySource((v) => !v)} />
-              <ChipToggle active={onlyFeatured} label="Featured only" onClick={() => setOnlyFeatured((v) => !v)} />
-            </div>
+            {/* Collapsible Filter Panel */}
+            <AnimatePresence initial={false}>
+              {filtersOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  className="overflow-hidden rounded-2xl border border-white/10 bg-secondary/10 p-5 sm:p-6 backdrop-blur-md mb-8 space-y-6"
+                >
+                  {/* Category Filter */}
+                  <div>
+                    <div className="mb-2 flex items-center gap-2 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
+                      <Layers size={14} className="text-accent" />
+                      Category
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {categories.map((category) => (
+                        <motion.button
+                          key={category}
+                          type="button"
+                          onClick={() => setActiveCategory(category)}
+                          className={`rounded-full px-3.5 py-1.5 text-xs font-mono transition-all duration-300 ${
+                            activeCategory === category
+                              ? 'bg-accent text-primary font-bold shadow-lg shadow-accent/25'
+                              : 'border border-secondary/50 bg-secondary/30 text-text-muted hover:border-accent/40 hover:text-text'
+                          }`}
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.97 }}
+                        >
+                          {category}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Tech Stack Multi-select */}
+                  <div>
+                    <div className="mb-2 flex items-center gap-2 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
+                      <Layers size={14} className="text-accent" />
+                      Tech stack (multi-select)
+                    </div>
+                    <div
+                      ref={techScrollRef}
+                      onPointerDown={(e) => {
+                        if (!techScrollRef.current) return;
+                        isPointerDown.current = true;
+                        techScrollRef.current.setPointerCapture?.(e.pointerId);
+                        startX.current = e.pageX - techScrollRef.current.offsetLeft;
+                        startScroll.current = techScrollRef.current.scrollLeft;
+                        techScrollRef.current.style.cursor = 'grabbing';
+                      }}
+                      onPointerMove={(e) => {
+                        if (!isPointerDown.current || !techScrollRef.current) return;
+                        e.preventDefault();
+                        const x = e.pageX - techScrollRef.current.offsetLeft;
+                        const walk = (x - startX.current) * 1.5;
+                        techScrollRef.current.scrollLeft = startScroll.current - walk;
+                      }}
+                      onPointerUp={(e) => {
+                        if (!isPointerDown.current || !techScrollRef.current) return;
+                        isPointerDown.current = false;
+                        techScrollRef.current.releasePointerCapture?.(e.pointerId);
+                        techScrollRef.current.style.cursor = 'grab';
+                      }}
+                      onPointerCancel={(e) => {
+                        if (!isPointerDown.current || !techScrollRef.current) return;
+                        isPointerDown.current = false;
+                        techScrollRef.current.releasePointerCapture?.(e.pointerId);
+                        techScrollRef.current.style.cursor = 'grab';
+                      }}
+                      className="-mx-1 flex max-w-full gap-2 overflow-x-auto overflow-y-hidden px-1 pb-1 no-scrollbar cursor-grab select-none"
+                    >
+                      {techOptions.map((tech) => (
+                        <button
+                          key={tech}
+                          type="button"
+                          onClick={() => toggleTech(tech)}
+                          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-mono transition-colors ${
+                            selectedTech.includes(tech)
+                              ? 'bg-accent/15 text-accent border border-accent/30'
+                              : 'bg-primary/50 text-text-muted border border-secondary/40 hover:border-accent/25 hover:text-text'
+                          }`}
+                        >
+                          {tech}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Toggle Chips */}
+                  <div>
+                    <div className="mb-2 flex items-center gap-2 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
+                      <Layers size={14} className="text-accent" />
+                      Status & Features
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <ChipToggle active={onlyLive} label="Has live demo" onClick={() => setOnlyLive((v) => !v)} />
+                      <ChipToggle active={onlySource} label="Has source code" onClick={() => setOnlySource((v) => !v)} />
+                      <ChipToggle active={onlyFeatured} label="Featured only" onClick={() => setOnlyFeatured((v) => !v)} />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {hasActiveFilters && (
               <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-sm text-text-muted">
@@ -627,6 +652,7 @@ const Projects = ({ isHomepage = false }) => {
           </>
         )}
 
+        {/* 2. Core content grid renderer */}
         {loading || projectsDoc === undefined ? (
           <ProjectsSkeleton />
         ) : isEmpty ? (
@@ -662,6 +688,7 @@ const Projects = ({ isHomepage = false }) => {
               </div>
             )}
 
+            {/* Homepage button navigation */}
             {isHomepage && displayProjects.length > 0 && (
               <div className="mt-12 flex justify-center">
                 <a
