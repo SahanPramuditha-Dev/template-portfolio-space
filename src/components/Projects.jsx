@@ -402,17 +402,35 @@ const Projects = () => {
     query,
   ]);
 
-  const featuredProjects = filteredProjects.filter((project) => project.featured);
+  const displayProjects = useMemo(() => {
+    // 1. Get all featured projects (published only)
+    const featured = filteredProjects.filter((project) => project.featured);
+    if (featured.length >= 3) {
+      return featured.slice(0, 3);
+    }
+    // 2. Get non-featured projects
+    const nonFeatured = filteredProjects.filter((project) => !project.featured);
+    // Sort by year desc
+    const sortedNonFeatured = [...nonFeatured].sort((a, b) => {
+      const ya = Number(a.year) || 0;
+      const yb = Number(b.year) || 0;
+      return yb - ya;
+    });
+    // Fill the remaining slots to make exactly 3
+    const combined = [...featured, ...sortedNonFeatured];
+    return combined.slice(0, 3);
+  }, [filteredProjects]);
 
   const timelineProjects = useMemo(() => {
-    const list = filteredProjects.filter((project) => !project.featured);
+    const displayIds = new Set(displayProjects.map(p => p.id));
+    const list = filteredProjects.filter((project) => !displayIds.has(project.id));
     const mult = sortOrder === 'desc' ? -1 : 1;
     return [...list].sort((a, b) => {
       const ya = Number(a.year) || 0;
       const yb = Number(b.year) || 0;
       return (ya - yb) * mult;
     });
-  }, [filteredProjects, sortOrder]);
+  }, [filteredProjects, displayProjects, sortOrder]);
 
   const timelineByYear = useMemo(() => {
     const map = new Map();
@@ -635,15 +653,15 @@ const Projects = () => {
           </motion.div>
         ) : (
           <>
-            {featuredProjects.length > 0 && (
+            {displayProjects.length > 0 && (
               <div className="mb-12">
                 <div className="mb-6 flex items-center gap-2">
                   <Sparkles size={18} className="text-accent" />
                   <h3 className="text-lg sm:text-xl font-bold text-text">Featured Projects</h3>
                 </div>
-                <div className="columns-1 lg:columns-2 gap-6 space-y-6">
-                  {featuredProjects.map((project, index) => (
-                    <div key={project.id || project.title || index} className="relative break-inside-avoid">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {displayProjects.map((project, index) => (
+                    <div key={project.id || project.title || index} className="relative">
                       <ProjectCard
                         project={project}
                         index={index}
@@ -661,7 +679,7 @@ const Projects = () => {
                 <h3 className="text-lg sm:text-xl font-bold text-text">Timeline</h3>
               </div>
 
-              {timelineProjects.length === 0 && featuredProjects.length > 0 ? (
+              {timelineProjects.length === 0 && displayProjects.length > 0 ? (
                 <div className="rounded-2xl border border-secondary/50 bg-secondary/20 px-6 py-16 text-center text-text-muted">
                   All matching projects are featured above—nothing else in the timeline for these filters.
                 </div>
