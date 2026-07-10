@@ -84,6 +84,7 @@ export const initialSiteContent = {
   resumeUrl: '/resume.pdf',
   githubUsername: 'SahanPramuditha-Dev',
   profilePhotoUrl: '',
+  avatarPhotoUrl: '',
   heroArtworkUrl: '',
   aboutParagraphs:
     'Hello! My name is Sahan and I enjoy creating things that live on the internet.\nFast-forward to today, and I’ve had the privilege of building software for a variety of clients.\nI also manage Wybe.lk, overseeing end-to-end e-commerce operations and platform reliability.\nI am currently a student at University Of Colombo who is constantly learning and evolving my skills.',

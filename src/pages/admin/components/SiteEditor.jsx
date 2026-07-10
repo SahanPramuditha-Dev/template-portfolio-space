@@ -54,6 +54,7 @@ const normalizeSiteDraft = (source = initialSiteContent) => ({
   resumeUrl: source.resumeUrl ?? initialSiteContent.resumeUrl,
   githubUsername: source.githubUsername ?? initialSiteContent.githubUsername,
   profilePhotoUrl: source.profilePhotoUrl ?? initialSiteContent.profilePhotoUrl,
+  avatarPhotoUrl: source.avatarPhotoUrl ?? initialSiteContent.avatarPhotoUrl,
   heroArtworkUrl: source.heroArtworkUrl ?? initialSiteContent.heroArtworkUrl,
   aboutParagraphs: source.aboutParagraphs ?? initialSiteContent.aboutParagraphs,
   aboutStatsJson: parseArrayValue(source.aboutStatsJson ?? initialSiteContent.aboutStatsJson, JSON.parse(initialSiteContent.aboutStatsJson)),
@@ -174,6 +175,7 @@ const SiteEditor = () => {
     try {
       const mediaErrors = [
         ['Profile Photo URL', draft.profilePhotoUrl],
+        ['Avatar Photo URL', draft.avatarPhotoUrl],
         ['Hero Artwork URL', draft.heroArtworkUrl],
         ['Resume URL', draft.resumeUrl],
       ]
@@ -205,6 +207,7 @@ const SiteEditor = () => {
         resumeUrl: draft.resumeUrl,
         githubUsername: draft.githubUsername,
         profilePhotoUrl: draft.profilePhotoUrl,
+        avatarPhotoUrl: draft.avatarPhotoUrl,
         heroArtworkUrl: draft.heroArtworkUrl,
         aboutParagraphs: draft.aboutParagraphs,
         aboutStatsJson: draft.aboutStatsJson,
@@ -361,6 +364,12 @@ const SiteEditor = () => {
                       value={draft.profilePhotoUrl}
                       onChange={(value) => updateField('profilePhotoUrl', value)}
                       onUpload={() => uploadAsset('profilePhotoUrl')}
+                    />
+                    <FieldEditor
+                      field={{ key: 'avatarPhotoUrl', label: 'Avatar Photo URL', type: 'image' }}
+                      value={draft.avatarPhotoUrl}
+                      onChange={(value) => updateField('avatarPhotoUrl', value)}
+                      onUpload={() => uploadAsset('avatarPhotoUrl')}
                     />
                   </div>
 

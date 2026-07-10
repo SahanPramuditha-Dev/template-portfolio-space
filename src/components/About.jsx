@@ -70,6 +70,7 @@ const About = () => {
   const { data: projectsDoc } = useCmsDoc(CMS_DOCS.projects, { items: [] });
   
   const [githubData, setGithubData] = useState({ loc: 0 });
+  const [isFlipped, setIsFlipped] = useState(false);
   const GITHUB_USERNAME = siteDoc?.githubUsername || 'SahanPramuditha-Dev';
 
   useEffect(() => {
@@ -104,6 +105,7 @@ const About = () => {
   }
 
   const profilePhotoUrl = siteDoc?.profilePhotoUrl || profilePhoto;
+  const avatarPhotoUrl = siteDoc?.avatarPhotoUrl || 'https://api.dicebear.com/7.x/bottts/svg?seed=Sahan';
 
   const aboutParagraphs = exists && siteDoc?.aboutParagraphs
     ? String(siteDoc.aboutParagraphs)
@@ -148,17 +150,51 @@ const About = () => {
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative">
         <div className="flex flex-col md:flex-row gap-10 sm:gap-12 items-center mb-12 md:mb-20">
           <div className="md:w-1/3 flex justify-center w-full">
-            <div className="relative w-56 h-56 sm:w-64 sm:h-64 group mx-auto">
-              <div className="absolute inset-0 border-2 border-accent rounded-lg translate-x-4 translate-y-4 group-hover:translate-x-2 group-hover:translate-y-2 transition-transform duration-300" />
-              <div className="absolute inset-0 bg-accent/20 rounded-lg group-hover:bg-transparent transition-colors duration-300 z-10 pointer-events-none" />
-              <div className="w-full h-full bg-secondary rounded-lg overflow-hidden relative z-0">
-                <ImageWithFallback
-                  src={profilePhotoUrl}
-                  alt="Sahan Pramuditha"
-                  className="w-full h-full object-cover"
-                  loading="eager"
-                  sources={profilePhotoUrl === profilePhoto ? profilePhotoSources : []}
-                />
+            <div 
+              onClick={() => setIsFlipped(!isFlipped)}
+              className="relative w-56 h-56 sm:w-64 sm:h-64 group mx-auto cursor-pointer [perspective:1000px] select-none"
+            >
+              {/* Circular border-glow shadow ring behind the coin */}
+              <div className="absolute inset-0 rounded-full border-2 border-accent/40 translate-x-2 translate-y-2 group-hover:translate-x-1 group-hover:translate-y-1 transition-all duration-500 -z-10 shadow-[0_0_24px_rgba(var(--color-accent-rgb),0.25)] bg-accent/5 backdrop-blur-sm" />
+              
+              {/* Flipping Coin Wrapper */}
+              <div 
+                className={`relative w-full h-full rounded-full transition-transform duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}
+              >
+                {/* FRONT SIDE (Real Photo) */}
+                <div className="absolute inset-0 w-full h-full rounded-full overflow-hidden border-4 border-accent/30 bg-secondary [backface-visibility:hidden] [webkit-backface-visibility:hidden]">
+                  <ImageWithFallback
+                    src={profilePhotoUrl}
+                    alt="Sahan Pramuditha"
+                    className="w-full h-full object-cover rounded-full"
+                    loading="eager"
+                    sources={profilePhotoUrl === profilePhoto ? profilePhotoSources : []}
+                  />
+                  {/* Hover visual shine and clue overlay */}
+                  <div className="absolute inset-0 bg-accent/10 opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none rounded-full" />
+                  <div className="absolute inset-0 bg-black/45 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full">
+                    <span className="text-[10px] font-mono font-bold text-accent tracking-wider uppercase bg-primary/90 border border-accent/35 px-2.5 py-1 rounded-md shadow-md">
+                      Click to Flip
+                    </span>
+                  </div>
+                </div>
+
+                {/* BACK SIDE (Avatar Illustration) */}
+                <div className="absolute inset-0 w-full h-full rounded-full overflow-hidden border-4 border-accent/30 bg-secondary [backface-visibility:hidden] [webkit-backface-visibility:hidden] [transform:rotateY(180deg)]">
+                  <ImageWithFallback
+                    src={avatarPhotoUrl}
+                    alt="Sahan Avatar"
+                    className="w-full h-full object-cover rounded-full"
+                    loading="lazy"
+                  />
+                  {/* Hover visual shine and clue overlay */}
+                  <div className="absolute inset-0 bg-purple-500/10 opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none rounded-full" />
+                  <div className="absolute inset-0 bg-black/45 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full [transform:rotateY(180deg)]">
+                    <span className="text-[10px] font-mono font-bold text-accent tracking-wider uppercase bg-primary/90 border border-accent/35 px-2.5 py-1 rounded-md shadow-md">
+                      Click to Flip
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
