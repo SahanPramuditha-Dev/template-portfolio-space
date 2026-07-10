@@ -119,7 +119,7 @@ function App() {
                     <Experience />
                   </Suspense>
                   <Suspense fallback={<CmsSectionSkeleton id="projects" />}>
-                    <Projects />
+                    <Projects isHomepage={true} />
                   </Suspense>
                   <Suspense fallback={<CmsSectionSkeleton id="certifications" />}>
                     <Certifications />

@@ -325,7 +325,7 @@ const ProjectsSkeleton = () => (
   </div>
 );
 
-const Projects = () => {
+const Projects = ({ isHomepage = false }) => {
   const { data: projectsDoc, loading } = useCmsDoc(CMS_DOCS.projects, { items: [] });
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedTech, setSelectedTech] = useState([]);
@@ -340,7 +340,6 @@ const Projects = () => {
     [projectsDoc]
   );
 
-  // Refs for drag-to-scroll on the tech options row
   const techScrollRef = useRef(null);
   const isPointerDown = useRef(false);
   const startX = useRef(0);
@@ -371,13 +370,12 @@ const Projects = () => {
         !search ||
         String(project.title || '').toLowerCase().includes(search) ||
         String(project.shortDescription || '').toLowerCase().includes(search) ||
-        String(project.category || '').toLowerCase().includes(search) ||
-        String(project.missionCode || '').toLowerCase().includes(search) ||
-        String(project.role || '').toLowerCase().includes(search) ||
+        String(project.description || '').toLowerCase().includes(search) ||
         String(project.client || '').toLowerCase().includes(search) ||
-        String(project.company || '').toLowerCase().includes(search) ||
         String(project.industry || '').toLowerCase().includes(search) ||
-        tech.some((item) => String(item).toLowerCase().includes(search));
+        String(project.role || '').toLowerCase().includes(search) ||
+        tech.some((t) => t.toLowerCase().includes(search)) ||
+        (Array.isArray(project.tags) && project.tags.some((t) => t.toLowerCase().includes(search)));
 
       const liveOk = !onlyLive || isUsableHttpUrl(project.external);
       const sourceOk = !onlySource || isUsableHttpUrl(project.github);
@@ -405,47 +403,22 @@ const Projects = () => {
   ]);
 
   const displayProjects = useMemo(() => {
-    // 1. Get all featured projects (published only)
-    const featured = filteredProjects.filter((project) => project.featured);
-    if (featured.length >= 3) {
-      return featured;
-    }
-    // 2. Get non-featured projects
-    const nonFeatured = filteredProjects.filter((project) => !project.featured);
-    // Sort by year desc
-    const sortedNonFeatured = [...nonFeatured].sort((a, b) => {
+    const sorted = [...filteredProjects].sort((a, b) => {
+      const featA = a.featured ? 1 : 0;
+      const featB = b.featured ? 1 : 0;
+      if (featA !== featB) {
+        return featB - featA;
+      }
       const ya = Number(a.year) || 0;
       const yb = Number(b.year) || 0;
-      return yb - ya;
+      return sortOrder === 'desc' ? yb - ya : ya - yb;
     });
-    // Fill the remaining slots to make exactly 3
-    const combined = [...featured, ...sortedNonFeatured];
-    return combined.slice(0, 3);
-  }, [filteredProjects]);
 
-  const timelineProjects = useMemo(() => {
-    const displayIds = new Set(displayProjects.map(p => p.id));
-    // Exclude ALL featured projects from timeline, and exclude displayed non-featured ones
-    const list = filteredProjects.filter((project) => !project.featured && !displayIds.has(project.id));
-    const mult = sortOrder === 'desc' ? -1 : 1;
-    return [...list].sort((a, b) => {
-      const ya = Number(a.year) || 0;
-      const yb = Number(b.year) || 0;
-      return (ya - yb) * mult;
-    });
-  }, [filteredProjects, displayProjects, sortOrder]);
-
-  const timelineByYear = useMemo(() => {
-    const map = new Map();
-    for (const p of timelineProjects) {
-      const y = Number(p.year) || 0;
-      if (!map.has(y)) map.set(y, []);
-      map.get(y).push(p);
+    if (isHomepage) {
+      return sorted.slice(0, 3);
     }
-    const entries = [...map.entries()];
-    entries.sort((a, b) => (sortOrder === 'desc' ? b[0] - a[0] : a[0] - b[0]));
-    return entries;
-  }, [timelineProjects, sortOrder]);
+    return sorted;
+  }, [filteredProjects, isHomepage, sortOrder]);
 
   const filterCount = useMemo(() => {
     let n = 0;
@@ -480,167 +453,178 @@ const Projects = () => {
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative">
         <div className="mb-6 flex flex-wrap items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold text-text font-display gradient-text">
           <span className="text-accent font-mono text-lg sm:text-xl mr-0 sm:mr-2">05.</span>
-          <span className="flex-grow min-w-0">Some Things I’ve Built</span>
+          <span className="flex-grow min-w-0">
+            {isHomepage ? 'Some Things I’ve Built' : 'All Projects'}
+          </span>
           <span className="h-px bg-secondary flex-grow min-w-[60px] ml-0 sm:ml-4 opacity-50 w-full sm:w-auto order-3 sm:order-none"></span>
         </div>
 
-        <div className="mb-8 grid gap-4 lg:grid-cols-[1.35fr_0.85fr] items-stretch">
-          <div className="rounded-2xl border border-white/10 bg-secondary/20 p-3 sm:p-4 backdrop-blur-md h-full flex flex-col justify-center">
-            <label className="sr-only" htmlFor="project-search">
-              Search projects
-            </label>
-            <div className="flex items-center gap-3 rounded-xl border border-secondary/50 bg-primary/50 px-4 py-3">
-              <Search size={18} className="text-accent shrink-0" />
-              <input
-                id="project-search"
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search title, description, tech, tags, role, client, industry…"
-                className="w-full bg-transparent text-text placeholder:text-text-muted outline-none"
-              />
-              {query && (
+        {!isHomepage && (
+          <>
+            <div className="mb-8 grid gap-4 lg:grid-cols-[1.35fr_0.85fr] items-stretch">
+              <div className="rounded-2xl border border-white/10 bg-secondary/20 p-3 sm:p-4 backdrop-blur-md h-full flex flex-col justify-center">
+                <label className="sr-only" htmlFor="project-search">
+                  Search projects
+                </label>
+                <div className="flex items-center gap-3 rounded-xl border border-secondary/50 bg-primary/50 px-4 py-3">
+                  <Search size={18} className="text-accent shrink-0" />
+                  <input
+                    id="project-search"
+                    type="search"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search title, description, tech, tags, role, client, industry…"
+                    className="w-full bg-transparent text-text placeholder:text-text-muted outline-none"
+                  />
+                  {query && (
+                    <button
+                      type="button"
+                      onClick={() => setQuery('')}
+                      className="text-text-muted hover:text-accent transition-colors"
+                      aria-label="Clear search"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-secondary/20 p-3 sm:p-4 backdrop-blur-md h-full flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-text">
+                  <ArrowUpDown size={16} className="text-accent shrink-0" />
+                  <span className="hidden sm:inline">Sort projects</span>
+                  <span className="sm:hidden">Sort</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSortOrder('desc')}
+                    className={`rounded-full px-3 py-1.5 text-xs font-mono transition-colors ${
+                      sortOrder === 'desc'
+                        ? 'bg-accent/15 text-accent border border-accent/30'
+                        : 'bg-primary/50 text-text-muted border border-secondary/40 hover:border-accent/25 hover:text-text'
+                    }`}
+                  >
+                    Newest first
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSortOrder('asc')}
+                    className={`rounded-full px-3 py-1.5 text-xs font-mono transition-colors ${
+                      sortOrder === 'asc'
+                        ? 'bg-accent/15 text-accent border border-accent/30'
+                        : 'bg-primary/50 text-text-muted border border-secondary/40 hover:border-accent/25 hover:text-text'
+                    }`}
+                  >
+                    Oldest first
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-5">
+              <div className="mb-2 flex items-center gap-2 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
+                <Layers size={14} className="text-accent" />
+                Category
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {categories.map((category) => (
+                  <motion.button
+                    key={category}
+                    type="button"
+                    onClick={() => setActiveCategory(category)}
+                    className={`rounded-full px-4 py-2 text-sm font-mono transition-all duration-300 ${
+                      activeCategory === category
+                        ? 'bg-accent text-primary font-bold shadow-lg shadow-accent/25'
+                        : 'border border-secondary/50 bg-secondary/30 text-text-muted hover:border-accent/40 hover:text-text'
+                    }`}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    {category}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <div className="mb-2 flex items-center gap-2 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
+                <Layers size={14} className="text-accent" />
+                Tech stack (multi-select)
+              </div>
+              <div
+                ref={(el) => (techScrollRef.current = el)}
+                onPointerDown={(e) => {
+                  if (!techScrollRef.current) return;
+                  isPointerDown.current = true;
+                  techScrollRef.current.setPointerCapture?.(e.pointerId);
+                  startX.current = e.pageX - techScrollRef.current.offsetLeft;
+                  startScroll.current = techScrollRef.current.scrollLeft;
+                  techScrollRef.current.style.cursor = 'grabbing';
+                }}
+                onPointerMove={(e) => {
+                  if (!isPointerDown.current || !techScrollRef.current) return;
+                  e.preventDefault();
+                  const x = e.pageX - techScrollRef.current.offsetLeft;
+                  const walk = (x - startX.current) * 1.5;
+                  techScrollRef.current.scrollLeft = startScroll.current - walk;
+                }}
+                onPointerUp={(e) => {
+                  if (!isPointerDown.current || !techScrollRef.current) return;
+                  isPointerDown.current = false;
+                  techScrollRef.current.releasePointerCapture?.(e.pointerId);
+                  techScrollRef.current.style.cursor = 'grab';
+                }}
+                onPointerCancel={(e) => {
+                  if (!isPointerDown.current || !techScrollRef.current) return;
+                  isPointerDown.current = false;
+                  techScrollRef.current.releasePointerCapture?.(e.pointerId);
+                  techScrollRef.current.style.cursor = 'grab';
+                }}
+                className="-mx-1 flex max-w-full gap-2 overflow-x-auto overflow-y-hidden px-1 pb-1 no-scrollbar cursor-grab select-none"
+              >
+                {techOptions.map((tech) => (
+                  <button
+                    key={tech}
+                    type="button"
+                    onClick={() => toggleTech(tech)}
+                    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-mono transition-colors ${
+                      selectedTech.includes(tech)
+                        ? 'bg-accent/15 text-accent border border-accent/30'
+                        : 'bg-primary/50 text-text-muted border border-secondary/40 hover:border-accent/25 hover:text-text'
+                    }`}
+                  >
+                    {tech}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-8 flex flex-wrap gap-2">
+              <ChipToggle active={onlyLive} label="Has live demo" onClick={() => setOnlyLive((v) => !v)} />
+              <ChipToggle active={onlySource} label="Has source code" onClick={() => setOnlySource((v) => !v)} />
+              <ChipToggle active={onlyFeatured} label="Featured only" onClick={() => setOnlyFeatured((v) => !v)} />
+            </div>
+
+            {hasActiveFilters && (
+              <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-sm text-text-muted">
+                <span>
+                  Showing {filteredProjects.length} project{filteredProjects.length === 1 ? '' : 's'}
+                </span>
                 <button
                   type="button"
-                  onClick={() => setQuery('')}
-                  className="text-text-muted hover:text-accent transition-colors"
-                  aria-label="Clear search"
+                  onClick={clearAllFilters}
+                  className={
+                    showClearPill
+                      ? 'rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-mono text-accent hover:bg-accent/15'
+                      : 'text-sm text-accent hover:underline'
+                  }
                 >
-                  <X size={16} />
+                  {showClearPill ? 'Clear all filters' : 'Clear filters'}
                 </button>
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-secondary/20 p-3 sm:p-4 backdrop-blur-md h-full flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-sm font-semibold text-text">
-              <ArrowUpDown size={16} className="text-accent shrink-0" />
-              <span className="hidden sm:inline">Sort timeline</span>
-              <span className="sm:hidden">Sort</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setSortOrder('desc')}
-                className={`rounded-full px-3 py-1.5 text-xs font-mono transition-colors ${
-                  sortOrder === 'desc'
-                    ? 'bg-accent/15 text-accent border border-accent/30'
-                    : 'bg-primary/50 text-text-muted border border-secondary/40 hover:border-accent/25 hover:text-text'
-                }`}
-              >
-                Newest first
-              </button>
-              <button
-                type="button"
-                onClick={() => setSortOrder('asc')}
-                className={`rounded-full px-3 py-1.5 text-xs font-mono transition-colors ${
-                  sortOrder === 'asc'
-                    ? 'bg-accent/15 text-accent border border-accent/30'
-                    : 'bg-primary/50 text-text-muted border border-secondary/40 hover:border-accent/25 hover:text-text'
-                }`}
-              >
-                Oldest first
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="mb-5">
-          <div className="mb-2 flex items-center gap-2 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
-            <Layers size={14} className="text-accent" />
-            Category
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {categories.map((category) => (
-              <motion.button
-                key={category}
-                type="button"
-                onClick={() => setActiveCategory(category)}
-                className={`rounded-full px-4 py-2 text-sm font-mono transition-all duration-300 ${
-                  activeCategory === category
-                    ? 'bg-accent text-primary font-bold shadow-lg shadow-accent/25'
-                    : 'border border-secondary/50 bg-secondary/30 text-text-muted hover:border-accent/40 hover:text-text'
-                }`}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                {category}
-              </motion.button>
-            ))}
-          </div>
-        </div>        <div className="mb-6">
-          <div className="mb-2 flex items-center gap-2 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
-            <Layers size={14} className="text-accent" />
-            Tech stack (multi-select)
-          </div>
-          <div
-            ref={(el) => (techScrollRef.current = el)}
-            onPointerDown={(e) => {
-              if (!techScrollRef.current) return;
-              isPointerDown.current = true;
-              techScrollRef.current.setPointerCapture?.(e.pointerId);
-              startX.current = e.clientX;
-              startScroll.current = techScrollRef.current.scrollLeft;
-              techScrollRef.current.style.cursor = 'grabbing';
-            }}
-            onPointerMove={(e) => {
-              if (!isPointerDown.current || !techScrollRef.current) return;
-              const dx = e.clientX - startX.current;
-              techScrollRef.current.scrollLeft = startScroll.current - dx;
-            }}
-            onPointerUp={(e) => {
-              if (!techScrollRef.current) return;
-              isPointerDown.current = false;
-              techScrollRef.current.releasePointerCapture?.(e.pointerId);
-              techScrollRef.current.style.cursor = 'grab';
-            }}
-            onPointerLeave={() => {
-              if (!techScrollRef.current) return;
-              isPointerDown.current = false;
-              techScrollRef.current.style.cursor = 'grab';
-            }}
-            className="-mx-1 flex max-w-full gap-2 overflow-x-auto overflow-y-hidden px-1 pb-1 no-scrollbar cursor-grab select-none"
-          >
-            {techOptions.map((tech) => (
-              <button
-                key={tech}
-                type="button"
-                onClick={() => toggleTech(tech)}
-                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-mono transition-colors ${
-                  selectedTech.includes(tech)
-                    ? 'bg-accent/15 text-accent border border-accent/30'
-                    : 'bg-primary/50 text-text-muted border border-secondary/40 hover:border-accent/25 hover:text-text'
-                }`}
-              >
-                {tech}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mb-8 flex flex-wrap gap-2">
-          <ChipToggle active={onlyLive} label="Has live demo" onClick={() => setOnlyLive((v) => !v)} />
-          <ChipToggle active={onlySource} label="Has source code" onClick={() => setOnlySource((v) => !v)} />
-          <ChipToggle active={onlyFeatured} label="Featured only" onClick={() => setOnlyFeatured((v) => !v)} />
-        </div>
-
-        {hasActiveFilters && (
-          <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-sm text-text-muted">
-            <span>
-              Showing {filteredProjects.length} project{filteredProjects.length === 1 ? '' : 's'}
-            </span>
-            <button
-              type="button"
-              onClick={clearAllFilters}
-              className={
-                showClearPill
-                  ? 'rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-mono text-accent hover:bg-accent/15'
-                  : 'text-sm text-accent hover:underline'
-              }
-            >
-              {showClearPill ? 'Clear all filters' : 'Clear filters'}
-            </button>
-          </div>
+              </div>
+            )}
+          </>
         )}
 
         {loading || projectsDoc === undefined ? (
@@ -656,108 +640,39 @@ const Projects = () => {
           </motion.div>
         ) : (
           <>
-            {displayProjects.length > 0 && (
-              <div className="mb-12">
-                <div className="mb-6 flex items-center gap-2">
-                  <Sparkles size={18} className="text-accent" />
-                  <h3 className="text-lg sm:text-xl font-bold text-text">Featured Projects</h3>
-                </div>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {displayProjects.map((project, index) => (
-                    <div key={project.id || project.title || index} className="relative">
-                      <ProjectCard
-                        project={project}
-                        index={index}
-                        compact
-                      />
-                    </div>
-                  ))}
-                </div>
+            {displayProjects.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="rounded-2xl border border-dashed border-secondary/50 bg-secondary/15 px-6 py-16 text-center text-text-muted"
+              >
+                No projects match your current search and filters.
+              </motion.div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {displayProjects.map((project, index) => (
+                  <div key={project.id || project.title || index} className="relative">
+                    <ProjectCard
+                      project={project}
+                      index={index}
+                      compact
+                    />
+                  </div>
+                ))}
               </div>
             )}
 
-            <div className="relative">
-              <div className="mb-6 flex items-center gap-2">
-                <Folder size={18} className="text-accent" />
-                <h3 className="text-lg sm:text-xl font-bold text-text">Timeline</h3>
-              </div>
-
-              {timelineProjects.length === 0 && displayProjects.length > 0 ? (
-                <div className="rounded-2xl border border-secondary/50 bg-secondary/20 px-6 py-16 text-center text-text-muted">
-                  All matching projects are featured above—nothing else in the timeline for these filters.
-                </div>
-              ) : timelineProjects.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="rounded-2xl border border-dashed border-secondary/50 bg-secondary/15 px-6 py-16 text-center text-text-muted"
+            {isHomepage && displayProjects.length > 0 && (
+              <div className="mt-12 flex justify-center">
+                <a
+                  href="/projects"
+                  className="group inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/5 px-6 py-3 font-mono text-sm font-semibold text-accent shadow-lg shadow-accent/5 backdrop-blur-md transition-all duration-300 hover:border-accent/60 hover:bg-accent/15 hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  No projects match your current search and filters.
-                </motion.div>
-              ) : (
-                <>
-                  {timelineProjects.length > 1 && (
-                    <div className="mb-6">
-                      <p className="mb-2 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">
-                        Quick scan — year · category
-                      </p>
-                      <div className="-mx-1 flex max-w-full gap-2 overflow-x-auto pb-2 [scrollbar-width:thin]">
-                        {timelineProjects.map((p) => (
-                          <button
-                            key={p.id || p.title}
-                            type="button"
-                            onClick={() =>
-                              document.getElementById(`project-${p.id || p.title}`)?.scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'start',
-                                })
-                            }
-                            className="shrink-0 rounded-full border border-secondary/50 bg-secondary/30 px-3 py-1.5 text-[0.7rem] font-mono text-text-muted hover:border-accent/40 hover:text-text"
-                          >
-                            {p.year} · {p.category}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="relative space-y-16 pl-8 md:pl-14">
-                    <TimelineRail />
-                    {timelineByYear.map(([year, items]) => (
-                      <div key={year} id={`year-${year}`} className="relative scroll-mt-28 space-y-8">
-                        <div className="sticky top-20 z-20 -ml-2 mb-4 inline-flex items-center rounded-full border border-accent/25 bg-primary/90 px-4 py-2 font-mono text-sm font-bold text-accent shadow-lg backdrop-blur-md">
-                          {year}
-                        </div>
-                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                           {items.map((project, index) => (
-                             <div
-                               key={project.id || project.title || index}
-                               id={`project-${project.id || project.title}`}
-                               className="relative scroll-mt-32"
-                             >
-                               <div className="mb-3 flex items-center gap-3">
-                                 <span className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.14em] text-accent">
-                                   <Calendar size={11} />
-                                   {project.year}
-                                 </span>
-                                 <span className="rounded-full border border-secondary/50 bg-secondary/30 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.12em] text-text-muted">
-                                   {project.category}
-                                 </span>
-                               </div>
- 
-                               <ProjectCard
-                                 project={project}
-                                 index={index}
-                               />
-                             </div>
-                           ))}
-                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
+                  View All Projects
+                  <ChevronRight size={16} className="transition-transform group-hover:translate-x-1" />
+                </a>
+              </div>
+            )}
           </>
         )}
       </div>

@@ -59,7 +59,7 @@ export const BlockRegistry = {
     schema: [],
     Component: ({ block }) => (
       <Suspense fallback={<CmsSectionSkeleton id="projects" />}>
-        <Projects />
+        <Projects isHomepage={true} />
       </Suspense>
     )
   },

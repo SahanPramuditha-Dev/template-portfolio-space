@@ -27,6 +27,7 @@ import { AchievementsProvider } from './context/AchievementsContext.jsx'
 const AdminPage = lazy(() => import('./pages/AdminPage.jsx'))
 const BlogPage = lazy(() => import('./pages/BlogPage.jsx'))
 const BlogPostPage = lazy(() => import('./pages/BlogPostPage.jsx'))
+const ProjectsPage = lazy(() => import('./pages/ProjectsPage.jsx'))
 const ProjectPage = lazy(() => import('./pages/ProjectPage.jsx'))
 const ResumePage = lazy(() => import('./pages/ResumePage.jsx'))
 const ResourcesPage = lazy(() => import('./pages/ResourcesPage.jsx'))
@@ -85,6 +86,7 @@ createRoot(document.getElementById('root')).render(
                     <Route path="/admin" element={<AdminPage />} />
                     <Route path="/blog" element={<BlogPage />} />
                     <Route path="/blog/:slug" element={<BlogPostPage />} />
+                    <Route path="/projects" element={<ProjectsPage />} />
                     <Route path="/projects/:slug" element={<ProjectPage />} />
                     <Route path="/resume" element={<ResumePage />} />
                     <Route path="/resources" element={<ResourcesPage />} />
