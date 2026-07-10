@@ -73,7 +73,7 @@ const ProjectCard = ({ project, index, compact = false }) => {
       aria-label={`Project: ${project.title}. Press Enter to open details.`}
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
-      className={`group relative cursor-pointer overflow-hidden rounded-3xl border border-white/10 bg-secondary/20 backdrop-blur-md shadow-[0_12px_40px_rgba(0,0,0,0.18)] outline-none transition-all duration-300 hover:border-accent/40 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-accent/50 ${
+      className={`group relative cursor-pointer overflow-hidden rounded-3xl border border-white/10 bg-secondary/20 backdrop-blur-md shadow-[0_12px_40px_rgba(0,0,0,0.18)] hover:shadow-[0_20px_50px_rgba(56,189,248,0.12)] outline-none transition-all duration-300 hover:border-accent/40 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-accent/50 ${
         compact ? 'h-full' : ''
       }`}
     >
@@ -489,12 +489,24 @@ const Projects = ({ isHomepage = false }) => {
                     : 'border-white/10 bg-secondary/20 text-text-muted hover:border-accent/30 hover:text-text'
                 }`}
               >
-                <SlidersHorizontal size={16} />
+                <motion.div
+                  animate={{ rotate: filtersOpen ? 90 : 0 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  className="flex items-center justify-center"
+                >
+                  <SlidersHorizontal size={16} />
+                </motion.div>
                 <span>Filters</span>
                 {filterCount > 0 && (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-primary">
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    key={filterCount}
+                    transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                    className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-primary"
+                  >
                     {filterCount}
-                  </span>
+                  </motion.span>
                 )}
               </button>
 
@@ -675,17 +687,31 @@ const Projects = ({ isHomepage = false }) => {
                 No projects match your current search and filters.
               </motion.div>
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {displayProjects.map((project, index) => (
-                  <div key={project.id || project.title || index} className="relative">
-                    <ProjectCard
-                      project={project}
-                      index={index}
-                      compact
-                    />
-                  </div>
-                ))}
-              </div>
+              <motion.div layout className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <AnimatePresence mode="popLayout">
+                  {displayProjects.map((project, index) => (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, scale: 0.92 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.92 }}
+                      transition={{
+                        opacity: { duration: 0.25 },
+                        layout: { type: 'spring', stiffness: 320, damping: 30 },
+                        scale: { duration: 0.25 }
+                      }}
+                      key={project.id || project.title}
+                      className="relative h-full"
+                    >
+                      <ProjectCard
+                        project={project}
+                        index={index}
+                        compact
+                      />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
             )}
 
             {/* Homepage button navigation */}
