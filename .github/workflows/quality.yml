@@ -56,7 +56,7 @@ jobs:
             page.on('console', (msg) => {
               if (msg.type() === 'error') errors.push(msg.text());
             });
-            await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
+            await page.goto('http://127.0.0.1:4173', { waitUntil: 'load' });
             await page.locator('nav a[href="#projects"]').first().click();
             await page.waitForURL(/#projects/, { timeout: 5000 }).catch(() => {});
             if (errors.length) {
