@@ -21,35 +21,35 @@ service cloud.firestore {
     }
 
     match /certifications/{itemId} {
-      allow read: if resource.data.status == 'published' || isAdmin();
+      allow read: if resource.data.status in ['published', 'Published', 'Live', 'Active'] || isAdmin();
       allow write: if isAdmin();
     }
     match /skills/{itemId} {
-      allow read: if resource.data.status == 'published' || isAdmin();
+      allow read: if resource.data.status in ['published', 'Published', 'Live', 'Active'] || isAdmin();
       allow write: if isAdmin();
     }
     match /experience/{itemId} {
-      allow read: if resource.data.status == 'published' || isAdmin();
+      allow read: if resource.data.status in ['published', 'Published', 'Live', 'Active'] || isAdmin();
       allow write: if isAdmin();
     }
     match /blog/{itemId} {
-      allow read: if resource.data.status == 'published' || isAdmin();
+      allow read: if resource.data.status in ['published', 'Published', 'Live', 'Active'] || isAdmin();
       allow write: if isAdmin();
     }
     match /testimonials/{itemId} {
-      allow read: if resource.data.status == 'published' || isAdmin();
+      allow read: if resource.data.status in ['published', 'Published', 'Live', 'Active'] || isAdmin();
       allow write: if isAdmin();
     }
     match /services/{itemId} {
-      allow read: if resource.data.status == 'published' || isAdmin();
+      allow read: if resource.data.status in ['published', 'Published', 'Live', 'Active'] || isAdmin();
       allow write: if isAdmin();
     }
     match /resources/{itemId} {
-      allow read: if resource.data.status == 'published' || isAdmin();
+      allow read: if resource.data.status in ['published', 'Published', 'Live', 'Active'] || isAdmin();
       allow write: if isAdmin();
     }
     match /faqs/{itemId} {
-      allow read: if resource.data.status == 'published' || isAdmin();
+      allow read: if resource.data.status in ['published', 'Published', 'Live', 'Active'] || isAdmin();
       allow write: if isAdmin();
     }
 
@@ -63,7 +63,7 @@ service cloud.firestore {
     }
 
     match /projects/{projectId} {
-      allow read: if resource.data.status == 'published' || isAdmin();
+      allow read: if resource.data.status in ['published', 'Published', 'Live', 'Active'] || isAdmin();
       allow write: if isAdmin();
 
       match /versions/{versionId} {

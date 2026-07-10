@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { doc, getDoc, getDocs, onSnapshot, setDoc, serverTimestamp, deleteDoc, collection, query, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, getDocs, onSnapshot, setDoc, serverTimestamp, deleteDoc, collection, query, writeBatch, where, orderBy, limit } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth, db, storage } from './firebase';
@@ -46,7 +46,9 @@ export const waitForHomepageCms = (timeoutMs = 20000) => {
     CMS_DOCS.testimonials,
     CMS_DOCS.blog,
   ];
-  const collectionReads = collections.map((name) => getDocs(collection(db, name)));
+  const collectionReads = collections.map((name) => 
+    getDocs(query(collection(db, name), where('status', 'in', ['published', 'Published', 'Live', 'Active'])))
+  );
   
   const pending = Promise.all([...reads, ...collectionReads]).then(() => undefined);
   if (!timeoutMs) return pending;
@@ -71,8 +73,15 @@ const MIGRATED_COLLECTIONS = [
 ];
 
 export const subscribeCmsDoc = (docId, onChange, onError) => {
+  if (!docId || typeof docId !== 'string') {
+    console.error("Invalid docId passed to subscribeCmsDoc:", docId);
+    return () => {};
+  }
+
   if (MIGRATED_COLLECTIONS.includes(docId)) {
-    const q = query(collection(db, docId));
+    // Public frontend should only fetch published items to satisfy Firestore security rules
+    // Support legacy statuses like 'Live', 'Active', and 'Published'
+    const q = query(collection(db, docId), where('status', 'in', ['published', 'Published', 'Live', 'Active']));
     return onSnapshot(
       q,
       (snapshot) => {
@@ -118,6 +127,10 @@ export const removeCmsDoc = async (docId) => {
 };
 
 export const subscribeCmsCollection = (collectionName, onChange, onError) => {
+  if (!collectionName || typeof collectionName !== 'string') {
+    console.error("Invalid collectionName passed to subscribeCmsCollection:", collectionName);
+    return () => {};
+  }
   const q = query(collection(db, collectionName));
   return onSnapshot(
     q,
@@ -136,14 +149,28 @@ export const subscribeCmsCollection = (collectionName, onChange, onError) => {
 };
 
 export const saveCmsItem = async (collectionName, itemId, payload) => {
-  await setDoc(
-    doc(db, collectionName, itemId),
-    {
-      ...payload,
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true }
-  );
+  const itemRef = doc(db, collectionName, itemId);
+  const revRef = doc(collection(itemRef, 'revisions'));
+  
+  const batch = writeBatch(db);
+  batch.set(itemRef, {
+    ...payload,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+  
+  batch.set(revRef, {
+    ...payload,
+    savedAt: serverTimestamp(),
+  });
+  
+  await batch.commit();
+};
+
+export const getCmsRevisions = async (collectionName, itemId) => {
+  const revsRef = collection(db, collectionName, itemId, 'revisions');
+  const q = query(revsRef, orderBy('savedAt', 'desc'), limit(10));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
 export const softRemoveCmsItem = async (collectionName, itemId) => {
@@ -156,9 +183,26 @@ export const softRemoveCmsItem = async (collectionName, itemId) => {
 
 export const softRemoveMultipleCmsItems = async (collectionName, itemIds) => {
   const batch = writeBatch(db);
-  itemIds.forEach(id => {
-    batch.set(doc(db, collectionName, id), { deletedAt: serverTimestamp() }, { merge: true });
-  });
+  for (const id of itemIds) {
+    const docRef = doc(db, collectionName, id);
+    batch.update(docRef, {
+      deletedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  }
+  await batch.commit();
+};
+
+export const bulkUpdateCmsItems = async (collectionName, itemIds, updateData) => {
+  if (!itemIds || itemIds.length === 0) return;
+  const batch = writeBatch(db);
+  for (const id of itemIds) {
+    const docRef = doc(db, collectionName, id);
+    batch.update(docRef, {
+      ...updateData,
+      updatedAt: serverTimestamp(),
+    });
+  }
   await batch.commit();
 };
 

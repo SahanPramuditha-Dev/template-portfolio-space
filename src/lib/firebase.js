@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAnalytics, isSupported } from 'firebase/analytics';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, clearIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
@@ -20,6 +20,13 @@ import { getPerformance } from 'firebase/performance';
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// Force clear the IndexedDB cache to resolve any schema mismatch or corrupted states 
+// (e.g. FIRESTORE INTERNAL ASSERTION FAILED: Unexpected state ID: ca9)
+if (typeof window !== 'undefined') {
+  clearIndexedDbPersistence(db).catch(() => {});
+}
+
 const storage = getStorage(app);
 const functions = getFunctions(app);
 

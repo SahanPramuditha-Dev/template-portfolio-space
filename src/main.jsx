@@ -18,6 +18,7 @@ import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import RouteAnalytics from './components/RouteAnalytics.jsx'
 import RouteFallback from './components/RouteFallback.jsx'
+import { initWebVitals } from './utils/analytics.js'
 import SmoothScroll from './components/SmoothScroll.jsx'
 import ScrollProgress from './components/ScrollProgress.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
@@ -107,3 +108,5 @@ createRoot(document.getElementById('root')).render(
     </HelmetProvider>
   </StrictMode>,
 )
+
+initWebVitals();

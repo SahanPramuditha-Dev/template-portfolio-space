@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Save, Search, RefreshCw, Github } from 'lucide-react';
-import { CMS_DOCS, useCmsDoc, useCmsCollection, saveCmsDoc, saveCmsItem, softRemoveCmsItem, softRemoveMultipleCmsItems, reorderCmsCollection, uploadCmsAsset } from '../../../lib/cms';
+import { CMS_DOCS, useCmsDoc, useCmsCollection, saveCmsDoc, saveCmsItem, softRemoveCmsItem, softRemoveMultipleCmsItems, bulkUpdateCmsItems, getCmsRevisions, reorderCmsCollection, uploadCmsAsset } from '../../../lib/cms';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import AdminStatus from './AdminStatus';
@@ -122,6 +122,10 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
   const [syncBusy, setSyncBusy] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState('');
+  const autoSaveTimeoutRef = useRef(null);
+  const [revisions, setRevisions] = useState([]);
+  const [loadingRevisions, setLoadingRevisions] = useState(false);
   const [listQuery, setListQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -171,15 +175,33 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
     }
   }, [data, collectionKey, fields, section.initialItem, selectedIndex]);
 
+  const loadRevisions = async (index) => {
+    if (index === -1 || !items[index]?.id) {
+      setRevisions([]);
+      return;
+    }
+    setLoadingRevisions(true);
+    try {
+      const revs = await getCmsRevisions(docId, items[index].id);
+      setRevisions(revs);
+    } catch (err) {
+      console.error("Failed to load revisions", err);
+    } finally {
+      setLoadingRevisions(false);
+    }
+  };
+
   const createNew = () => {
     setSelectedIndex(-1);
     setDraft(formFromItem(section.initialItem, fields, section.initialItem));
+    setRevisions([]);
     setStatus('New draft ready.');
   };
 
   const editItem = (index) => {
     setSelectedIndex(index);
     setDraft(formFromItem(items[index], fields, section.initialItem));
+    loadRevisions(index);
   };
 
   const removeItem = async (index) => {
@@ -201,6 +223,21 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
   const updateField = (key, value) => {
     setDraft((prev) => ({ ...prev, [key]: value }));
   };
+
+  useEffect(() => {
+    if (!draft || selectedIndex === -1) return; // Don't auto-save completely new items until first manual save
+    
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    
+    setAutoSaveStatus('Drafting...');
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      saveItem(true);
+    }, 2000);
+    
+    return () => clearTimeout(autoSaveTimeoutRef.current);
+  }, [draft]);
 
   const uploadAsset = async (key, accept) => {
     const resolvedAccept = accept || (key === 'pdfUrl' ? 'application/pdf,.pdf' : 'image/*,.gif,.mp4,.webm');
@@ -290,14 +327,16 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
     });
   };
 
-  const saveItem = async () => {
+  const saveItem = async (silent = false) => {
     if (!draft) return;
-    setBusy(true);
+    if (!silent) setBusy(true);
+    if (silent) setAutoSaveStatus('Saving...');
     try {
       const normalized = itemFromForm(draft, fields);
       const validationErrors = collectMediaValidationErrors(normalized, fields);
       if (validationErrors.length > 0) {
-        setStatus(`Please fix media before publishing: ${validationErrors.slice(0, 3).join(' ')}`);
+        if (!silent) setStatus(`Please fix media before publishing: ${validationErrors.slice(0, 3).join(' ')}`);
+        if (silent) setAutoSaveStatus('Validation failed');
         return;
       }
       
@@ -316,11 +355,18 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
       setItems(nextItems);
       await saveCmsItem(docId, itemId, itemToSave);
       setSelectedIndex(selectedIndex === -1 ? 0 : selectedIndex);
-      setStatus('Changes saved.');
+      if (!silent) loadRevisions(selectedIndex === -1 ? 0 : selectedIndex);
+      
+      if (!silent) setStatus('Changes saved.');
+      if (silent) {
+        setAutoSaveStatus('Saved');
+        setTimeout(() => setAutoSaveStatus(''), 3000);
+      }
     } catch (error) {
-      setStatus(getCmsErrorMessage(error));
+      if (!silent) setStatus(getCmsErrorMessage(error));
+      if (silent) setAutoSaveStatus('Save failed');
     } finally {
-      setBusy(false);
+      if (!silent) setBusy(false);
     }
   };
 
@@ -377,6 +423,38 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
         await softRemoveMultipleCmsItems(docId, idsToRemove);
       }
       setStatus(`${indicesToRemove.length} items deleted.`);
+    } catch (error) {
+      setStatus(getCmsErrorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const updateMultipleStatus = async (newStatus) => {
+    if (selectedIndices.size === 0) return;
+    setBusy(true);
+    try {
+      const indicesToUpdate = Array.from(selectedIndices);
+      const idsToUpdate = indicesToUpdate.map(i => items[i].id).filter(id => id);
+      
+      const nextItems = [...items];
+      indicesToUpdate.forEach(i => {
+        if (nextItems[i]) {
+          nextItems[i] = { ...nextItems[i], status: newStatus };
+        }
+      });
+      setItems(nextItems);
+      
+      if (selectedIndex !== -1 && selectedIndices.has(selectedIndex)) {
+        setDraft(prev => ({ ...prev, status: newStatus }));
+      }
+      
+      if (idsToUpdate.length > 0) {
+        await bulkUpdateCmsItems(docId, idsToUpdate, { status: newStatus });
+      }
+      
+      setSelectedIndices(new Set());
+      setStatus(`${idsToUpdate.length} items updated to ${newStatus}.`);
     } catch (error) {
       setStatus(getCmsErrorMessage(error));
     } finally {
@@ -499,15 +577,31 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
           ) : (
             <>
               {selectedIndices.size > 0 && (
-                <div className="flex items-center justify-between mb-4 p-3 rounded-xl bg-red-400/10 border border-red-400/20">
-                  <span className="text-sm font-medium text-red-300">{selectedIndices.size} selected</span>
-                  <button
-                    onClick={removeMultipleItems}
-                    disabled={busy}
-                    className="px-3 py-1.5 text-xs font-bold bg-red-500/20 text-red-200 hover:bg-red-500/30 rounded-lg transition-colors"
-                  >
-                    Delete Selected
-                  </button>
+                <div className="flex items-center justify-between mb-4 p-3 rounded-xl bg-primary/40 border border-white/10">
+                  <span className="text-sm font-medium text-text-muted">{selectedIndices.size} selected</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => updateMultipleStatus('published')}
+                      disabled={busy}
+                      className="px-3 py-1.5 text-xs font-bold bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-lg transition-colors"
+                    >
+                      Publish
+                    </button>
+                    <button
+                      onClick={() => updateMultipleStatus('Draft')}
+                      disabled={busy}
+                      className="px-3 py-1.5 text-xs font-bold bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/20 rounded-lg transition-colors"
+                    >
+                      Unpublish
+                    </button>
+                    <button
+                      onClick={removeMultipleItems}
+                      disabled={busy}
+                      className="px-3 py-1.5 text-xs font-bold bg-red-500/10 text-red-300 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors ml-2"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               )}
               <DndContext 
@@ -594,9 +688,60 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
 
           <DraftPreview draft={draft} fields={fields} title={section.title} />
 
+          {selectedIndex !== -1 && (
+            <div className="rounded-2xl border border-white/10 bg-primary/30 p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs font-mono uppercase tracking-[0.14em] text-text-muted">Revision History</p>
+                <button 
+                  onClick={() => loadRevisions(selectedIndex)}
+                  disabled={loadingRevisions}
+                  className="text-xs text-accent hover:underline disabled:opacity-50"
+                >
+                  {loadingRevisions ? 'Loading...' : 'Refresh'}
+                </button>
+              </div>
+              
+              {revisions.length === 0 ? (
+                <p className="text-xs text-text-muted italic">No revisions found.</p>
+              ) : (
+                <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                  {revisions.map((rev) => {
+                    const date = rev.savedAt?.toDate ? rev.savedAt.toDate() : new Date();
+                    return (
+                      <div key={rev.id} className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-secondary/10 hover:bg-secondary/20 transition-colors">
+                        <div>
+                          <p className="text-xs font-medium text-text">{date.toLocaleString()}</p>
+                          <p className="text-[10px] text-text-muted font-mono">{rev.id}</p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (window.confirm('Are you sure you want to restore this version? Your current draft will be overwritten.')) {
+                              setDraft(formFromItem(rev, fields, section.initialItem));
+                              setStatus('Version restored to draft. Click Save to commit.');
+                            }
+                          }}
+                          className="px-3 py-1.5 text-xs font-bold bg-accent/10 text-accent hover:bg-accent/20 rounded-lg transition-colors"
+                        >
+                          Restore
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="sticky bottom-2 z-10 rounded-2xl border border-white/10 bg-primary/90 px-4 py-3 backdrop-blur-md sm:bottom-4">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-[11px] text-text-muted">Save applies the full item, including collapsed groups.</p>
+              <div className="flex items-center gap-3">
+                <p className="text-[11px] text-text-muted">Save applies the full item, including collapsed groups.</p>
+                {autoSaveStatus && (
+                  <span className="text-[11px] font-mono text-accent bg-accent/10 px-2 py-0.5 rounded border border-accent/20">
+                    {autoSaveStatus}
+                  </span>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={saveItem}

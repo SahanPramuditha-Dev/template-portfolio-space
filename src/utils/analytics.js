@@ -1,5 +1,6 @@
 import { db } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp, doc, setDoc, increment } from 'firebase/firestore';
+import { onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals';
 
 const generateSessionId = () => {
   if (typeof window === 'undefined') return '';
@@ -117,4 +118,25 @@ export const trackDownload = (fileType) => {
 
 export const trackSocialClick = (platform) => {
   trackEvent('social_click', { platform });
+};
+
+export const initWebVitals = () => {
+  const sendToAnalytics = ({ name, delta, id, value }) => {
+    trackEvent('web_vitals', {
+      metric_name: name,
+      metric_id: id,
+      metric_value: value,
+      metric_delta: delta,
+    });
+  };
+
+  try {
+    onCLS(sendToAnalytics);
+    onFCP(sendToAnalytics);
+    onINP(sendToAnalytics);
+    onLCP(sendToAnalytics);
+    onTTFB(sendToAnalytics);
+  } catch (err) {
+    console.error('Failed to initialize web vitals', err);
+  }
 };

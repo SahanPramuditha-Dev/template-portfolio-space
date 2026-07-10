@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
-import { Settings2, Save } from 'lucide-react';
+import { Settings2, Save, Link as LinkIcon } from 'lucide-react';
 import { useCmsDoc, CMS_DOCS, saveCmsDoc, uploadCmsAsset } from '../../../lib/cms';
 import AdminStatus from './AdminStatus';
 import SectionBanner from './SectionBanner';
@@ -173,7 +173,7 @@ const SiteEditor = () => {
       const isCropExempt = file.type === 'image/gif' || file.type === 'image/svg+xml' || file.type === 'image/x-icon' || file.name.endsWith('.ico') || file.name.endsWith('.svg');
       if (file.type.startsWith('image/') && !isCropExempt) {
         try {
-          const aspect = key === 'profilePhotoUrl' || key === 'ogImage' || key === 'seoFavicon' ? 1 : 16/9;
+          const aspect = key === 'profilePhotoUrl' || key === 'avatarPhotoUrl' || key === 'ogImage' || key === 'seoFavicon' ? 1 : 16/9;
           file = await requestImageCrop(file, aspect);
         } catch {
           return;
@@ -484,6 +484,10 @@ const SiteEditor = () => {
 
             {siteTab === 'seo' && (
               <SiteSection title="SEO & Metadata" description="Manage global title tags, descriptions, and social sharing imagery.">
+                <FieldEditor
+                  field={{ key: 'seoPreview', type: 'seo-preview' }}
+                  draft={draft}
+                />
                 <FieldEditor
                   field={{ key: 'seoTitle', label: 'Global Title Tag', type: 'text' }}
                   value={draft.seoTitle}

@@ -802,3 +802,39 @@ exports.logEvent = functions.https.onRequest(async (req, res) => {
     res.status(500).json({ error: 'Failed to log event' });
   }
 });
+
+// Scheduled Publishing Cron Job
+// Runs every 60 minutes to check for Scheduled items whose publishDate has passed
+exports.checkScheduledPublishing = functions.pubsub.schedule('every 60 minutes').onRun(async (context) => {
+  const db = admin.firestore();
+  const now = new Date().toISOString();
+  
+  const collections = ['projects', 'blog'];
+  let publishedCount = 0;
+
+  for (const coll of collections) {
+    const snapshot = await db.collection(coll)
+      .where('status', '==', 'Scheduled')
+      .get();
+      
+    if (snapshot.empty) continue;
+      
+    const batch = db.batch();
+    
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.publishDate && data.publishDate <= now) {
+        const newStatus = coll === 'projects' ? 'Live' : 'Published';
+        batch.update(doc.ref, { status: newStatus, updatedAt: admin.firestore.FieldValue.serverTimestamp() });
+        publishedCount++;
+      }
+    });
+    
+    if (publishedCount > 0) {
+      await batch.commit();
+    }
+  }
+  
+  console.log(`Successfully published ${publishedCount} scheduled items.`);
+  return null;
+});

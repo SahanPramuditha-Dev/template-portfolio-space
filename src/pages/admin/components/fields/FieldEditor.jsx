@@ -33,8 +33,61 @@ import {
   GripVertical,
   Github,
   Download,
-  Loader2
+  Loader2,
+  Search as SearchIcon
 } from 'lucide-react';
+
+const SeoPreviewField = ({ draft }) => {
+  const title = draft.seoTitle || draft.title || draft.name || 'Page Title';
+  const description = draft.seoDescription || draft.shortDescription || draft.description || 'Page description will appear here in search engine results.';
+  const url = 'https://yourportfolio.com/' + (draft.slug || 'page-url');
+
+  const titleLen = title.length;
+  const descLen = description.length;
+  const titleColor = titleLen > 60 ? 'text-amber-500' : 'text-emerald-500';
+  const descColor = descLen > 160 ? 'text-amber-500' : 'text-emerald-500';
+
+  return (
+    <div className="space-y-3 p-5 rounded-2xl border border-white/10 bg-black/20 shadow-inner mt-2">
+      <div className="flex items-center gap-2 text-text-muted mb-3">
+        <SearchIcon size={16} />
+        <h4 className="text-sm font-semibold tracking-wide">Google Search Preview</h4>
+      </div>
+      
+      {/* Google-like snippet preview */}
+      <div className="bg-white p-4 rounded-lg font-sans max-w-[600px]">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">
+            W
+          </div>
+          <div>
+            <div className="text-[14px] text-[#202124] leading-tight">Your Portfolio</div>
+            <div className="text-[12px] text-[#4d5156] leading-tight truncate max-w-[500px]">{url}</div>
+          </div>
+        </div>
+        <div className="text-[20px] text-[#1a0dab] hover:underline cursor-pointer leading-tight mb-1 truncate">
+          {title}
+        </div>
+        <div className="text-[14px] text-[#4d5156] leading-[1.58] line-clamp-2">
+          {description}
+        </div>
+      </div>
+
+      <div className="flex gap-6 mt-4 text-xs font-mono">
+        <div>
+          <span className="text-text-muted">Title Length: </span>
+          <span className={`${titleColor} font-bold`}>{titleLen}/60</span>
+          {titleLen > 60 && <span className="text-amber-500 ml-2">May truncate</span>}
+        </div>
+        <div>
+          <span className="text-text-muted">Description: </span>
+          <span className={`${descColor} font-bold`}>{descLen}/160</span>
+          {descLen > 160 && <span className="text-amber-500 ml-2">May truncate</span>}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const GithubImportField = ({ onChangeDraft, draft }) => {
   const [repoUrl, setRepoUrl] = React.useState('');
@@ -128,6 +181,7 @@ const GithubImportField = ({ onChangeDraft, draft }) => {
 };
 
 const FieldEditor = ({ field, value, onChange, onUpload, section, docId, draft, onChangeDraft }) => {
+  const [selectedFileIdx, setSelectedFileIdx] = React.useState(0);
   const fieldId = `admin-field-${field.key}`;
 
   // Local suggestions for tech list fields (avoid referencing AdminPage scope)
@@ -472,6 +526,10 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId, draft, 
             })
         : null;
 
+  if (field.type === 'seo-preview') {
+    return <SeoPreviewField draft={draft} />;
+  }
+
     if (field.key === 'architectureConnectionsJson') {
       // Connections are fully edited inside the Interactive Topology Builder of architectureNodesJson
       return null;
@@ -502,7 +560,6 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId, draft, 
     }
     if (field.key === 'folderStructureJson') {
       const files = Array.isArray(value) ? value : [];
-      const [selectedFileIdx, setSelectedFileIdx] = React.useState(0);
 
       const addFileNode = (parentFolder = '') => {
         const base = parentFolder ? `${parentFolder}/` : '';
@@ -797,7 +854,7 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId, draft, 
           <div className="flex gap-2">
             <input
               id={fieldId}
-              type={field.type === 'number' ? 'number' : 'text'}
+              type={field.type === 'number' ? 'number' : field.type === 'datetime-local' || field.type === 'date' ? field.type : 'text'}
               value={value}
               onChange={(e) => onChange(e.target.value)}
               className={commonClass}
