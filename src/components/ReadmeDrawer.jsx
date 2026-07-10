@@ -106,6 +106,70 @@ const ReadmeDrawer = ({ isOpen, onClose, repoName, githubUsername, repoUrl, isMa
     });
   }, [projectsList, repoDetails]);
 
+  // Handle escape key and focus trap for accessibility
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    
+    // Save active element to restore it on close
+    const activeElement = document.activeElement;
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (activeElement && activeElement.focus) {
+        activeElement.focus();
+      }
+    };
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const drawerElement = document.getElementById('readme-drawer-container');
+    if (!drawerElement) return;
+
+    // Find all focusable elements inside the drawer
+    const focusableElements = drawerElement.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusableElements.length === 0) return;
+    
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
+
+    const handleFocusTrap = (e) => {
+      if (e.key !== 'Tab') return;
+
+      if (e.shiftKey) { // Shift + Tab
+        if (document.activeElement === firstFocusable) {
+          lastFocusable.focus();
+          e.preventDefault();
+        }
+      } else { // Tab
+        if (document.activeElement === lastFocusable) {
+          firstFocusable.focus();
+          e.preventDefault();
+        }
+      }
+    };
+
+    drawerElement.addEventListener('keydown', handleFocusTrap);
+
+    // Automatically focus the first element (the close button) when opened
+    firstFocusable.focus();
+
+    return () => {
+      drawerElement.removeEventListener('keydown', handleFocusTrap);
+    };
+  }, [isOpen]);
+
   // Trigger data fetches on open
   useEffect(() => {
     if (!isOpen || !repoName) return;
@@ -223,6 +287,10 @@ const ReadmeDrawer = ({ isOpen, onClose, repoName, githubUsername, repoUrl, isMa
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              id="readme-drawer-container"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="readme-drawer-title"
               className="w-screen max-w-2xl bg-[#070b13]/95 border-l border-white/10 backdrop-blur-xl flex flex-col shadow-[-10px_0_40px_rgba(0,0,0,0.5)] h-screen overflow-hidden text-left"
             >
               {/* Header */}
@@ -232,7 +300,7 @@ const ReadmeDrawer = ({ isOpen, onClose, repoName, githubUsername, repoUrl, isMa
                     <BookOpen size={20} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white leading-none mb-1">{repoName}</h3>
+                    <h3 id="readme-drawer-title" className="text-lg font-bold text-white leading-none mb-1">{repoName}</h3>
                     <p className="text-xs text-text-muted">
                       {isManual ? 'Custom Database Project' : 'Syncing GitHub Repository'}
                     </p>

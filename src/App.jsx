@@ -54,6 +54,15 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (heavyVisualsEnabled) {
+      document.documentElement.classList.remove('lite-mode');
+    } else {
+      document.documentElement.classList.add('lite-mode');
+    }
+  }, [heavyVisualsEnabled]);
+
   return (
     <>
       <SEO 
