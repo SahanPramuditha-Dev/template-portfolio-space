@@ -37,32 +37,6 @@ function App() {
   const { data: siteDoc } = useCmsDoc(CMS_DOCS.site);
 
   useEffect(() => {
-    let animationFrameId;
-
-    const handleMouseMove = (e) => {
-      if (animationFrameId) return;
-
-      animationFrameId = requestAnimationFrame(() => {
-        const cards = document.getElementsByClassName('glass-card');
-        for (const card of cards) {
-          const rect = card.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-          card.style.setProperty('--mouse-x', `${x}px`);
-          card.style.setProperty('--mouse-y', `${y}px`);
-        }
-        animationFrameId = null;
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-    };
-  }, []);
-
-  useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
     const update = () => {
       setHeavyVisualsEnabled(!shouldDisableHeavyVisuals());

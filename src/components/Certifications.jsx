@@ -269,6 +269,15 @@ const FilterTabs = ({ certs, active, onChange }) => {
   );
 };
 
+const handleMouseMoveSpotlight = (e) => {
+  const card = e.currentTarget;
+  const rect = card.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  card.style.setProperty('--mouse-x', `${x}px`);
+  card.style.setProperty('--mouse-y', `${y}px`);
+};
+
 /* ─── Certificate Card ──────────────────────────────────────── */
 const CertificationCard = ({ cert, index, onViewPdf }) => (
   <motion.div
@@ -276,6 +285,7 @@ const CertificationCard = ({ cert, index, onViewPdf }) => (
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
     transition={{ duration: 0.5, delay: index * 0.08 }}
+    onMouseMove={handleMouseMoveSpotlight}
     className="glass-card flex flex-col rounded-xl border border-secondary/50 hover:border-accent/50 transition-all duration-300 group bg-secondary/20 hover:bg-secondary/30 overflow-hidden"
   >
     {cert.image && (

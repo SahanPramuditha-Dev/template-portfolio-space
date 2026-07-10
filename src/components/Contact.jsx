@@ -23,6 +23,15 @@ const Contact = () => {
   const prefersReducedMotion = useReducedMotion();
   const { data: siteDoc, loading } = useCmsDoc(CMS_DOCS.site, null);
 
+  const handleMouseMove = (e) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    card.style.setProperty('--mouse-x', `${x}px`);
+    card.style.setProperty('--mouse-y', `${y}px`);
+  };
+
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     
@@ -248,7 +257,7 @@ const Contact = () => {
 
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Form Side */}
-          <div className="max-w-xl w-full mx-auto glass-card p-8 rounded-2xl relative overflow-hidden order-2 lg:order-1">
+          <div onMouseMove={handleMouseMove} className="max-w-xl w-full mx-auto glass-card p-8 rounded-2xl relative overflow-hidden order-2 lg:order-1">
             <AnimatePresence mode="wait">
               {formState === 'success' ? (
                 <motion.div

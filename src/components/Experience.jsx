@@ -64,6 +64,15 @@ const EXPERIENCE_DATA = [
 ];
 */
 
+const handleMouseMoveSpotlight = (e) => {
+  const card = e.currentTarget;
+  const rect = card.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  card.style.setProperty('--mouse-x', `${x}px`);
+  card.style.setProperty('--mouse-y', `${y}px`);
+};
+
 const ExperienceCard = ({ item, index }) => {
   return (
     <motion.div
@@ -87,6 +96,7 @@ const ExperienceCard = ({ item, index }) => {
       <div className="w-full md:w-5/12 pl-16 md:pl-0">
         <motion.div 
           whileHover={{ scale: 1.02 }}
+          onMouseMove={handleMouseMoveSpotlight}
           className="glass-card p-6 rounded-xl border-l-4 border-accent hover:shadow-[0_10px_30px_rgba(0,0,0,0.1)] transition-all duration-300 group"
         >
           <div className="flex justify-between items-start mb-4">

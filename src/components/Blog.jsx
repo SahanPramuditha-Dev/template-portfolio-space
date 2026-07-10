@@ -16,6 +16,15 @@ const Blog = () => {
   const posts = (Array.isArray(data?.items) ? data.items : []).filter((post) => post.status !== 'Draft');
   const latestPosts = posts.slice(0, 3);
 
+  const handleMouseMove = (e) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    card.style.setProperty('--mouse-x', `${x}px`);
+    card.style.setProperty('--mouse-y', `${y}px`);
+  };
+
   if (loading || data === undefined) {
     return <CmsSectionSkeleton id="blog" />;
   }
@@ -56,6 +65,7 @@ const Blog = () => {
                   onClick={!href ? (e) => e.preventDefault() : undefined}
                   target={!href || href.startsWith('/') ? '_self' : '_blank'}
                   rel={!href || href.startsWith('/') ? undefined : 'noreferrer'}
+                  onMouseMove={handleMouseMove}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
