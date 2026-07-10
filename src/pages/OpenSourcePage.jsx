@@ -480,7 +480,7 @@ const OpenSourcePage = () => {
                 <motion.div
                   key={repo.id}
                   variants={fadeUp}
-                  className="relative rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-sm hover:border-white/20 transition-all flex flex-col group shadow-lg"
+                  className="relative rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-sm hover:border-white/20 transition-all flex flex-col h-full group shadow-lg"
                 >
                   {/* Pinned Badge */}
                   {repo.pinned && (
@@ -526,7 +526,7 @@ const OpenSourcePage = () => {
                 </h3>
 
                 {/* Description */}
-                <p className="text-sm leading-relaxed text-slate-300 mb-6 flex-grow text-left">
+                <p className="text-sm leading-relaxed text-slate-300 mb-6 flex-grow text-left line-clamp-2">
                   {repo.description}
                 </p>
 

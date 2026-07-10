@@ -205,7 +205,7 @@ const Contact = () => {
           <h2 className="text-accent font-mono text-lg mb-4">09. What's Next?</h2>
           <h2 className="text-4xl md:text-5xl font-bold text-text mb-6 gradient-text">Get In Touch</h2>
           <p className="text-text-muted text-lg max-w-2xl mx-auto mb-6">
-            Tell me what you are building, what timeline you have in mind, and where I can help. I keep the first reply practical so we can decide the next step quickly.
+            Whether you're looking to build a high-performance Web app, discuss network architecture, or collaborate on WebGL simulations—drop a transmission below. I keep the first reply practical so we can establish a connection quickly.
           </p>
           <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
             <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm font-mono text-emerald-300">
