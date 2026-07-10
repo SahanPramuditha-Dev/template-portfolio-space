@@ -39,7 +39,7 @@ const ImageWithFallback = ({
   }
 
   return (
-    <div className="relative">
+    <div className="relative w-full h-full">
       {isLoading && (
         <div className={`absolute inset-0 bg-secondary/20 animate-pulse rounded ${className.split(' ')[0] || ''}`} />
       )}

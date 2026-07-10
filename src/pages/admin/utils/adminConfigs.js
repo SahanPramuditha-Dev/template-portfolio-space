@@ -9,15 +9,48 @@ import {
   initialTestimonial,
   initialService,
   initialOpenSource,
+  initialFaq,
+  initialMaintenancePlan,
 } from './adminConstants';
-import { Folder, Award, Wrench, Link as LinkIcon, Sparkles, BookOpen, Quote, Briefcase, Github } from 'lucide-react';
+import { Folder, Award, Wrench, Link as LinkIcon, Sparkles, BookOpen, Quote, Briefcase, Github, HelpCircle, Activity } from 'lucide-react';
 
 export const projectFields = [
+  {
+    key: 'githubImport',
+    label: 'Auto-fill from GitHub Repository',
+    type: 'github-import',
+    group: 'summary',
+  },
+  {
+    key: 'layoutJson',
+    label: 'Dynamic Page Layout Builder',
+    type: 'layout-builder',
+    group: 'summary',
+  },
   { key: 'missionCode', label: 'Mission Code', type: 'text', group: 'summary', placeholder: 'e.g. STUDYOS' },
   { key: 'year', label: 'Year', type: 'number', group: 'summary', placeholder: 'e.g. 2026' },
   { key: 'title', label: 'Title', type: 'text', group: 'summary', placeholder: 'e.g. StudyOS' },
   { key: 'shortDescription', label: 'Short Description (5-second intro)', type: 'textarea', group: 'summary', placeholder: 'e.g. AI-powered study operating system that helps students organize notes, generate flashcards, and automate learning.' },
+  { key: 'valueProposition', label: 'One Sentence Value Proposition', type: 'text', group: 'summary', placeholder: 'e.g. An interactive 3D developer portfolio featuring real-time CMS, gamification and production-ready performance.' },
+  { 
+    key: 'galleryLayout', 
+    label: 'Visual Gallery Layout Engine', 
+    type: 'visual-gallery-picker', 
+    group: 'summary' 
+  },
   { key: 'tech', label: 'Tech Stack Tags', type: 'list', placeholder: 'Enter a tech (e.g. Next.js, React, Supabase)', group: 'summary' },
+  {
+    key: 'techStackJson',
+    label: 'Interactive Tech Stack Details',
+    type: 'object-list',
+    group: 'summary',
+    createItem: () => ({ name: '', description: '', iconImage: '' }),
+    fields: [
+      { key: 'name', label: 'Tech Name', type: 'text', placeholder: 'e.g. React' },
+      { key: 'description', label: 'Description/Usage', type: 'textarea', placeholder: 'e.g. Used for UI components and state management.' },
+      { key: 'iconImage', label: 'Upload Custom Icon Image', type: 'image' },
+    ],
+  },
   { key: 'category', label: 'Category', type: 'text', group: 'summary', placeholder: 'e.g. Web Apps / Productivity' },
   {
     key: 'status',
@@ -29,7 +62,19 @@ export const projectFields = [
   { key: 'client', label: 'Client / Company', type: 'text', group: 'summary', placeholder: 'e.g. StudyOS Inc. / Personal Research' },
   { key: 'industry', label: 'Industry', type: 'text', group: 'summary', placeholder: 'e.g. EdTech / SaaS / productivity' },
   { key: 'teamSize', label: 'Team Size', type: 'text', group: 'summary', placeholder: 'e.g. Sole Developer / 3 engineers' },
-  { key: 'projectTimeline', label: 'Timeline / Duration', type: 'text', group: 'summary', placeholder: 'e.g. 3 Months (Spring 2026)' },
+  { key: 'projectTimeline', label: 'Timeline / Duration (Text)', type: 'text', group: 'summary', placeholder: 'e.g. 3 Months (Spring 2026)' },
+  {
+    key: 'timelineJson',
+    label: 'Development Journey Steps',
+    type: 'object-list',
+    group: 'story',
+    createItem: () => ({ step: '', duration: '', description: '' }),
+    fields: [
+      { key: 'step', label: 'Step / Phase', type: 'text', placeholder: 'e.g. Research' },
+      { key: 'duration', label: 'Duration / Dates', type: 'text', placeholder: 'e.g. Week 1' },
+      { key: 'description', label: 'Description', type: 'textarea', placeholder: 'e.g. Gathering requirements and competitor analysis.' },
+    ],
+  },
   { key: 'outcomeBadge', label: 'Outcome Badge (Metrics Callout)', type: 'text', group: 'summary', placeholder: 'e.g. Reduced loading lag by 40%' },
   { key: 'featured', label: 'Featured Project', type: 'checkbox', group: 'summary' },
   { key: 'completed', label: 'Completed Project Status', type: 'checkbox', group: 'summary' },
@@ -46,12 +91,71 @@ export const projectFields = [
   { key: 'problem', label: 'Problem Statement', type: 'textarea', group: 'story', placeholder: 'e.g. Students use multiple disconnected platforms for notes, calendars, and tasks, causing cognitive load.' },
   { key: 'solution', label: 'Proposed Solution', type: 'textarea', group: 'story', placeholder: 'e.g. StudyOS centralizes study tasks, document summaries, and flashcards into one unified AI workspace.' },
   { key: 'architecture', label: 'Architecture (ASCII Text Fallback)', type: 'markdown', group: 'story', placeholder: 'Use this text area only if you do not upload an Architecture Image diagram.' },
+  {
+    key: 'userJourneyJson',
+    label: 'User Journey Flow',
+    type: 'object-list',
+    group: 'story',
+    createItem: () => ({ step: '', description: '', icon: '' }),
+    fields: [
+      { key: 'step', label: 'Journey Step Title', type: 'text', placeholder: 'e.g. User Onboarding' },
+      { key: 'description', label: 'Description', type: 'textarea', placeholder: 'e.g. User signs up via SSO and completes profile.' },
+      { key: 'icon', label: 'Lucide Icon', type: 'text', placeholder: 'e.g. UserPlus, Shield, ArrowRight' },
+    ],
+  },
+  {
+    key: 'scalabilityStrategyJson',
+    label: 'Scalability Strategy',
+    type: 'object-list',
+    group: 'engineering',
+    createItem: () => ({ area: '', strategy: '' }),
+    fields: [
+      { key: 'area', label: 'System Area', type: 'text', placeholder: 'e.g. Database Layer' },
+      { key: 'strategy', label: 'Scaling Strategy', type: 'textarea', placeholder: 'e.g. Implemented Redis caching.' },
+    ],
+  },
   { key: 'features', label: 'Key Features List', type: 'list', placeholder: 'e.g. Automatic flashcard generation / Spaced repetition algorithm', group: 'story' },
+  {
+    key: 'featuresJson',
+    label: 'Key Features Detailed',
+    type: 'object-list',
+    group: 'story',
+    createItem: () => ({ title: '', explanation: '' }),
+    fields: [
+      { key: 'title', label: 'Feature Title', type: 'text', placeholder: 'e.g. Realtime CMS' },
+      { key: 'explanation', label: 'Explanation', type: 'textarea', placeholder: 'e.g. Allows publishing projects without redeployment.' },
+    ],
+  },
   { key: 'learned', label: 'What I Learned (Lessons Learned Reflection)', type: 'textarea', group: 'story', placeholder: 'Explain key technical growth, prompt engineering, and architecture takeaways.' },
   { key: 'lessonsLearned', label: 'Alternative Lessons learned', type: 'textarea', group: 'story', placeholder: 'Reflection notes.' },
   { key: 'nextSteps', label: 'Next Steps & Future Roadmaps', type: 'textarea', group: 'story', placeholder: 'e.g. Integrating offline vector syncing and real-time collaboration.' },
+  { key: 'repoInsights', label: 'Repository & Code Insights', type: 'markdown', group: 'story', placeholder: 'Explain Folder structure, testing, CI/CD, state management...' },
   { key: 'challenges', label: 'Engineering Challenges', type: 'textarea', group: 'story', placeholder: 'e.g. Optimizing OpenAI token costs for large document processing.' },
+  {
+    key: 'challengesJson',
+    label: 'Engineering Decisions & Challenges',
+    type: 'object-list',
+    group: 'story',
+    createItem: () => ({ challenge: '', solution: '', result: '' }),
+    fields: [
+      { key: 'challenge', label: 'Challenge/Problem', type: 'textarea', placeholder: 'e.g. Too many Firebase reads.' },
+      { key: 'solution', label: 'Solution', type: 'textarea', placeholder: 'e.g. Caching, Memoization' },
+      { key: 'result', label: 'Result', type: 'text', placeholder: 'e.g. 65% fewer reads.' },
+    ],
+  },
   { key: 'outcomes', label: 'Business & User Outcomes', type: 'textarea', group: 'story', placeholder: 'e.g. Increased student study consistency metrics by 25%.' },
+  {
+    key: 'testimonialsJson',
+    label: 'Project Testimonials',
+    type: 'object-list',
+    group: 'story',
+    createItem: () => ({ quote: '', author: '', role: '' }),
+    fields: [
+      { key: 'quote', label: 'Quote', type: 'textarea', placeholder: 'e.g. Made revision much easier.' },
+      { key: 'author', label: 'Author', type: 'text', placeholder: 'e.g. Student' },
+      { key: 'role', label: 'Role/Company', type: 'text', placeholder: 'e.g. University of Colombo' },
+    ],
+  },
   {
     key: 'impactMetricsJson',
     label: 'Impact Metrics Data Grid',
@@ -68,6 +172,17 @@ export const projectFields = [
   { key: 'external', label: 'Live Demo URL', type: 'text', group: 'links', placeholder: 'https://studyos.com' },
   { key: 'demoEmail', label: 'Demo Email Credentials', type: 'text', group: 'links', placeholder: 'e.g. demo@studyos.com' },
   { key: 'demoPassword', label: 'Demo Password Credentials', type: 'text', group: 'links', placeholder: 'e.g. studyos123' },
+  {
+    key: 'developmentAnalyticsJson',
+    label: 'Development Analytics (LOC, Commits)',
+    type: 'object-list',
+    group: 'metrics',
+    createItem: () => ({ label: '', value: '' }),
+    fields: [
+      { key: 'label', label: 'Label', type: 'text', placeholder: 'e.g. Lines of Code' },
+      { key: 'value', label: 'Value', type: 'text', placeholder: 'e.g. 15,000+' },
+    ],
+  },
   { key: 'perfScore', label: 'Lighthouse Performance Score (0-100)', type: 'text', group: 'metrics', placeholder: 'e.g. 98' },
   { key: 'accessScore', label: 'Lighthouse Accessibility Score (0-100)', type: 'text', group: 'metrics', placeholder: 'e.g. 100' },
   { key: 'bestScore', label: 'Lighthouse Best Practices Score (0-100)', type: 'text', group: 'metrics', placeholder: 'e.g. 100' },
@@ -95,14 +210,254 @@ export const projectFields = [
     type: 'object-list',
     group: 'media',
     helper: 'URL, optional caption for the modal gallery, and alt text for accessibility.',
-    createItem: () => ({ url: '', caption: '', alt: '' }),
+    createItem: () => ({ url: '', caption: '', alt: '', group: '' }),
     fields: [
       { key: 'url', label: 'Image or video URL', type: 'image' },
       { key: 'caption', label: 'Caption', type: 'text' },
       { key: 'alt', label: 'Alt text', type: 'text' },
+      { key: 'group', label: 'Group Filter (e.g. Desktop, Mobile, Admin)', type: 'text', placeholder: 'Desktop' },
+    ],
+  },
+  // Upgraded Case Study Fields
+  { key: 'heroSubtitle', label: 'Hero Subtitle', type: 'text', group: 'hero', placeholder: 'e.g. The ultimate workspace for student developers.' },
+  {
+    key: 'heroStatsJson',
+    label: 'Hero Animated Statistics',
+    type: 'object-list',
+    group: 'hero',
+    createItem: () => ({ value: '', label: '', suffix: '' }),
+    fields: [
+      { key: 'value', label: 'Metric Value', type: 'text', placeholder: 'e.g. 99' },
+      { key: 'suffix', label: 'Metric Suffix (e.g. %, +, ms)', type: 'text', placeholder: 'e.g. %' },
+      { key: 'label', label: 'Metric Label', type: 'text', placeholder: 'e.g. Code Coverage' },
+    ],
+  },
+  { key: 'heroVideoUrl', label: 'Hero Video URL (Background or Preview)', type: 'text', group: 'hero', placeholder: 'https://...' },
+  { key: 'heroImageUrl', label: 'Hero Image URL (Fallback/Preview)', type: 'image', group: 'hero' },
+  {
+    key: 'heroThreeJsBg',
+    label: 'Hero 3D Background Effect',
+    type: 'select',
+    options: ['wireframeGlobe', 'particleField', 'constellation', 'hologram', 'orbit'],
+    group: 'hero',
+  },
+  { key: 'showLiveSandbox', label: 'Show Live Interactive Sandbox Section', type: 'checkbox', group: 'hero' },
+  { key: 'overviewParagraphs', label: 'Overview Long Description Paragraphs', type: 'textarea', group: 'story', placeholder: 'Multi-line detailed overview explanation.' },
+  {
+    key: 'overviewCardsJson',
+    label: 'Overview Highlights (Cards)',
+    type: 'object-list',
+    group: 'story',
+    createItem: () => ({ icon: '', title: '', description: '' }),
+    fields: [
+      { key: 'icon', label: 'Lucide Icon Name', type: 'text', placeholder: 'e.g. Zap, Shield, Cpu' },
+      { key: 'title', label: 'Highlight Title', type: 'text', placeholder: 'e.g. Blazing Fast' },
+      { key: 'description', label: 'Highlight Description', type: 'textarea', placeholder: 'e.g. Loads under 100ms globally.' },
+    ],
+  },
+  {
+    key: 'objectivesJson',
+    label: 'Project Objectives',
+    type: 'object-list',
+    group: 'story',
+    createItem: () => ({ title: '', description: '' }),
+    fields: [
+      { key: 'title', label: 'Objective Title', type: 'text', placeholder: 'e.g. Performance Target' },
+      { key: 'description', label: 'Objective Detail', type: 'textarea', placeholder: 'e.g. Maintain 95+ score across all device classes.' },
+    ],
+  },
+  {
+    key: 'beforeAfterJson',
+    label: 'Before/After Comparison Cards',
+    type: 'object-list',
+    group: 'story',
+    createItem: () => ({ label: '', description: '', state: 'before', imageUrl: '' }),
+    fields: [
+      { key: 'label', label: 'Title / Headline', type: 'text', placeholder: 'e.g. Disconnected Workflows' },
+      { key: 'description', label: 'Detailed Description', type: 'textarea', placeholder: 'e.g. Fragmented user paths across calendars, notes, and task lists.' },
+      { key: 'state', label: 'State', type: 'select', options: ['before', 'after'] },
+      { key: 'imageUrl', label: 'Mock Snapshot Image', type: 'image' },
+    ],
+  },
+  {
+    key: 'storyMilestonesJson',
+    label: 'Visual Story Milestones',
+    type: 'object-list',
+    group: 'story',
+    createItem: () => ({ date: '', title: '', description: '', badge: '', status: 'completed' }),
+    fields: [
+      { key: 'date', label: 'Milestone Date / Period', type: 'text', placeholder: 'e.g. Jan 2026' },
+      { key: 'title', label: 'Milestone Title', type: 'text', placeholder: 'e.g. Core API Complete' },
+      { key: 'description', label: 'Milestone Description', type: 'textarea', placeholder: 'e.g. Integrated Firebase auth, db sync, and security audits.' },
+      { key: 'badge', label: 'Milestone Badge Text', type: 'text', placeholder: 'e.g. Phase 2' },
+      { key: 'status', label: 'Status', type: 'select', options: ['planned', 'in-progress', 'completed'] },
+    ],
+  },
+  {
+    key: 'architectureNodesJson',
+    label: 'System Topology: Nodes',
+    type: 'object-list',
+    group: 'architecture',
+    createItem: () => ({ id: '', label: '', desc: '', icon: '', x: 50, y: 50, color: '#38bdf8' }),
+    fields: [
+      { key: 'id', label: 'Unique Node ID (e.g. user, cdn, db)', type: 'text', placeholder: 'e.g. user' },
+      { key: 'label', label: 'Display Label', type: 'text', placeholder: 'e.g. User Client' },
+      { key: 'desc', label: 'Description', type: 'textarea', placeholder: 'e.g. Desktop and mobile viewports initiating client sessions.' },
+      { key: 'icon', label: 'Lucide Icon Name', type: 'text', placeholder: 'e.g. Monitor, Globe, Database, Cpu', suggestions: ['Smartphone', 'Globe', 'Database', 'Cpu', 'Server', 'Shield', 'HardDrive', 'Boxes', 'Monitor'] },
+      { key: 'x', label: 'X Position percentage (0 to 100)', type: 'number', placeholder: '50' },
+      { key: 'y', label: 'Y Position percentage (0 to 100)', type: 'number', placeholder: '50' },
+      { key: 'color', label: 'Node Color Hex', type: 'color', placeholder: '#38bdf8' },
+    ],
+  },
+  {
+    key: 'architectureConnectionsJson',
+    label: 'System Topology: Connections',
+    type: 'object-list',
+    group: 'architecture',
+    createItem: () => ({ from: '', to: '', color: '' }),
+    fields: [
+      { key: 'from', label: 'From Node ID', type: 'text', placeholder: 'e.g. user', suggestions: ['user', 'cdn', 'auth', 'api', 'db', 'storage'] },
+      { key: 'to', label: 'To Node ID', type: 'text', placeholder: 'e.g. cdn', suggestions: ['user', 'cdn', 'auth', 'api', 'db', 'storage'] },
+      { key: 'color', label: 'Connection Line Color Hex', type: 'color', placeholder: 'e.g. #38bdf8' },
+    ],
+  },
+  { key: 'architectureMarkdown', label: 'System Design Narrative (Markdown)', type: 'markdown', group: 'architecture' },
+  {
+    key: 'folderStructureJson',
+    label: 'Workspace Folder Files Explorer',
+    type: 'object-list',
+    group: 'architecture',
+    createItem: () => ({ path: 'src/App.jsx', code: '// Write code here...' }),
+    fields: [
+      { key: 'path', label: 'File Path', type: 'text', placeholder: 'e.g. src/components/Workspace.jsx' },
+      { key: 'code', label: 'Mock Code / Contents', type: 'textarea', placeholder: 'const Workspace = () => ...' }
+    ]
+  },
+  {
+    key: 'databaseSchemaJson',
+    label: 'Database Schema Tables',
+    type: 'object-list',
+    group: 'architecture',
+    createItem: () => ({ table: '', description: '', columns: '' }),
+    fields: [
+      { key: 'table', label: 'Table / Collection Name', type: 'text', placeholder: 'e.g. users' },
+      { key: 'description', label: 'Table Description', type: 'textarea', placeholder: 'e.g. Stores master client profiles.' },
+      { key: 'columns', label: 'Columns Schema (e.g. id: string, name: string)', type: 'textarea', placeholder: 'e.g. uid: string (PK)\nemail: string\nrole: enum' },
+    ],
+  },
+  { key: 'databaseDesignMarkdown', label: 'Database Architecture Detail (Markdown)', type: 'markdown', group: 'architecture' },
+  {
+    key: 'apiEndpointsJson',
+    label: 'API Integrations & Mock Endpoints',
+    type: 'object-list',
+    group: 'architecture',
+    createItem: () => ({ name: '', endpoint: '', method: 'GET', description: '', requestFormat: '{}', responseFormat: '{}' }),
+    fields: [
+      { key: 'name', label: 'Endpoint Name', type: 'text', placeholder: 'e.g. Get User Profile' },
+      { key: 'endpoint', label: 'Path', type: 'text', placeholder: 'e.g. /api/v1/profile' },
+      { key: 'method', label: 'HTTP Method', type: 'select', options: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] },
+      { key: 'description', label: 'Endpoint Description', type: 'textarea', placeholder: 'e.g. Fetches profile information for current session.' },
+      { key: 'requestFormat', label: 'Mock Request JSON (If POST/PUT)', type: 'textarea', placeholder: 'e.g. {}' },
+      { key: 'responseFormat', label: 'Mock Response JSON', type: 'textarea', placeholder: 'e.g. { "status": "success", "data": { "uid": "123" } }' },
+    ],
+  },
+  { key: 'authenticationFlow', label: 'Authentication Architecture (Markdown)', type: 'markdown', group: 'architecture' },
+  {
+    key: 'engineeringDecisionsJson',
+    label: 'Engineering Decisions & Trade-offs',
+    type: 'object-list',
+    group: 'engineering',
+    createItem: () => ({ question: '', decision: '', reason: '', alternatives: '', tradeOffs: '' }),
+    fields: [
+      { key: 'question', label: 'Architectural Dilemma / Question', type: 'textarea', placeholder: 'e.g. Relational vs. NoSQL?' },
+      { key: 'decision', label: 'Chosen Decision', type: 'textarea', placeholder: 'e.g. PostgreSQL with JSONB' },
+      { key: 'reason', label: 'Decision Reason', type: 'textarea', placeholder: 'e.g. Handled structured relations with high-flex metadata.' },
+      { key: 'alternatives', label: 'Alternatives Considered', type: 'textarea', placeholder: 'e.g. MongoDB, MySQL' },
+      { key: 'tradeOffs', label: 'Trade-offs Faced', type: 'textarea', placeholder: 'e.g. More complex schemas than MongoDB, but full ACID transactions.' },
+    ],
+  },
+  {
+    key: 'performanceMetricsJson',
+    label: 'Performance & Optimization Metrics',
+    type: 'object-list',
+    group: 'metrics',
+    createItem: () => ({ label: '', value: '', detail: '', status: 'pass' }),
+    fields: [
+      { key: 'label', label: 'Metric Name', type: 'text', placeholder: 'e.g. Bundle Size' },
+      { key: 'value', label: 'Metric Value / Score', type: 'text', placeholder: 'e.g. 142 KB' },
+      { key: 'detail', label: 'Metric Details', type: 'textarea', placeholder: 'e.g. gzip compressed main vendor chunk.' },
+      { key: 'status', label: 'Status Code', type: 'select', options: ['pass', 'warning', 'critical'] },
+    ],
+  },
+  {
+    key: 'roadmapJson',
+    label: 'Future Roadmap checklist',
+    type: 'object-list',
+    group: 'story',
+    createItem: () => ({ task: '', priority: 'Medium', status: 'Todo', release: '' }),
+    fields: [
+      { key: 'task', label: 'Feature / Task Name', type: 'text', placeholder: 'e.g. WebRTC Video Chat' },
+      { key: 'priority', label: 'Priority', type: 'select', options: ['Low', 'Medium', 'High'] },
+      { key: 'status', label: 'Status', type: 'select', options: ['Todo', 'In Progress', 'Done'] },
+      { key: 'release', label: 'Estimated Release Period', type: 'text', placeholder: 'e.g. Q4 2026' },
+    ],
+  },
+  {
+    key: 'videosJson',
+    label: 'Video Showcase Library',
+    type: 'object-list',
+    group: 'media',
+    createItem: () => ({ url: '', caption: '', title: '' }),
+    fields: [
+      { key: 'url', label: 'Video URL (Direct mp4/webm/YouTube embed)', type: 'text', placeholder: 'https://...' },
+      { key: 'title', label: 'Video Title', type: 'text', placeholder: 'e.g. Product Walkthrough' },
+      { key: 'caption', label: 'Video Caption', type: 'text', placeholder: 'e.g. Dashboard navigation walkthrough.' },
+    ],
+  },
+  {
+    key: 'lessonsLearnedJson',
+    label: 'Lessons Learned & Retrospectives',
+    type: 'object-list',
+    group: 'engineering',
+    createItem: () => ({ title: '', description: '', icon: '' }),
+    fields: [
+      { key: 'title', label: 'Lesson Title', type: 'text', placeholder: 'e.g. Keep State Localized' },
+      { key: 'description', label: 'Lesson Details', type: 'textarea', placeholder: 'e.g. Redundant global state caused extra context re-renders.' },
+      { key: 'icon', label: 'Lucide Icon Name', type: 'text', placeholder: 'e.g. Lightbulb, AlertTriangle, BookOpen' },
+    ],
+  },
+  { key: 'deploymentMarkdown', label: 'CI/CD & Deployment Strategy (Markdown)', type: 'markdown', group: 'architecture' },
+  { key: 'ctaJson', label: 'Case Study Call-to-Action Settings (JSON)', type: 'json', group: 'hero' },
+  { key: 'seoKeywords', label: 'SEO Keywords (CSV)', type: 'csv', group: 'summary', placeholder: 'e.g. react, edtech, serverless' },
+  { key: 'relatedProjects', label: 'Related Projects Slugs/Titles (CSV)', type: 'csv', group: 'summary', placeholder: 'e.g. studyos, quantum-ledger' },
+  {
+    key: 'benchmarksJson',
+    label: 'Performance Benchmark Comparisons',
+    type: 'object-list',
+    group: 'metrics',
+    createItem: () => ({ metricName: '', oldValue: '', newValue: '', unit: '', betterDirection: 'lower' }),
+    fields: [
+      { key: 'metricName', label: 'Metric Name', type: 'text', placeholder: 'e.g. Load Time, Bundle Size, Memory Usage' },
+      { key: 'oldValue', label: 'Legacy Value', type: 'number', placeholder: 'e.g. 3.8' },
+      { key: 'newValue', label: 'Optimized Value', type: 'number', placeholder: 'e.g. 0.6' },
+      { key: 'unit', label: 'Value Unit (e.g. s, ms, MB, %)', type: 'text', placeholder: 'e.g. s' },
+      { key: 'betterDirection', label: 'Better Direction', type: 'select', options: ['lower', 'higher'] },
+    ],
+  },
+
+  {
+    key: 'technicalFaqJson',
+    label: 'Technical Q&A / FAQs Accordions',
+    type: 'object-list',
+    group: 'engineering',
+    createItem: () => ({ question: '', answer: '' }),
+    fields: [
+      { key: 'question', label: 'Engineering Question', type: 'text', placeholder: 'e.g. How is cache synchronization handled offline?' },
+      { key: 'answer', label: 'Technical Response (Detailed)', type: 'textarea', placeholder: 'e.g. We utilize a Service Worker network-first sync layer...' },
     ],
   },
 ];
+
 
 export const certificateFields = [
   { key: 'title', label: 'Title', type: 'text', group: 'identity' },
@@ -238,14 +593,17 @@ export const serviceFields = [
 ];
 
 export const openSourceFields = [
-  { key: 'name', label: 'Project Name', type: 'text', group: 'identity' },
-  { key: 'description', label: 'Description', type: 'textarea', group: 'identity' },
-  { key: 'repository', label: 'Repository URL', type: 'text', group: 'identity' },
-  { key: 'category', label: 'Category', type: 'text', group: 'identity' },
-  { key: 'status', label: 'Status', type: 'text', group: 'identity' },
-  { key: 'stars', label: 'Stars', type: 'number', group: 'stats' },
-  { key: 'forks', label: 'Forks', type: 'number', group: 'stats' },
-  { key: 'watchers', label: 'Watchers', type: 'number', group: 'stats' },
+  { key: 'name', label: 'GitHub Repository Name (Exact Match)', type: 'text', group: 'general', placeholder: 'e.g. pyNetScope' },
+  { key: 'category', label: 'Category Override', type: 'select', group: 'general',
+    options: ['Featured', 'University', 'Learning', 'Experiments', 'Security', 'Web', 'Mobile', 'AI', 'Archived', 'Other'] },
+  { key: 'status', label: 'Status', type: 'select', group: 'general',
+    options: ['Active', 'Maintenance', 'Learning', 'Archived', 'Discontinued'] },
+  { key: 'pinned', label: 'Pin to top', type: 'checkbox', group: 'general' },
+  { key: 'hidden', label: 'Hide from Portfolio', type: 'checkbox', group: 'general' },
+  { key: 'difficulty', label: 'Difficulty / Maturity', type: 'select', group: 'general',
+    options: ['None', 'Learning', 'Intermediate', 'Advanced', 'Professional'] },
+  { key: 'customDescription', label: 'Custom Description Override', type: 'textarea', group: 'general',
+    placeholder: 'Optional. Leave blank to use GitHub repo description.' },
 ];
 
 export const experienceFields = [
@@ -263,9 +621,21 @@ export const COLLECTION_FIELD_GROUPS = {
     label: 'Summary & classification',
     hint: 'What appears on cards, filters, and list views.',
   },
+  hero: {
+    label: 'Hero & CTA Details',
+    hint: 'Cinematic hero details, 3D settings, custom metrics, and calls-to-action.',
+  },
   story: {
     label: 'Case study & narrative',
-    hint: 'Long-form content shown in the project modal.',
+    hint: 'Long-form content, objectives, story milestones, and roadmap.',
+  },
+  architecture: {
+    label: 'Architecture & System Design',
+    hint: 'Interactive flow diagrams, database schemas, mock endpoints, and authentication.',
+  },
+  engineering: {
+    label: 'Engineering Integrity',
+    hint: 'Technical dilemmas, challenges, lessons learned, and folder structures.',
   },
   metrics: { label: 'Impact metrics', hint: 'Optional headline numbers.' },
   links: { label: 'Outbound links', hint: 'Demo and source URLs.' },
@@ -288,7 +658,22 @@ export const COLLECTION_FIELD_GROUPS = {
   role: { label: 'Role & place', hint: 'Title, organization, location, and timeframe.' },
   detail: { label: 'Story & skills', hint: 'Description and skill tags.' },
   general: { label: 'Fields', hint: '' },
+  faqItem: { label: 'FAQ Details', hint: 'Question and answer text.' },
+  maintenancePlan: { label: 'Maintenance Details', hint: 'Plan name, pricing, and features.' },
 };
+
+export const faqFields = [
+  { key: 'question', label: 'Question', type: 'text', group: 'faqItem' },
+  { key: 'answer',   label: 'Answer',   type: 'textarea', group: 'faqItem' },
+  { key: 'status',   label: 'Status',   type: 'select', options: ['Draft', 'Published'], group: 'faqItem' },
+];
+
+export const maintenancePlanFields = [
+  { key: 'title',       label: 'Plan Title',       type: 'text',     group: 'maintenancePlan' },
+  { key: 'price',       label: 'Price (LKR)',      type: 'text',     group: 'maintenancePlan', placeholder: 'e.g. Rs. 5,000/mo' },
+  { key: 'recommended', label: 'Recommended Plan', type: 'checkbox', group: 'maintenancePlan' },
+  { key: 'features',    label: 'Features List',    type: 'list',     group: 'maintenancePlan', placeholder: 'e.g. Uptime monitoring, Weekly backups' },
+];
 
 export const sectionConfig = {
   [CMS_DOCS.projects]: {
@@ -362,5 +747,21 @@ export const sectionConfig = {
     initialItem: initialOpenSource,
     uploadFolder: null,
     help: 'Manage your external OSS packages and contributions.',
+  },
+  [CMS_DOCS.faqs]: {
+    title: 'FAQs',
+    icon: HelpCircle,
+    collectionKey: 'items',
+    initialItem: initialFaq,
+    uploadFolder: null,
+    help: 'Manage frequently asked questions on the Services page.',
+  },
+  [CMS_DOCS.maintenancePlans]: {
+    title: 'Maintenance Plans',
+    icon: Activity,
+    collectionKey: 'items',
+    initialItem: initialMaintenancePlan,
+    uploadFolder: null,
+    help: 'Manage maintenance and support pricing plans on the Services page.',
   },
 };

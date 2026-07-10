@@ -607,21 +607,119 @@ const TelemetryDashboard = () => {
             )}
 
             {expandedCard === 'countries' && (
-              <div className="p-4 bg-secondary/20 rounded-lg border border-secondary/40 text-xs">
-                <div className="font-bold text-accent mb-3 uppercase tracking-wider text-[10px]">Geographic Sectors</div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {metrics.topCountriesList.map(c => (
-                    <div key={c.name} className="flex items-center justify-between p-2.5 bg-secondary/35 rounded border border-secondary/45">
-                      <div className="flex items-center gap-2">
-                        <CountryFlag countryName={c.name} className="w-5 h-3.5" />
-                        <span className="font-bold text-text">{c.name}</span>
+              <div className="space-y-6">
+                <div className="p-4 bg-secondary/20 rounded-lg border border-secondary/40 text-xs">
+                  <div className="font-bold text-accent mb-3 uppercase tracking-wider text-[10px]">Geographic Sectors</div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {metrics.topCountriesList.map(c => (
+                      <div key={c.name} className="flex items-center justify-between p-2.5 bg-secondary/35 rounded border border-secondary/45">
+                        <div className="flex items-center gap-2">
+                          <CountryFlag countryName={c.name} className="w-5 h-3.5" />
+                          <span className="font-bold text-text">{c.name}</span>
+                        </div>
+                        <div className="flex items-baseline gap-2 font-mono">
+                          <span className="text-text font-bold">{c.count} hits</span>
+                          <span className="text-accent text-[10px]">{c.percent}%</span>
+                        </div>
                       </div>
-                      <div className="flex items-baseline gap-2 font-mono">
-                        <span className="text-text font-bold">{c.count} hits</span>
-                        <span className="text-accent text-[10px]">{c.percent}%</span>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Embedded Geographic World Map */}
+                <div className="text-xs">
+                  <div 
+                    onDoubleClick={() => {
+                      setShowMapModal(true);
+                      setModalTab('🗺 World Map');
+                    }}
+                    className="p-6 bg-secondary/35 rounded-lg border border-secondary/40 overflow-hidden cursor-zoom-in group/map relative min-w-0"
+                    title="Double click to enlarge"
+                  >
+                    <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
+                      <span className="font-bold text-accent uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                        Geo Telemetry & User Distribution
+                      </span>
+                      <span className="text-[8px] text-text-muted opacity-50 select-none group-hover/map:opacity-80 transition-opacity">
+                        ⤢ double click to enlarge
+                      </span>
+                    </div>
+
+                    <div className="grid md:grid-cols-[2fr_1fr] gap-6 items-center">
+                      {/* SVG Map Container */}
+                      <div className="w-full flex items-center justify-center p-3 bg-black/35 rounded-lg border border-white/5 relative">
+                        <svg 
+                          className="w-full h-auto text-white/10 max-h-[300px]" 
+                          viewBox="30.767 241.591 784.077 458.627" 
+                          fill="currentColor"
+                        >
+                          {WORLD_MAP_PATHS.map((country, idx) => {
+                            const countryCode = country.id;
+                            const activeCountry = metrics.topCountriesList.find(
+                              c => COUNTRY_CODE_MAP[c.name]?.toLowerCase() === countryCode
+                            );
+                            
+                            return (
+                              <path
+                                key={`${countryCode}-${idx}`}
+                                d={country.d}
+                                className={`${
+                                  activeCountry 
+                                    ? 'fill-cyan-500/80 stroke-cyan-400/40' 
+                                    : 'fill-white/5 stroke-white/10'
+                                } transition-all duration-300`}
+                              />
+                            );
+                          })}
+
+                          {metrics.topCountriesList.map((c) => {
+                            const code = COUNTRY_CODE_MAP[c.name]?.toLowerCase();
+                            const center = getCountryCenter(code);
+                            if (!center) return null;
+                            return (
+                              <g key={`beacon-small-${code}`}>
+                                <circle
+                                  cx={center.x}
+                                  cy={center.y}
+                                  r="6"
+                                  className="fill-accent/15 stroke-accent/40 animate-ping"
+                                />
+                                <circle
+                                  cx={center.x}
+                                  cy={center.y}
+                                  r="2.5"
+                                  className="fill-cyan-400 stroke-black/50 stroke-[0.5]"
+                                />
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      </div>
+                      
+                      {/* Stats Breakdown Panel */}
+                      <div className="flex flex-col justify-between h-full py-1">
+                        <div>
+                          <h4 className="text-[10px] text-accent uppercase tracking-wider mb-3 font-mono">Visitor Locations</h4>
+                          <div className="space-y-3 font-mono text-[10px]">
+                            {metrics.topCountriesList.map((c) => (
+                              <div key={c.name} className="flex items-center justify-between border-b border-white/[0.03] pb-2">
+                                <span className="text-text flex items-center gap-2">
+                                  <CountryFlag countryName={c.name} className="w-4 h-3 rounded-[1px] border border-white/5" />
+                                  <span>{c.name}</span>
+                                </span>
+                                <span className="font-bold text-accent">{c.count} sessions ({c.percent}%)</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="mt-6 text-[9px] text-text-muted font-mono leading-relaxed bg-primary/20 border border-white/5 rounded p-3 select-none">
+                          📍 Beacons represent live uplink sectors. Double click the map to view in full screen and hover over sectors for detailed metrics.
+                        </div>
                       </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -701,103 +799,6 @@ const TelemetryDashboard = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Bottom Panel: Expanded Geographic World Map */}
-      <div className="border-t border-white/5 pt-6 text-xs">
-        {/* High-Tech Vector World Map Card */}
-        <div 
-          onDoubleClick={() => {
-            setShowMapModal(true);
-            setModalTab('🗺 World Map');
-          }}
-          className="p-6 bg-secondary/35 rounded-lg border border-secondary/40 overflow-hidden cursor-zoom-in group/map relative min-w-0"
-          title="Double click to enlarge"
-        >
-          <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
-            <span className="font-bold text-accent uppercase tracking-wider text-[10px] flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-              Geo Telemetry & User Distribution
-            </span>
-            <span className="text-[8px] text-text-muted opacity-50 select-none group-hover/map:opacity-80 transition-opacity">
-              ⤢ double click to enlarge
-            </span>
-          </div>
-
-          <div className="grid md:grid-cols-[2fr_1fr] gap-6 items-center">
-            {/* SVG Map Container */}
-            <div className="w-full flex items-center justify-center p-3 bg-black/35 rounded-lg border border-white/5 relative">
-              <svg 
-                className="w-full h-auto text-white/10 max-h-[300px]" 
-                viewBox="30.767 241.591 784.077 458.627" 
-                fill="currentColor"
-              >
-                {WORLD_MAP_PATHS.map((country, idx) => {
-                  const countryCode = country.id;
-                  const activeCountry = metrics.topCountriesList.find(
-                    c => COUNTRY_CODE_MAP[c.name]?.toLowerCase() === countryCode
-                  );
-                  
-                  return (
-                    <path
-                      key={`${countryCode}-${idx}`}
-                      d={country.d}
-                      className={`${
-                        activeCountry 
-                          ? 'fill-cyan-500/80 stroke-cyan-400/40' 
-                          : 'fill-white/5 stroke-white/10'
-                      } transition-all duration-300`}
-                    />
-                  );
-                })}
-
-                {metrics.topCountriesList.map((c) => {
-                  const code = COUNTRY_CODE_MAP[c.name]?.toLowerCase();
-                  const center = getCountryCenter(code);
-                  if (!center) return null;
-                  return (
-                    <g key={`beacon-small-${code}`}>
-                      <circle
-                        cx={center.x}
-                        cy={center.y}
-                        r="6"
-                        className="fill-accent/15 stroke-accent/40 animate-ping"
-                      />
-                      <circle
-                        cx={center.x}
-                        cy={center.y}
-                        r="2.5"
-                        className="fill-cyan-400 stroke-black/50 stroke-[0.5]"
-                      />
-                    </g>
-                  );
-                })}
-              </svg>
-            </div>
-            
-            {/* Stats Breakdown Panel */}
-            <div className="flex flex-col justify-between h-full py-1">
-              <div>
-                <h4 className="text-[10px] text-accent uppercase tracking-wider mb-3 font-mono">Visitor Locations</h4>
-                <div className="space-y-3 font-mono text-[10px]">
-                  {metrics.topCountriesList.map((c) => (
-                    <div key={c.name} className="flex items-center justify-between border-b border-white/[0.03] pb-2">
-                      <span className="text-text flex items-center gap-2">
-                        <CountryFlag countryName={c.name} className="w-4 h-3 rounded-[1px] border border-white/5" />
-                        <span>{c.name}</span>
-                      </span>
-                      <span className="font-bold text-accent">{c.count} sessions ({c.percent}%)</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="mt-6 text-[9px] text-text-muted font-mono leading-relaxed bg-primary/20 border border-white/5 rounded p-3 select-none">
-                📍 Beacons represent live uplink sectors. Double click the map to view in full screen and hover over sectors for detailed metrics.
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Map Zoom Modal Overlay via React Portal */}
       {typeof document !== 'undefined' && createPortal(

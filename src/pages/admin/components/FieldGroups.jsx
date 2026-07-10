@@ -6,9 +6,21 @@ export const COLLECTION_FIELD_GROUPS = {
     label: 'Summary & classification',
     hint: 'What appears on cards, filters, and list views.',
   },
+  hero: {
+    label: 'Hero & CTA Details',
+    hint: 'Cinematic hero details, 3D settings, custom metrics, and calls-to-action.',
+  },
   story: {
     label: 'Case study & narrative',
-    hint: 'Long-form content shown in the project modal.',
+    hint: 'Long-form content, objectives, story milestones, and roadmap.',
+  },
+  architecture: {
+    label: 'Architecture & System Design',
+    hint: 'Interactive flow diagrams, database schemas, mock endpoints, and authentication.',
+  },
+  engineering: {
+    label: 'Engineering Integrity',
+    hint: 'Technical dilemmas, challenges, lessons learned, and folder structures.',
   },
   metrics: { label: 'Impact metrics', hint: 'Optional headline numbers.' },
   links: { label: 'Outbound links', hint: 'Demo and source URLs.' },

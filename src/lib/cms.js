@@ -16,6 +16,8 @@ export const CMS_DOCS = {
   openSource: 'openSource',
   resources: 'resources',
   messages: 'messages',
+  faqs: 'faqs',
+  maintenancePlans: 'maintenancePlans',
 };
 
 /** Firestore documents required for the home page (single-flight warm-up + listener hydration). */

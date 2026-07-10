@@ -16,6 +16,7 @@ import { CmsSectionSkeleton, FooterCmsSkeleton } from './components/CmsShapeSkel
 import { AchievementsProvider } from './context/AchievementsContext';
 import { AccessibilityProvider } from './context/AccessibilityContext';
 import { CMS_DOCS, useCmsDoc } from './lib/cms';
+import { BlockRenderer } from './blocks/BlockRenderer';
 
 const ThreeBackground = lazy(() => import('./components/ThreeBackground'));
 const CustomCursor = lazy(() => import('./components/CustomCursor'));
@@ -122,24 +123,30 @@ function App() {
           <div className="relative z-10">
             <Navbar />
             <main id="main-content" className="pb-16 md:pb-0 overflow-x-hidden">
-              <Hero />
-              <About />
-              <Suspense fallback={<CmsSectionSkeleton id="skills" />}>
-                <Skills />
-              </Suspense>
-              <Suspense fallback={<CmsSectionSkeleton id="experience" />}>
-                <Experience />
-              </Suspense>
-              <Suspense fallback={<CmsSectionSkeleton id="projects" />}>
-                <Projects />
-              </Suspense>
-              <Suspense fallback={<CmsSectionSkeleton id="certifications" />}>
-                <Certifications />
-              </Suspense>
-              <Suspense fallback={<CmsSectionSkeleton id="contact" />}>
-                <Contact />
-              </Suspense>
-            </main>
+              {siteDoc?.layoutJson ? (
+                <BlockRenderer blocks={siteDoc.layoutJson} />
+              ) : (
+                <>
+                  <Hero />
+                  <About />
+                  <Suspense fallback={<CmsSectionSkeleton id="skills" />}>
+                    <Skills />
+                  </Suspense>
+                  <Suspense fallback={<CmsSectionSkeleton id="experience" />}>
+                    <Experience />
+                  </Suspense>
+                  <Suspense fallback={<CmsSectionSkeleton id="projects" />}>
+                    <Projects />
+                  </Suspense>
+                  <Suspense fallback={<CmsSectionSkeleton id="certifications" />}>
+                    <Certifications />
+                  </Suspense>
+                  <Suspense fallback={<CmsSectionSkeleton id="contact" />}>
+                    <Contact />
+                  </Suspense>
+                </>
+              )}
+</main>
             <Suspense fallback={<FooterCmsSkeleton />}>
               <Footer />
             </Suspense>

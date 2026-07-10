@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Github, Star, BookOpen, Calendar, Flame, Award, GitFork, RotateCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 // GitHub language colors mapping
 const getLanguageColor = (lang) => {
@@ -35,7 +36,7 @@ const COLOR_SCALE = [
   '#61d9ff', // 4+
 ];
 
-const GithubStats = ({ username }) => {
+const GithubStats = ({ username, onlyHeatmap = false }) => {
   const [user, setUser] = useState(null);
   const [repos, setRepos] = useState([]);
   const [contributions, setContributions] = useState(null);
@@ -253,10 +254,12 @@ const GithubStats = ({ username }) => {
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] items-stretch">
-          <div className="bg-secondary/20 p-6 rounded-xl border border-secondary/50 min-h-[340px]" />
-          <div className="bg-secondary/20 p-6 rounded-xl border border-secondary/50 min-h-[340px]" />
-        </div>
+        {!onlyHeatmap && (
+          <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] items-stretch">
+            <div className="bg-secondary/20 p-6 rounded-xl border border-secondary/50 min-h-[340px]" />
+            <div className="bg-secondary/20 p-6 rounded-xl border border-secondary/50 min-h-[340px]" />
+          </div>
+        )}
         <div className="bg-secondary/20 p-6 rounded-xl border border-secondary/50 min-h-[220px]" />
       </div>
     );
@@ -264,20 +267,16 @@ const GithubStats = ({ username }) => {
 
   if (error) {
     return (
-      <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] items-stretch">
-        <div className="bg-secondary/20 p-6 rounded-xl border border-secondary/50 text-text-muted text-sm min-h-[340px] flex items-center">
-          {error}
-        </div>
-        <div className="bg-secondary/20 p-6 rounded-xl border border-secondary/50 min-h-[340px] flex items-center">
-          <a
-            href={`https://github.com/${username}`}
-            target="_blank"
-            rel="noreferrer"
-            className="px-4 py-2 border border-accent text-accent rounded font-mono hover:bg-accent/10 transition-colors inline-block"
-          >
-            View on GitHub
-          </a>
-        </div>
+      <div className="bg-secondary/20 p-6 rounded-xl border border-secondary/50 text-text-muted text-sm min-h-[220px] flex flex-col justify-center items-center gap-3">
+        <span>{error}</span>
+        <a
+          href={`https://github.com/${username}`}
+          target="_blank"
+          rel="noreferrer"
+          className="px-4 py-2 border border-accent text-accent rounded font-mono hover:bg-accent/10 transition-colors inline-block"
+        >
+          View on GitHub
+        </a>
       </div>
     );
   }
@@ -299,7 +298,8 @@ const GithubStats = ({ username }) => {
   return (
     <div className="space-y-6 relative">
       {/* Top Section: Profile and Repositories */}
-      <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] items-stretch">
+      {!onlyHeatmap && (
+        <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] items-stretch">
         {/* Profile Card */}
         <div className="bg-secondary/20 p-6 rounded-xl border border-secondary/50 h-full min-h-[340px] flex flex-col justify-between">
           <div className="space-y-5">
@@ -426,17 +426,16 @@ const GithubStats = ({ username }) => {
           </div>
 
           <div className="pt-4 mt-4 border-t border-secondary/40">
-            <a
-              href={`https://github.com/${username}?tab=repositories`}
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              to="/opensource"
               className="inline-flex items-center gap-2 text-accent hover:text-text transition-colors text-sm font-mono"
             >
               View all repositories
-            </a>
+            </Link>
           </div>
         </div>
       </div>
+      )}
 
       {/* Heatmap & Activity Section */}
       {heatmapData && (

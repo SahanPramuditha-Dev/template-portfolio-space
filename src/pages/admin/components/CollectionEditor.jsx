@@ -74,6 +74,7 @@ const fromFormValue = (field, value) => {
           url: String(row?.url ?? '').trim(),
           caption: String(row?.caption ?? '').trim(),
           alt: String(row?.alt ?? '').trim(),
+          group: String(row?.group ?? '').trim(),
         }))
         .filter((row) => row.url);
     }
@@ -399,9 +400,9 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
       />
       <AdminStatus message={status} />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
-        <div className="space-y-3">
-          <div className="rounded-2xl border border-white/10 bg-primary/30 p-3">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)] items-start">
+        <div className="flex flex-col xl:sticky xl:top-24 xl:h-[calc(100vh-8rem)] rounded-3xl border border-white/5 bg-primary/10 p-4 shadow-inner">
+          <div className="rounded-2xl border border-white/10 bg-primary/30 p-2 shrink-0 mb-4">
             <label className="sr-only" htmlFor={`list-search-${docId}`}>
               Filter {section.title} list
             </label>
@@ -417,6 +418,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
               />
             </div>
           </div>
+          <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3 pb-4">
           {items.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-white/15 bg-primary/25 p-6 text-center text-sm text-text-muted">
               No items yet. Use <span className="text-accent">Add new</span> above to create the first entry.
@@ -490,6 +492,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
               )}
             </>
           )}
+          </div>
         </div>
 
         <div className="space-y-5">
@@ -506,6 +509,8 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
                   field={field}
                   value={draft[field.key]}
                   onChange={(value) => updateField(field.key, value)}
+                  draft={draft}
+                  onChangeDraft={updateField}
                   section={section}
                   docId={docId}
                   onUpload={

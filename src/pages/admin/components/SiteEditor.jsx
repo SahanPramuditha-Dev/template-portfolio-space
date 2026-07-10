@@ -31,6 +31,8 @@ const parseArrayValue = (value, fallback = []) => {
 };
 
 const normalizeSiteDraft = (source = initialSiteContent) => ({
+  layoutJson: source.layoutJson ?? initialSiteContent.layoutJson,
+
   heroTitle: source.heroTitle ?? initialSiteContent.heroTitle,
   heroSubtitle: source.heroSubtitle ?? initialSiteContent.heroSubtitle,
   heroIntro: source.heroIntro ?? initialSiteContent.heroIntro,

@@ -5,6 +5,7 @@ import NebulaBackground from './NebulaBackground';
 import WarpBackground from './WarpBackground';
 import NetworkBackground from './NetworkBackground';
 import ThreeBackground from '../ThreeBackground';
+import StarryConstellationsBackground from './StarryConstellationsBackground';
 
 const DynamicBackground = () => {
   const location = useLocation();
@@ -28,7 +29,7 @@ const DynamicBackground = () => {
   }
   
   if (path.includes('/opensource')) {
-    // Standard starry night for Open Source, as it feels "universal"
+    // Standard static starry night for Open Source
     return (
       <div className="fixed inset-0 -z-0 pointer-events-none bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.08),transparent_40%),linear-gradient(180deg,rgba(2,6,23,1),rgba(15,23,42,1))]">
         <ThreeBackground />
@@ -36,8 +37,8 @@ const DynamicBackground = () => {
     );
   }
 
-  // Fallback to Nebula (softest, most generic) for any other sub-page like /projects
-  return <NebulaBackground />;
+  // Use the beautiful animated interactive constellations for projects and the rest of the site!
+  return <StarryConstellationsBackground />;
 };
 
 export default DynamicBackground;

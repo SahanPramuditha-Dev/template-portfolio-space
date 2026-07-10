@@ -26,6 +26,8 @@ import {
   Link as LinkIcon,
   Eye,
   EyeOff,
+  HelpCircle,
+  Activity,
 } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
@@ -46,7 +48,9 @@ import {
   testimonialFields,
   serviceFields,
   openSourceFields,
-  resourceFields
+  resourceFields,
+  faqFields,
+  maintenancePlanFields,
 } from './admin/utils/adminConfigs';
 
 import MessagesInbox from '../components/MessagesInbox';
@@ -106,6 +110,8 @@ const AdminPage = () => {
         { id: CMS_DOCS.testimonials, label: 'Testimonials', icon: Quote },
         { id: CMS_DOCS.openSource, label: 'Open Source', icon: Github },
         { id: CMS_DOCS.resources, label: 'Resources Archive', icon: LinkIcon },
+        { id: CMS_DOCS.faqs, label: 'FAQs Config', icon: HelpCircle },
+        { id: CMS_DOCS.maintenancePlans, label: 'Maintenance Plans', icon: Activity },
       ],
     },
   ];
@@ -263,7 +269,7 @@ const AdminPage = () => {
   const activeSection = tabs.find((tab) => tab.id === activeTab) || tabs[0];
 
   return (
-    <div className="h-screen w-screen flex overflow-hidden bg-primary bg-[radial-gradient(ellipse_80%_45%_at_50%_-15%,rgb(var(--color-accent-rgb)/0.07),transparent)] text-text">
+    <div className="min-h-screen w-full flex bg-primary bg-[radial-gradient(ellipse_80%_45%_at_50%_-15%,rgb(var(--color-accent-rgb)/0.07),transparent)] text-text">
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div 
@@ -274,7 +280,7 @@ const AdminPage = () => {
 
       {/* FIXED SIDEBAR (Zero Scroll Layout Shift) */}
       <aside className={clsx(
-        "fixed inset-y-0 left-0 z-50 w-72 flex flex-col bg-primary/95 backdrop-blur-2xl border-r border-white/10 p-6 transition-transform duration-300 ease-in-out lg:static lg:w-72 lg:transform-none lg:bg-secondary/20 lg:backdrop-blur-md shrink-0 h-full",
+        "fixed inset-y-0 left-0 z-50 w-72 flex flex-col bg-primary/95 backdrop-blur-2xl border-r border-white/10 p-6 transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:w-72 lg:transform-none lg:bg-secondary/20 lg:backdrop-blur-md shrink-0",
         isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
         <div className="flex items-center justify-between mb-6 shrink-0">
@@ -346,10 +352,10 @@ const AdminPage = () => {
         </div>
       </aside>
 
-      {/* INDEPENDENT CONTENT AREA (Only this part scrolls) */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      {/* INDEPENDENT CONTENT AREA */}
+      <div className="flex-1 flex flex-col min-h-screen min-w-0">
         {/* Top Header Panel */}
-        <header className="flex items-center justify-between gap-4 px-6 py-4 border-b border-white/10 bg-secondary/35 backdrop-blur-md shrink-0">
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-4 px-6 py-4 border-b border-white/10 bg-secondary/35 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
@@ -382,7 +388,7 @@ const AdminPage = () => {
         </header>
 
         {/* Scrollable Work Workspace Pane */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 [scrollbar-width:thin]">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
           {activeSection.id === 'site' && <SiteEditor />}
           {activeSection.id === 'media' && <MediaLibrary />}
           {activeSection.id === CMS_DOCS.messages && <MessagesInbox />}
@@ -444,6 +450,20 @@ const AdminPage = () => {
               docId={CMS_DOCS.resources}
               section={sectionConfig[CMS_DOCS.resources]}
               fields={resourceFields}
+            />
+          )}
+          {activeSection.id === CMS_DOCS.faqs && (
+            <CollectionEditor
+              docId={CMS_DOCS.faqs}
+              section={sectionConfig[CMS_DOCS.faqs]}
+              fields={faqFields}
+            />
+          )}
+          {activeSection.id === CMS_DOCS.maintenancePlans && (
+            <CollectionEditor
+              docId={CMS_DOCS.maintenancePlans}
+              section={sectionConfig[CMS_DOCS.maintenancePlans]}
+              fields={maintenancePlanFields}
             />
           )}
         </main>

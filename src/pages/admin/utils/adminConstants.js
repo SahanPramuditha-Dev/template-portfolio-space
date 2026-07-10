@@ -1,4 +1,42 @@
 export const initialSiteContent = {
+  layoutJson: [
+  {
+    "id": "Hero",
+    "type": "Hero",
+    "enabled": true
+  },
+  {
+    "id": "About",
+    "type": "About",
+    "enabled": true
+  },
+  {
+    "id": "Skills",
+    "type": "Skills",
+    "enabled": true
+  },
+  {
+    "id": "Experience",
+    "type": "Experience",
+    "enabled": true
+  },
+  {
+    "id": "Projects",
+    "type": "Projects",
+    "enabled": true
+  },
+  {
+    "id": "Certifications",
+    "type": "Certifications",
+    "enabled": true
+  },
+  {
+    "id": "Contact",
+    "type": "Contact",
+    "enabled": true
+  }
+],
+
   heroTitle: 'Sahan Pramuditha',
   heroSubtitle: 'Software Engineer & Creative Developer',
   heroIntro:
@@ -177,17 +215,40 @@ export const collectMediaValidationErrors = (item, fields) => {
 };
 
 export const initialProject = {
+  layoutJson: [
+    { id: 'Hero', enabled: true },
+    { id: 'ProblemStatement', enabled: true },
+    { id: 'ProductOverview', enabled: true },
+    { id: 'KeyFeatures', enabled: true },
+    { id: 'InteractiveDemo', enabled: true },
+    { id: 'UserJourney', enabled: true },
+    { id: 'ArchitectureOverview', enabled: true },
+    { id: 'EngineeringDecisions', enabled: true },
+    { id: 'TechnicalChallenges', enabled: true },
+    { id: 'SecurityPerformance', enabled: true },
+    { id: 'ScalabilityStrategy', enabled: true },
+    { id: 'DevelopmentTimeline', enabled: true },
+    { id: 'MetricsStatistics', enabled: true },
+    { id: 'LessonsLearned', enabled: true },
+    { id: 'FutureRoadmap', enabled: true },
+    { id: 'CTA', enabled: true }
+  ],
   missionCode: '',
   year: new Date().getFullYear(),
   title: '',
   shortDescription: '',
+  valueProposition: '',
   description: '',
   architecture: '',
   architectureImage: '',
   features: [],
+  featuresJson: [],
   learned: '',
   impactMetricsJson: [],
+  developmentAnalyticsJson: [],
+  timelineJson: [],
   tech: [],
+  techStackJson: [],
   tags: [],
   category: 'Web Apps',
   github: '',
@@ -209,6 +270,9 @@ export const initialProject = {
   lessonsLearned: '',
   nextSteps: '',
   challenges: '',
+  challengesJson: [],
+  repoInsights: '',
+  testimonialsJson: [],
   outcomes: '',
   featured: false,
   completed: false,
@@ -220,7 +284,41 @@ export const initialProject = {
   accessScore: '',
   bestScore: '',
   seoScore: '',
+  // Redesigned Case Study Fields
+  heroSubtitle: '',
+  heroStatsJson: [],
+  heroVideoUrl: '',
+  heroImageUrl: '',
+  heroThreeJsBg: 'wireframeGlobe',
+  showLiveSandbox: true,
+  overviewParagraphs: '',
+  overviewCardsJson: [],
+  objectivesJson: [],
+  beforeAfterJson: [],
+  storyMilestonesJson: [],
+  architectureNodesJson: [],
+  architectureConnectionsJson: [],
+  architectureMarkdown: '',
+  folderStructure: '',
+  databaseSchemaJson: [],
+  databaseDesignMarkdown: '',
+  apiEndpointsJson: [],
+  authenticationFlow: '',
+  userJourneyJson: [],
+  scalabilityStrategyJson: [],
+  engineeringDecisionsJson: [],
+  performanceMetricsJson: [],
+  roadmapJson: [],
+  videosJson: [],
+  lessonsLearnedJson: [],
+  deploymentMarkdown: '',
+  ctaJson: {},
+  benchmarksJson: [],
+  terminalCommandsJson: [],
+  technicalFaqJson: [],
+  relatedProjects: '',
 };
+
 
 export const initialCertificate = {
   title: '',
@@ -291,12 +389,24 @@ export const initialService = {
 
 export const initialOpenSource = {
   name: '',
-  description: '',
-  repository: '',
-  stars: 0,
-  forks: 0,
-  watchers: 0,
-  category: '',
+  category: 'Other',
   status: 'Active',
+  pinned: false,
+  hidden: false,
+  difficulty: 'None',
+  customDescription: '',
+};
+
+export const initialFaq = {
+  question: '',
+  answer: '',
+  status: 'Published',
+};
+
+export const initialMaintenancePlan = {
+  title: '',
+  price: '',
+  recommended: false,
+  features: [],
 };
 

@@ -463,8 +463,8 @@ const Projects = () => {
           <span className="h-px bg-secondary flex-grow min-w-[60px] ml-0 sm:ml-4 opacity-50 w-full sm:w-auto order-3 sm:order-none"></span>
         </div>
 
-        <div className="mb-8 grid gap-4 lg:grid-cols-[1.35fr_0.85fr] items-start">
-          <div className="rounded-2xl border border-white/10 bg-secondary/20 p-4 sm:p-5 backdrop-blur-md">
+        <div className="mb-8 grid gap-4 lg:grid-cols-[1.35fr_0.85fr] items-stretch">
+          <div className="rounded-2xl border border-white/10 bg-secondary/20 p-3 sm:p-4 backdrop-blur-md h-full flex flex-col justify-center">
             <label className="sr-only" htmlFor="project-search">
               Search projects
             </label>
@@ -491,14 +491,12 @@ const Projects = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-secondary/20 p-4 sm:p-5 backdrop-blur-md">
-            <div className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
-              <ArrowUpDown size={16} className="text-accent" />
-              Sort timeline
+          <div className="rounded-2xl border border-white/10 bg-secondary/20 p-3 sm:p-4 backdrop-blur-md h-full flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-text">
+              <ArrowUpDown size={16} className="text-accent shrink-0" />
+              <span className="hidden sm:inline">Sort timeline</span>
+              <span className="sm:hidden">Sort</span>
             </div>
-            <p className="text-xs text-text-muted leading-relaxed mb-4">
-              Order projects in the timeline by year. Featured projects stay in their own section above.
-            </p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
