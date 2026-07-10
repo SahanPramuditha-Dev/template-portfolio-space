@@ -2330,6 +2330,21 @@ export const DynamicProjectLayout = (props) => {
   }
   if (!layout || layout.length === 0) {
     layout = defaultLayout;
+  } else {
+    // Map legacy/migration layout IDs to the current supported switch cases
+    layout = layout.map(s => {
+      let mappedId = s.id;
+      if (s.id === 'Summary') mappedId = 'ProductOverview';
+      else if (s.id === 'Story') mappedId = 'ProblemStatement';
+      else if (s.id === 'Engineering') mappedId = 'TechStack';
+      else if (s.id === 'Metrics') mappedId = 'MetricsStatistics';
+      return { ...s, id: mappedId };
+    });
+
+    // Ensure 'Hero' is always present at the very beginning of the layout
+    if (!layout.some(s => s.id === 'Hero')) {
+      layout = [{ id: 'Hero', enabled: true }, ...layout];
+    }
   }
   
   return (
