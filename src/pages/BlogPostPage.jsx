@@ -4,7 +4,7 @@ import { Calendar, Clock, Tag, ChevronLeft, Code2 } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
-import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
+import PageLoader from '../components/PageLoader';
 
 const splitCsv = (value) =>
   String(value || '')
@@ -29,9 +29,7 @@ const BlogPostPage = () => {
     return (
       <>
         <SEO title="Blog | Sahan Pramuditha" description="Loading article…" canonicalPath={`/blog/${slug || ''}`} />
-        <PageShell eyebrow="Blog" title="Loading" description="Fetching post content…">
-          <PageBodyCmsSkeleton />
-        </PageShell>
+        <PageLoader text="Loading article" subtext="Loading post content..." />
       </>
     );
   }

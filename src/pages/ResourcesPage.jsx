@@ -8,7 +8,7 @@ import {
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
-import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
+import PageLoader from '../components/PageLoader';
 import GlowCard from '../components/GlowCard';
 
 /* ── Type config ──────────────────────────────────────────── */
@@ -237,9 +237,7 @@ const ResourcesPage = () => {
     return (
       <>
         <SEO title="Resources | Sahan Pramuditha" description="Curated tools, PDFs, templates, and links." canonicalPath="/resources" />
-        <PageShell eyebrow="Curated Resources" title="Resources" description="Loading…">
-          <PageBodyCmsSkeleton />
-        </PageShell>
+        <PageLoader text="Loading resources" subtext="Fetching templates & files..." />
       </>
     );
   }

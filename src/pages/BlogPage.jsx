@@ -4,8 +4,8 @@ import { Calendar, Clock, Filter, Tag, Search, ChevronRight } from 'lucide-react
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
-import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
 import GlowCard from '../components/GlowCard';
+import PageLoader from '../components/PageLoader';
 
 const splitCsv = (value) =>
   String(value || '')
@@ -26,12 +26,20 @@ const BlogPage = () => {
   const [activeTag, setActiveTag] = useState('All');
   const [query, setQuery] = useState('');
 
-  const tags = useMemo(() => ['All', ...new Set(posts.flatMap((post) => splitCsv(post.tags)))], [posts]);
+  // Extract tags list
+  const tags = useMemo(() => {
+    const list = new Set(['All']);
+    posts.forEach((post) => {
+      splitCsv(post.tags).forEach((tag) => list.add(tag));
+    });
+    return Array.from(list);
+  }, [posts]);
 
   const filteredPosts = useMemo(() => {
     const search = query.trim().toLowerCase();
     return posts.filter((post) => {
-      const matchesTag = activeTag === 'All' || splitCsv(post.tags).includes(activeTag);
+      const postTags = splitCsv(post.tags);
+      const matchesTag = activeTag === 'All' || postTags.includes(activeTag);
       const haystack = `${post.title || ''} ${post.excerpt || ''} ${post.body || ''} ${post.category || ''}`.toLowerCase();
       const matchesSearch = !search || haystack.includes(search);
       return matchesTag && matchesSearch;
@@ -46,9 +54,7 @@ const BlogPage = () => {
           description="Tutorials, deep dives, and case studies about building software, systems, and digital products."
           canonicalPath="/blog"
         />
-        <PageShell eyebrow="Dev Writing" title="Blog" description="Loading articles…">
-          <PageBodyCmsSkeleton />
-        </PageShell>
+        <PageLoader text="Loading articles" subtext="Fetching publications..." />
       </>
     );
   }

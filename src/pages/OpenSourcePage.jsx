@@ -11,6 +11,8 @@ import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import ReadmeDrawer from '../components/ReadmeDrawer';
 import GithubStats from '../components/GithubStats';
+import PageLoader from '../components/PageLoader';
+import { slugify } from '../utils/slugify';
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -28,6 +30,8 @@ const fadeUp = {
 const OpenSourcePage = () => {
   const { data: cmsDoc, loading: cmsLoading } = useCmsDoc(CMS_DOCS.openSource, { items: [] });
   const { data: siteDoc, loading: siteLoading } = useCmsDoc(CMS_DOCS.site, null);
+  const { data: projectsDoc } = useCmsDoc(CMS_DOCS.projects, { items: [] });
+  const projectsList = projectsDoc?.items || [];
 
   const [githubRepos, setGithubRepos] = useState([]);
   const [reposLoading, setReposLoading] = useState(true);
@@ -293,6 +297,19 @@ const OpenSourcePage = () => {
     }
   };
 
+  if (reposLoading || cmsLoading) {
+    return (
+      <>
+        <SEO
+          title="Open Source Explorer | Sahan Pramuditha"
+          description="Explore Sahan's open-source projects, labs, assignments, and contributions loaded directly from GitHub."
+          canonicalPath="/opensource"
+        />
+        <PageLoader text="Syncing GitHub repositories" subtext="Fetching latest commits & code stats..." />
+      </>
+    );
+  }
+
   return (
     <>
       <SEO
@@ -306,7 +323,6 @@ const OpenSourcePage = () => {
         description="A real-time snapshot of my public codebases, university coursework, security research, and tutorial learning logs synced via GitHub API."
       >
         {/* STATS HEADER */}
-        {!reposLoading && (
           <motion.div 
             variants={staggerContainer}
             initial="hidden"
@@ -334,8 +350,7 @@ const OpenSourcePage = () => {
               <span className="text-[10px] text-text-muted uppercase tracking-wider font-mono mt-1">Languages</span>
             </div>
           </motion.div>
-        )}
-
+        
         {/* CONTRIBUTION GRAPH */}
         <GithubStats username={githubUsername} onlyHeatmap={true} />
 
@@ -453,13 +468,7 @@ const OpenSourcePage = () => {
 
         {/* REPOSITORIES GRID CONTAINER WRAPPER */}
         <div className="w-full">
-          {/* LOADING STATE */}
-          {reposLoading ? (
-            <div className="flex flex-col items-center justify-center py-24 text-text-muted gap-4">
-              <Loader2 className="animate-spin text-accent" size={36} />
-              <span className="text-sm font-mono tracking-wider">Syncing GitHub repositories...</span>
-            </div>
-          ) : filteredAndSortedRepos.length === 0 ? (
+          {filteredAndSortedRepos.length === 0 ? (
             <div className="rounded-3xl border border-white/5 bg-secondary/10 px-6 py-20 text-center text-text-muted font-medium">
               No repositories found matching current filter queries.
             </div>
@@ -471,39 +480,56 @@ const OpenSourcePage = () => {
             animate="show"
             className="grid gap-6 md:grid-cols-2"
           >
-            {filteredAndSortedRepos.map((repo, idx) => (
-              <motion.div
-                key={repo.id}
-                variants={fadeUp}
-                className="relative rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-sm hover:border-white/20 transition-all flex flex-col group shadow-lg"
-              >
-                {/* Pinned Badge */}
-                {repo.pinned && (
-                  <div className="absolute top-4 right-4 bg-accent/20 border border-accent/40 px-2 py-0.5 rounded-md text-[9px] font-mono font-bold text-accent uppercase tracking-wider">
-                    📌 Pinned
-                  </div>
-                )}
+            {filteredAndSortedRepos.map((repo, idx) => {
+              const matchingProject = projectsList.find(proj => {
+                if (!proj.github || proj.status === 'Draft') return false;
+                const projRepoName = proj.github.split('/').filter(Boolean).pop()?.toLowerCase();
+                return projRepoName === repo.name.toLowerCase();
+              });
+              const projectSlug = matchingProject ? slugify(matchingProject.slug || matchingProject.id || matchingProject.title || matchingProject.missionCode) : '';
 
-                {/* Category & Status Row */}
-                <div className="flex flex-wrap gap-2 items-center mb-4 text-left">
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/70 bg-white/5 border border-white/10 px-2 py-1 rounded-md">
-                    {getCategoryIcon(repo.category)}
-                    {repo.category}
-                  </span>
-                  <span className={`text-[10px] font-mono font-bold border px-2 py-0.5 rounded-md ${getStatusBadgeStyles(repo.status)}`}>
-                    {repo.status === 'Active' ? '🟢' : repo.status === 'Maintenance' ? '🟡' : repo.status === 'Learning' ? '🔵' : '⚫'} {repo.status}
-                  </span>
-                  {repo.difficulty && (
-                    <span className="text-[10px] font-mono text-purple-400 bg-purple-400/10 border border-purple-400/20 px-2 py-0.5 rounded-md">
-                      🎓 {repo.difficulty}
-                    </span>
+              return (
+                <motion.div
+                  key={repo.id}
+                  variants={fadeUp}
+                  className="relative rounded-3xl border border-white/10 bg-secondary/20 p-6 backdrop-blur-sm hover:border-white/20 transition-all flex flex-col group shadow-lg"
+                >
+                  {/* Pinned Badge */}
+                  {repo.pinned && (
+                    <div className="absolute top-4 right-4 bg-accent/20 border border-accent/40 px-2 py-0.5 rounded-md text-[9px] font-mono font-bold text-accent uppercase tracking-wider">
+                      📌 Pinned
+                    </div>
                   )}
-                  {repo.isManual && (
-                    <span className="text-[9px] font-mono text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 px-1.5 py-0.5 rounded-md uppercase tracking-wider font-bold">
-                      CMS Manual
+
+                  {/* Category & Status Row */}
+                  <div className="flex flex-wrap gap-2 items-center mb-4 text-left">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/70 bg-white/5 border border-white/10 px-2 py-1 rounded-md">
+                      {getCategoryIcon(repo.category)}
+                      {repo.category}
                     </span>
-                  )}
-                </div>
+                    <span className={`text-[10px] font-mono font-bold border px-2 py-0.5 rounded-md ${getStatusBadgeStyles(repo.status)}`}>
+                      {repo.status === 'Active' ? '🟢' : repo.status === 'Maintenance' ? '🟡' : repo.status === 'Learning' ? '🔵' : '⚫'} {repo.status}
+                    </span>
+                    {repo.difficulty && (
+                      <span className="text-[10px] font-mono text-purple-400 bg-purple-400/10 border border-purple-400/20 px-2 py-0.5 rounded-md">
+                        🎓 {repo.difficulty}
+                      </span>
+                    )}
+                    {repo.isManual && (
+                      <span className="text-[9px] font-mono text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 px-1.5 py-0.5 rounded-md uppercase tracking-wider font-bold">
+                        CMS Manual
+                      </span>
+                    )}
+                    {matchingProject && (
+                      <a
+                        href={`/projects/${projectSlug}`}
+                        className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-accent bg-accent/10 border border-accent/35 px-2 py-0.5 rounded-md hover:bg-accent/25 transition-all hover:scale-105 cursor-pointer"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Sparkles size={11} className="animate-pulse" /> Case Study
+                      </a>
+                    )}
+                  </div>
 
                 {/* Title */}
                 <h3 className="text-xl font-bold text-white mb-2 leading-tight flex items-center gap-2 group-hover:text-accent transition-colors text-left">
@@ -558,7 +584,8 @@ const OpenSourcePage = () => {
                   </div>
                 </div>
               </motion.div>
-            ))}
+            );
+          })}
           </motion.div>
         )}
         </div>
@@ -580,6 +607,7 @@ const OpenSourcePage = () => {
         repoUrl={selectedRepo?.url}
         isManual={selectedRepo?.isManual}
         repoDetails={selectedRepo}
+        projectsList={projectsList}
       />
     </>
   );

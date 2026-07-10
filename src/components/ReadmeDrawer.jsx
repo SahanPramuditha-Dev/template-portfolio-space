@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, ExternalLink, Loader2, BookOpen, 
   Info, Users, Code, Calendar, Star, 
-  GitFork, Eye, GitPullRequest, ShieldAlert
+  GitFork, Eye, GitPullRequest, ShieldAlert, Sparkles
 } from 'lucide-react';
+import { slugify } from '../utils/slugify';
 
 const parseMarkdown = (markdown) => {
   if (!markdown) return '';
@@ -87,7 +88,7 @@ const parseMarkdown = (markdown) => {
   return html;
 };
 
-const ReadmeDrawer = ({ isOpen, onClose, repoName, githubUsername, repoUrl, isManual, repoDetails }) => {
+const ReadmeDrawer = ({ isOpen, onClose, repoName, githubUsername, repoUrl, isManual, repoDetails, projectsList = [] }) => {
   const [readme, setReadme] = useState('');
   const [languages, setLanguages] = useState(null);
   const [contributors, setContributors] = useState(null);
@@ -95,6 +96,15 @@ const ReadmeDrawer = ({ isOpen, onClose, repoName, githubUsername, repoUrl, isMa
   const [activeTab, setActiveTab] = useState('readme'); // readme, overview, languages, contributors
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+
+  const matchingProject = useMemo(() => {
+    if (!projectsList || !repoDetails || !repoDetails.name) return null;
+    return projectsList.find(proj => {
+      if (!proj.github || proj.status === 'Draft') return false;
+      const projRepoName = proj.github.split('/').filter(Boolean).pop()?.toLowerCase();
+      return projRepoName === repoDetails.name.toLowerCase();
+    });
+  }, [projectsList, repoDetails]);
 
   // Trigger data fetches on open
   useEffect(() => {
@@ -276,6 +286,29 @@ const ReadmeDrawer = ({ isOpen, onClose, repoName, githubUsername, repoUrl, isMa
 
               {/* Scrollable Content */}
               <div className="flex-1 overflow-y-auto px-6 py-6" data-lenis-prevent>
+                
+                {matchingProject && (
+                  <div className="mb-6 p-4 rounded-2xl border border-accent/30 bg-accent/5 backdrop-blur-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-xs font-mono font-bold text-accent uppercase tracking-wider">
+                        <Sparkles size={12} className="animate-pulse" />
+                        Featured Portfolio Project
+                      </div>
+                      <h4 className="text-sm font-bold text-white">
+                        {matchingProject.title} — Case Study is available!
+                      </h4>
+                      <p className="text-xs text-text-muted">
+                        Read the detailed system architecture, engineering dilemmas, and lessons learned.
+                      </p>
+                    </div>
+                    <a
+                      href={`/projects/${slugify(matchingProject.slug || matchingProject.id || matchingProject.title || matchingProject.missionCode)}`}
+                      className="shrink-0 px-4 py-2 rounded-xl bg-accent text-primary font-bold text-xs hover:shadow-lg hover:shadow-accent/25 hover:scale-105 transition-all text-center"
+                    >
+                      Read Case Study
+                    </a>
+                  </div>
+                )}
                 
                 {/* TAB 1: README */}
                 {activeTab === 'readme' && (

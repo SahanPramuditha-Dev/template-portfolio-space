@@ -4,7 +4,7 @@ import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import Contact from '../components/Contact';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
-import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
+import PageLoader from '../components/PageLoader';
 
 const ContactPage = () => {
   const { data: siteDoc, loading } = useCmsDoc(CMS_DOCS.site, null);
@@ -18,7 +18,7 @@ const ContactPage = () => {
           canonicalPath="/contact"
         />
         <PageShell eyebrow="Lead Capture" title="Contact" description="Loading…">
-          <PageBodyCmsSkeleton />
+          <PageLoader text="Loading contact" subtext="Loading capture forms..." />
         </PageShell>
       </>
     );

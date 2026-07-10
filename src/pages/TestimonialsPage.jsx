@@ -4,7 +4,7 @@ import { Star, Quote } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
-import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
+import PageLoader from '../components/PageLoader';
 import GlowCard from '../components/GlowCard';
 
 const TestimonialsPage = () => {
@@ -19,9 +19,7 @@ const TestimonialsPage = () => {
           description="Client, peer, and mentor feedback from projects, collaborations, and professional work."
           canonicalPath="/testimonials"
         />
-        <PageShell eyebrow="Social Proof" title="Testimonials" description="Loading…">
-          <PageBodyCmsSkeleton />
-        </PageShell>
+        <PageLoader text="Loading testimonials" subtext="Fetching reviews..." />
       </>
     );
   }

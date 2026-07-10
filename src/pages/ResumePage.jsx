@@ -8,7 +8,7 @@ import {
 import SEO from '../components/SEO';
 import PageShell from '../components/PageShell';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
-import { PageBodyCmsSkeleton } from '../components/CmsShapeSkeleton';
+import PageLoader from '../components/PageLoader';
 import { trackDownload } from '../utils/analytics';
 
 const DEFAULT_RESUME_URL = '/resume.pdf';
@@ -139,9 +139,7 @@ const ResumePage = () => {
     return (
       <>
         <SEO title="Resume | Sahan Pramuditha" description="Resume preview, summary, and download." canonicalPath="/resume" />
-        <PageShell eyebrow="Resume" title="Resume" description="Loading…">
-          <PageBodyCmsSkeleton />
-        </PageShell>
+        <PageLoader text="Loading resume" subtext="Assembling CV credentials..." />
       </>
     );
   }
