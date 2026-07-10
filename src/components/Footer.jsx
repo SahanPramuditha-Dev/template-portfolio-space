@@ -47,7 +47,7 @@ const Footer = () => {
 
   const tagline = siteDoc?.footerTagline || '';
   const email = siteDoc?.footerEmail || '';
-  const pageLinks = [
+  const defaultPageLinks = [
     { label: 'Blog', href: '/blog' },
     { label: 'Resume', href: '/resume' },
     { label: 'Resources', href: '/resources' },
@@ -55,6 +55,17 @@ const Footer = () => {
     { label: 'Testimonials', href: '/testimonials' },
     { label: 'Contact', href: '/contact' },
   ];
+
+  const pageLinks = React.useMemo(() => {
+    if (!siteDoc?.footerLinksJson) return defaultPageLinks;
+    try {
+      const parsed = JSON.parse(siteDoc.footerLinksJson);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch {
+      // fallback
+    }
+    return defaultPageLinks;
+  }, [siteDoc]);
 
   return (
     <footer ref={footerRef} className="relative z-10 border-t border-secondary bg-primary/90 pt-12 pb-8 backdrop-blur-md">

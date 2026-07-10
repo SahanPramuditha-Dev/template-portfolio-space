@@ -15,9 +15,41 @@ service cloud.firestore {
     }
 
     match /content/{docId} {
-      // Legacy public CMS documents. Keep public until the app is migrated to
-      // the publish-safe collections below.
-      allow read: if true;
+      // Only allow public read for the remaining non-migrated CMS configuration documents
+      allow read: if docId in ['site', 'openSource', 'maintenancePlans'] || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /certifications/{itemId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow write: if isAdmin();
+    }
+    match /skills/{itemId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow write: if isAdmin();
+    }
+    match /experience/{itemId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow write: if isAdmin();
+    }
+    match /blog/{itemId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow write: if isAdmin();
+    }
+    match /testimonials/{itemId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow write: if isAdmin();
+    }
+    match /services/{itemId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow write: if isAdmin();
+    }
+    match /resources/{itemId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow write: if isAdmin();
+    }
+    match /faqs/{itemId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
       allow write: if isAdmin();
     }
 
@@ -31,7 +63,7 @@ service cloud.firestore {
     }
 
     match /projects/{projectId} {
-      allow read: if resource.data.status == 'published';
+      allow read: if resource.data.status == 'published' || isAdmin();
       allow write: if isAdmin();
 
       match /versions/{versionId} {

@@ -7,6 +7,7 @@ import GalacticDefender from './GalacticDefender';
 import AchievementsModal from './AchievementsModal';
 import { useAchievements } from '../context/AchievementsContext';
 import { useAccessibility } from '../context/AccessibilityContext';
+import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -94,17 +95,36 @@ const Navbar = () => {
     };
   }, []);
 
-  const navLinks = [
+  const { data: siteDoc } = useCmsDoc(CMS_DOCS.site, null);
+
+  const defaultNavLinks = [
     { name: 'Home', href: '#home', id: 'home' },
     { name: 'About', href: '#about', id: 'about' },
     { name: 'Projects', href: '#projects', id: 'projects' },
-    { name: 'Contact', href: '#contact', id: 'contact' },
-  ];
-
-  const moreLinks = [
     { name: 'Skills', href: '#skills', id: 'skills' },
     { name: 'Experience', href: '#experience', id: 'experience' },
     { name: 'Certifications', href: '#certifications', id: 'certifications' },
+    { name: 'Contact', href: '#contact', id: 'contact' },
+  ];
+
+  const navLinks = React.useMemo(() => {
+    if (!siteDoc?.headerLinksJson) return defaultNavLinks;
+    try {
+      const parsed = JSON.parse(siteDoc.headerLinksJson);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((item) => ({
+          name: item.label,
+          href: item.href,
+          id: item.href.replace('#', '').replace('/', '') || 'home'
+        }));
+      }
+    } catch {
+      // fallback
+    }
+    return defaultNavLinks;
+  }, [siteDoc]);
+
+  const moreLinks = [
     { name: 'Services', href: '/services', id: 'services' },
     { name: 'Testimonials', href: '/testimonials', id: 'testimonials' },
     { name: 'Blog', href: '/blog', id: 'blog' },

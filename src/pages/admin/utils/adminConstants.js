@@ -131,6 +131,28 @@ export const initialSiteContent = {
     null,
     2
   ),
+  headerLinksJson: JSON.stringify(
+    [
+      { label: 'About', href: '/about' },
+      { label: 'Projects', href: '/projects' },
+      { label: 'Services', href: '/services' },
+      { label: 'Resume', href: '/resume' },
+      { label: 'Contact', href: '/contact' }
+    ],
+    null,
+    2
+  ),
+  footerLinksJson: JSON.stringify(
+    [
+      { label: 'Projects', href: '/projects' },
+      { label: 'Blog', href: '/blog' },
+      { label: 'Open Source', href: '/open-source' },
+      { label: 'Resources', href: '/resources' },
+      { label: 'Admin', href: '/admin' }
+    ],
+    null,
+    2
+  ),
   seoTitle: 'Sahan Pramuditha | Software Engineer and Creative Developer',
   seoDescription: 'Sahan Pramuditha is a software engineer and creative developer building accessible, high-performance digital experiences.',
   seoImage: '',

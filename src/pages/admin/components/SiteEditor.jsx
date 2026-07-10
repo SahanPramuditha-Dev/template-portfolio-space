@@ -66,6 +66,8 @@ const normalizeSiteDraft = (source = initialSiteContent) => ({
   seoDescription: source.seoDescription ?? initialSiteContent.seoDescription,
   seoImage: source.seoImage ?? initialSiteContent.seoImage,
   seoFavicon: source.seoFavicon ?? initialSiteContent.seoFavicon,
+  headerLinksJson: parseArrayValue(source.headerLinksJson ?? initialSiteContent.headerLinksJson, JSON.parse(initialSiteContent.headerLinksJson || '[]')),
+  footerLinksJson: parseArrayValue(source.footerLinksJson ?? initialSiteContent.footerLinksJson, JSON.parse(initialSiteContent.footerLinksJson || '[]')),
 });
 
 const stringListConfig = {
@@ -116,12 +118,31 @@ const objectEditorConfigs = {
       { key: 'href', label: 'URL', type: 'text' },
     ],
   },
+  headerLinksJson: {
+    label: 'Header Navigation Links',
+    helper: 'Links displayed in the top navbar.',
+    createItem: () => ({ label: '', href: '' }),
+    fields: [
+      { key: 'label', label: 'Link Text', type: 'text' },
+      { key: 'href', label: 'URL / Path', type: 'text' },
+    ],
+  },
+  footerLinksJson: {
+    label: 'Footer Navigation Links',
+    helper: 'Links displayed in the footer.',
+    createItem: () => ({ label: '', href: '' }),
+    fields: [
+      { key: 'label', label: 'Link Text', type: 'text' },
+      { key: 'href', label: 'URL / Path', type: 'text' },
+    ],
+  },
 };
 
 const SITE_CONTENT_TABS = [
   { id: 'hero', label: 'Hero', hint: 'Homepage headline & artwork' },
   { id: 'contact', label: 'Contact', hint: 'Email, availability, résumé' },
   { id: 'about', label: 'About', hint: 'Bio, lists, education, stats' },
+  { id: 'navigation', label: 'Navigation', hint: 'Header & footer links' },
   { id: 'footer', label: 'Footer', hint: 'Footer copy & social links' },
   { id: 'seo', label: 'SEO', hint: 'Global site metadata' },
 ];
@@ -215,6 +236,8 @@ const SiteEditor = () => {
         footerTagline: draft.footerTagline,
         footerEmail: draft.footerEmail,
         socialLinksJson: draft.socialLinksJson,
+        headerLinksJson: draft.headerLinksJson,
+        footerLinksJson: draft.footerLinksJson,
         seoTitle: draft.seoTitle || '',
         seoDescription: draft.seoDescription || '',
         seoImage: draft.seoImage || '',
@@ -395,7 +418,7 @@ const SiteEditor = () => {
                     <h4 className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent border-b border-white/5 pb-2">Structured Cards</h4>
                     <div className="grid gap-4">
                       {Object.entries(objectEditorConfigs)
-                        .filter(([key]) => key !== 'socialLinksJson')
+                        .filter(([key]) => key !== 'socialLinksJson' && key !== 'headerLinksJson' && key !== 'footerLinksJson')
                         .map(([key, config]) => (
                           <RepeatableObjectEditor
                             key={key}
@@ -410,6 +433,27 @@ const SiteEditor = () => {
                     </div>
                   </div>
                 </div>
+              </SiteSection>
+            )}
+
+            {siteTab === 'navigation' && (
+              <SiteSection title="Navigation & Links" icon={LinkIcon} description="Configure site-wide navigation menus.">
+                <RepeatableObjectEditor
+                  label={objectEditorConfigs.headerLinksJson.label}
+                  helper={objectEditorConfigs.headerLinksJson.helper}
+                  value={draft.headerLinksJson}
+                  onChange={(v) => updateField('headerLinksJson', v)}
+                  createItem={objectEditorConfigs.headerLinksJson.createItem}
+                  fields={objectEditorConfigs.headerLinksJson.fields}
+                />
+                <RepeatableObjectEditor
+                  label={objectEditorConfigs.footerLinksJson.label}
+                  helper={objectEditorConfigs.footerLinksJson.helper}
+                  value={draft.footerLinksJson}
+                  onChange={(v) => updateField('footerLinksJson', v)}
+                  createItem={objectEditorConfigs.footerLinksJson.createItem}
+                  fields={objectEditorConfigs.footerLinksJson.fields}
+                />
               </SiteSection>
             )}
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Save, Search, RefreshCw, Github } from 'lucide-react';
-import { CMS_DOCS, useCmsDoc, saveCmsDoc, uploadCmsAsset } from '../../../lib/cms';
+import { CMS_DOCS, useCmsDoc, useCmsCollection, saveCmsDoc, saveCmsItem, softRemoveCmsItem, softRemoveMultipleCmsItems, reorderCmsCollection, uploadCmsAsset } from '../../../lib/cms';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import AdminStatus from './AdminStatus';
@@ -114,7 +114,7 @@ const itemFromForm = (draft, fields) => {
 };
 
 const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) => {
-  const { data, loading } = useCmsDoc(docId, { [collectionKey]: [] });
+  const { data, loading } = useCmsCollection(docId, []);
   const { data: siteDoc } = useCmsDoc(CMS_DOCS.site, null);
   const [items, setItems] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -156,7 +156,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
 
   useEffect(() => {
     if (data === undefined) return;
-    const nextItems = Array.isArray(data?.[collectionKey]) ? data[collectionKey] : [];
+    const nextItems = Array.isArray(data) ? data : [];
     setItems(nextItems);
     if (selectedIndex === -1) {
       setDraft(formFromItem(section.initialItem, fields, section.initialItem));
@@ -183,6 +183,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
   };
 
   const removeItem = async (index) => {
+    const itemToRemove = items[index];
     const nextItems = items.filter((_, i) => i !== index);
     setItems(nextItems);
     setSelectedIndex(nextItems.length === 0 ? -1 : Math.min(index, nextItems.length - 1));
@@ -191,7 +192,9 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
         ? formFromItem(section.initialItem, fields, section.initialItem)
         : formFromItem(nextItems[Math.min(index, nextItems.length - 1)], fields, section.initialItem)
     );
-    await saveCmsDoc(docId, { [collectionKey]: nextItems });
+    if (itemToRemove && itemToRemove.id) {
+        await softRemoveCmsItem(docId, itemToRemove.id);
+    }
     setStatus('Item deleted.');
   };
 
@@ -297,12 +300,21 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
         setStatus(`Please fix media before publishing: ${validationErrors.slice(0, 3).join(' ')}`);
         return;
       }
+      
+      const itemId = (selectedIndex === -1 || !items[selectedIndex]?.id) 
+        ? `${docId}-${Date.now()}` 
+        : items[selectedIndex].id;
+      
+      const itemToSave = { ...normalized, id: itemId };
+      itemToSave.order = selectedIndex === -1 ? 0 : (items[selectedIndex]?.order ?? 0);
+      
       const nextItems =
         selectedIndex === -1
-          ? [normalized, ...items]
-          : items.map((item, index) => (index === selectedIndex ? normalized : item));
+          ? [itemToSave, ...items]
+          : items.map((item, index) => (index === selectedIndex ? itemToSave : item));
+      
       setItems(nextItems);
-      await saveCmsDoc(docId, { [collectionKey]: nextItems });
+      await saveCmsItem(docId, itemId, itemToSave);
       setSelectedIndex(selectedIndex === -1 ? 0 : selectedIndex);
       setStatus('Changes saved.');
     } catch (error) {
@@ -355,12 +367,15 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
     setBusy(true);
     try {
       const indicesToRemove = Array.from(selectedIndices);
+      const idsToRemove = indicesToRemove.map(i => items[i].id).filter(id => id);
       const nextItems = items.filter((_, i) => !indicesToRemove.includes(i));
       setItems(nextItems);
       setSelectedIndices(new Set());
       setSelectedIndex(-1);
       setDraft(formFromItem(section.initialItem, fields, section.initialItem));
-      await saveCmsDoc(docId, { [collectionKey]: nextItems });
+      if (idsToRemove.length > 0) {
+        await softRemoveMultipleCmsItems(docId, idsToRemove);
+      }
       setStatus(`${indicesToRemove.length} items deleted.`);
     } catch (error) {
       setStatus(getCmsErrorMessage(error));
@@ -394,7 +409,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
       
       setBusy(true);
       try {
-        await saveCmsDoc(docId, { [collectionKey]: newItems });
+        await reorderCmsCollection(docId, newItems);
         setStatus('Order saved.');
       } catch {
         setStatus('Failed to save order.');

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { doc, getDoc, onSnapshot, setDoc, serverTimestamp, deleteDoc, collection } from 'firebase/firestore';
+import { doc, getDoc, getDocs, onSnapshot, setDoc, serverTimestamp, deleteDoc, collection, query, writeBatch } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth, db, storage } from './firebase';
@@ -37,7 +37,18 @@ export const HOMEPAGE_CMS_DOC_IDS = [
  */
 export const waitForHomepageCms = (timeoutMs = 20000) => {
   const reads = HOMEPAGE_CMS_DOC_IDS.map((id) => getDoc(doc(db, 'content', id)));
-  const pending = Promise.all(reads).then(() => undefined);
+  // After migration, most of these will be collections, so we should also prefetch collections
+  const collections = [
+    CMS_DOCS.projects,
+    CMS_DOCS.experience,
+    CMS_DOCS.skills,
+    CMS_DOCS.certifications,
+    CMS_DOCS.testimonials,
+    CMS_DOCS.blog,
+  ];
+  const collectionReads = collections.map((name) => getDocs(collection(db, name)));
+  
+  const pending = Promise.all([...reads, ...collectionReads]).then(() => undefined);
   if (!timeoutMs) return pending;
   return Promise.race([
     pending,
@@ -47,7 +58,35 @@ export const waitForHomepageCms = (timeoutMs = 20000) => {
   ]);
 };
 
+const MIGRATED_COLLECTIONS = [
+  'projects',
+  'certifications',
+  'skills',
+  'experience',
+  'blog',
+  'testimonials',
+  'services',
+  'resources',
+  'faqs'
+];
+
 export const subscribeCmsDoc = (docId, onChange, onError) => {
+  if (MIGRATED_COLLECTIONS.includes(docId)) {
+    const q = query(collection(db, docId));
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        let items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        items = items.filter(item => !item.deletedAt);
+        items.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        onChange({ items });
+      },
+      (error) => {
+        if (onError) onError(error);
+      }
+    );
+  }
+
   return onSnapshot(
     doc(db, 'content', docId),
     (snapshot) => {
@@ -76,6 +115,59 @@ export const saveCmsDoc = async (docId, payload) => {
 
 export const removeCmsDoc = async (docId) => {
   await deleteDoc(doc(db, 'content', docId));
+};
+
+export const subscribeCmsCollection = (collectionName, onChange, onError) => {
+  const q = query(collection(db, collectionName));
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      let items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // Filter out soft-deleted items
+      items = items.filter(item => !item.deletedAt);
+      // Sort by order field if available
+      items.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      onChange(items);
+    },
+    (error) => {
+      if (onError) onError(error);
+    }
+  );
+};
+
+export const saveCmsItem = async (collectionName, itemId, payload) => {
+  await setDoc(
+    doc(db, collectionName, itemId),
+    {
+      ...payload,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+};
+
+export const softRemoveCmsItem = async (collectionName, itemId) => {
+  await setDoc(
+    doc(db, collectionName, itemId),
+    { deletedAt: serverTimestamp() },
+    { merge: true }
+  );
+};
+
+export const softRemoveMultipleCmsItems = async (collectionName, itemIds) => {
+  const batch = writeBatch(db);
+  itemIds.forEach(id => {
+    batch.set(doc(db, collectionName, id), { deletedAt: serverTimestamp() }, { merge: true });
+  });
+  await batch.commit();
+};
+
+export const reorderCmsCollection = async (collectionName, items) => {
+  const batch = writeBatch(db);
+  items.forEach((item, index) => {
+    batch.set(doc(db, collectionName, item.id), { order: index }, { merge: true });
+  });
+  await batch.commit();
 };
 
 export const saveContactMessage = async (payload) => {
@@ -258,6 +350,34 @@ export const useCmsDoc = (docId, whenMissingDoc = null) => {
   }, [docId]);
 
   return { data, loading, error, exists, setData };
+};
+
+export const useCmsCollection = (collectionName, initialData = []) => {
+  const [data, setData] = useState(initialData);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!collectionName) {
+      setLoading(false);
+      return;
+    }
+    const unsubscribe = subscribeCmsCollection(
+      collectionName,
+      (items) => {
+        setData(items);
+        setError(null);
+        setLoading(false);
+      },
+      (err) => {
+        setError(err);
+        setLoading(false);
+      }
+    );
+    return unsubscribe;
+  }, [collectionName]);
+
+  return { data, loading, error, setData };
 };
 
 export const useAdminSession = () => {
