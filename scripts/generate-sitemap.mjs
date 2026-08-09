@@ -1,8 +1,9 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { BLOG_POSTS } from '../src/data/blogPosts.js';
 
 const root = process.cwd();
-const siteUrl = (process.env.VITE_SITE_URL || 'https://www.sahanpramuditha.me').replace(/\/+$/, '');
+const siteUrl = (process.env.VITE_SITE_URL || 'https://sahanpramuditha.me').replace(/\/+$/, '');
 const today = new Date().toISOString().slice(0, 10);
 
 const slugify = (value) =>
@@ -41,7 +42,10 @@ const projectRoutes = (cmsExport.projects || cmsExport.projectItems || [])
   .filter(Boolean)
   .map((slug) => ({ path: `/projects/${slug}`, changefreq: 'monthly', priority: '0.8' }));
 
-const blogRoutes = (cmsExport.blog || cmsExport.posts || [])
+const cmsBlogPosts = cmsExport.blog || cmsExport.posts || [];
+const combinedBlogPosts = cmsBlogPosts.length > 0 ? cmsBlogPosts : BLOG_POSTS;
+
+const blogRoutes = combinedBlogPosts
   .map((item) => slugify(item.slug || item.title))
   .filter(Boolean)
   .map((slug) => ({ path: `/blog/${slug}`, changefreq: 'monthly', priority: '0.7' }));

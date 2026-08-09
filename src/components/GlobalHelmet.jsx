@@ -11,11 +11,13 @@ const GlobalHelmet = () => {
     <Helmet>
       <title>{siteDoc.seoTitle || 'Sahan Pramuditha'}</title>
       <meta name="description" content={siteDoc.seoDescription || ''} />
-      <link 
-        rel="icon" 
-        href={siteDoc.seoFavicon || '/favicon.svg'} 
-        sizes="any" 
-      />
+      {siteDoc.seoFavicon && (
+        <link 
+          rel="icon" 
+          href={siteDoc.seoFavicon} 
+          sizes="any" 
+        />
+      )}
       {siteDoc.seoImage && (
         <meta property="og:image" content={siteDoc.seoImage} />
       )}

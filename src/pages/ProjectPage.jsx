@@ -1547,7 +1547,9 @@ export const SectionProblemStatement = ({ project, techList, hasLive, hasGithub,
   );
 };
 
-export const SectionInteractiveDemo = ({ project, techList, hasLive, hasGithub, slides, heroSlide, scaleX, galleryGroups, galleryFilter, setGalleryFilter, galleryScreenshots, zoomedImage, setZoomedImage, deviceFrameWidth, setDeviceFrameWidth }) => {
+export const SectionInteractiveDemo = ({ project, hasLive, slides, heroSlide }) => {
+  const [deviceFrameWidth, setDeviceFrameWidth] = useState('100%'); // 100%, 75%, 42%
+
   return (
     <>
       {/* ================= 4. LIVE PLAYGROUND / VIEWPORT SHOWCASE ================= */}
@@ -1857,8 +1859,36 @@ export const SectionSecurityPerformance = ({ project, techList, hasLive, hasGith
   );
 };
 
-export const SectionMetricsStatistics = ({ project, techList, hasLive, hasGithub, slides, heroSlide, scaleX, galleryGroups, galleryFilter, setGalleryFilter, galleryScreenshots, zoomedImage, setZoomedImage, deviceFrameWidth, setDeviceFrameWidth }) => {
+export const SectionMetricsStatistics = ({ project }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState(null);
+  const [galleryFilter, setGalleryFilter] = useState('All');
+  
+  const galleryScreenshots = useMemo(() => {
+    let shots = project?.screenshots || [];
+    if (shots.length < 6) {
+      const placeholders = [
+        { url: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=1200', group: 'Desktop' },
+        { url: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=1200', group: 'Desktop' },
+        { url: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=1200', group: 'Mobile' },
+        { url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1200', group: 'Mobile' },
+        { url: 'https://images.unsplash.com/photo-1555099962-4199c345e5dd?auto=format&fit=crop&q=80&w=1200', group: 'Desktop' },
+        { url: 'https://images.unsplash.com/photo-1504639725590-34d0984388bd?auto=format&fit=crop&q=80&w=1200', group: 'Mobile' }
+      ];
+      shots = [...shots, ...placeholders].slice(0, 6);
+    }
+    if (galleryFilter === 'All') return shots;
+    return shots.filter(s => s.group === galleryFilter);
+  }, [project?.screenshots, galleryFilter]);
+
+  const galleryGroups = useMemo(() => {
+    let shots = project?.screenshots || [];
+    if (shots.length < 6) {
+      shots = [...shots, { group: 'Desktop' }, { group: 'Mobile' }];
+    }
+    const groups = new Set(shots.map(s => s.group).filter(Boolean));
+    return ['All', ...Array.from(groups)];
+  }, [project?.screenshots]);
 
   return (
     <>
@@ -2377,11 +2407,7 @@ export const DynamicProjectLayout = (props) => {
 
 const ProjectPage = () => {
   const { slug } = useParams();
-  const [zoomedImage, setZoomedImage] = useState(null);
-  const [galleryFilter, setGalleryFilter] = useState('All');
-  
-  // Floating device frame width state
-  const [deviceFrameWidth, setDeviceFrameWidth] = useState('100%'); // 100%, 75%, 42%
+
 
   const { data, loading } = useCmsDoc(CMS_DOCS.projects, { items: [] });
   const projects = useMemo(() => (Array.isArray(data?.items) ? data.items : []), [data]);
@@ -2405,37 +2431,6 @@ const ProjectPage = () => {
   const techList = Array.isArray(project?.tech) ? project.tech : [];
   const hasLive = isUsableHttpUrl(project?.external);
   const hasGithub = isUsableHttpUrl(project?.github);
-
-  // Filter gallery screenshots with auto-injected beautiful placeholders for the demo!
-  const galleryScreenshots = useMemo(() => {
-    let shots = project?.screenshots || [];
-    
-    // Automatically inject gorgeous placeholder images if there are fewer than 6 images
-    if (shots.length < 6) {
-      const placeholders = [
-        { url: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=1200', group: 'Desktop' },
-        { url: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=1200', group: 'Desktop' },
-        { url: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=1200', group: 'Mobile' },
-        { url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1200', group: 'Mobile' },
-        { url: 'https://images.unsplash.com/photo-1555099962-4199c345e5dd?auto=format&fit=crop&q=80&w=1200', group: 'Desktop' },
-        { url: 'https://images.unsplash.com/photo-1504639725590-34d0984388bd?auto=format&fit=crop&q=80&w=1200', group: 'Mobile' }
-      ];
-      shots = [...shots, ...placeholders].slice(0, 6);
-    }
-    
-    if (galleryFilter === 'All') return shots;
-    return shots.filter(s => s.group === galleryFilter);
-  }, [project?.screenshots, galleryFilter]);
-
-  const galleryGroups = useMemo(() => {
-    // If using placeholders, make sure we have Desktop and Mobile groups available for testing
-    let shots = project?.screenshots || [];
-    if (shots.length < 6) {
-      shots = [...shots, { group: 'Desktop' }, { group: 'Mobile' }];
-    }
-    const groups = new Set(shots.map(s => s.group).filter(Boolean));
-    return ['All', ...Array.from(groups)];
-  }, [project?.screenshots]);
 
   const currentIndex = projects.findIndex(p => (p.id === project?.id || p.title === project?.title));
   const prevProject = currentIndex > 0 ? projects[currentIndex - 1] : null;
@@ -2478,7 +2473,7 @@ const ProjectPage = () => {
       <PageShell backHref="/#projects">
         
         
-        <DynamicProjectLayout project={project} techList={techList} hasLive={hasLive} hasGithub={hasGithub} slides={slides} heroSlide={heroSlide} scaleX={scaleX} galleryGroups={galleryGroups} galleryFilter={galleryFilter} setGalleryFilter={setGalleryFilter} galleryScreenshots={galleryScreenshots} zoomedImage={zoomedImage} setZoomedImage={setZoomedImage} deviceFrameWidth={deviceFrameWidth} setDeviceFrameWidth={setDeviceFrameWidth} />
+        <DynamicProjectLayout project={project} techList={techList} hasLive={hasLive} hasGithub={hasGithub} slides={slides} heroSlide={heroSlide} scaleX={scaleX} />
 
         {/* ================= NEXT PROJECT DIRECTION ================= */}
         <div className="mt-24 w-full border-t border-white/10 pt-12 pb-20 relative z-20">

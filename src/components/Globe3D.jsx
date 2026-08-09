@@ -83,9 +83,11 @@ const EarthShader = {
   `
 };
 
-// Procedural texture generators
+let cachedEarthTextures = null;
+
 const createEarthTextures = () => {
   if (typeof document === 'undefined') return { day: null, night: null };
+  if (cachedEarthTextures) return cachedEarthTextures;
 
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
@@ -105,7 +107,6 @@ const createEarthTextures = () => {
     try {
       const path = new Path2D(country.d);
       ctx.save();
-      // Map SVG viewBox 30.767 241.591 784.077 458.627 to 1024x512
       ctx.translate(-30.767, -241.591);
       ctx.scale(1024 / 784.077, 512 / 458.627);
       ctx.fill(path);
@@ -120,7 +121,6 @@ const createEarthTextures = () => {
   nightCanvas.height = 512;
   const nCtx = nightCanvas.getContext('2d');
 
-  // Start night base (black oceans, darker land)
   nCtx.fillStyle = '#020306';
   nCtx.fillRect(0, 0, 1024, 512);
 
@@ -140,35 +140,38 @@ const createEarthTextures = () => {
     } catch (e) { /* ignore */ }
   });
 
-  // Draw clusters of city lights in night canvas
   const drawCityLights = (x, y, radius, count) => {
     for (let i = 0; i < count; i++) {
       const lx = x + (Math.random() - 0.5) * radius;
       const ly = y + (Math.random() - 0.5) * radius;
-      nCtx.fillStyle = Math.random() > 0.35 ? '#22d3ee' : '#eab308'; // mix cyan & amber
+      nCtx.fillStyle = Math.random() > 0.35 ? '#22d3ee' : '#eab308';
       nCtx.beginPath();
       nCtx.arc(lx, ly, Math.random() * 1.2 + 0.3, 0, Math.PI * 2);
       nCtx.fill();
     }
   };
 
-  // Map approximate SVG scale coords to 1024x512
-  drawCityLights(190, 190, 25, 40);  // US West
-  drawCityLights(250, 200, 30, 80);  // US East
-  drawCityLights(300, 310, 40, 50);  // Brazil
-  drawCityLights(520, 160, 25, 90);  // Europe
-  drawCityLights(670, 230, 20, 70);  // India
-  drawCityLights(760, 190, 25, 85);  // China/Japan
-  drawCityLights(890, 360, 20, 30);  // Australia
+  drawCityLights(190, 190, 25, 40);
+  drawCityLights(250, 200, 30, 80);
+  drawCityLights(300, 310, 40, 50);
+  drawCityLights(520, 160, 25, 90);
+  drawCityLights(670, 230, 20, 70);
+  drawCityLights(760, 190, 25, 85);
+  drawCityLights(890, 360, 20, 30);
 
   const dayTex = new THREE.CanvasTexture(canvas);
   const nightTex = new THREE.CanvasTexture(nightCanvas);
 
-  return { day: dayTex, night: nightTex };
+  cachedEarthTextures = { day: dayTex, night: nightTex };
+  return cachedEarthTextures;
 };
+
+let cachedCloudTexture = null;
 
 const createCloudTexture = () => {
   if (typeof document === 'undefined') return null;
+  if (cachedCloudTexture) return cachedCloudTexture;
+
   const canvas = document.createElement('canvas');
   canvas.width = 512;
   canvas.height = 256;
@@ -194,7 +197,8 @@ const createCloudTexture = () => {
     ctx.fill();
   }
 
-  return new THREE.CanvasTexture(canvas);
+  cachedCloudTexture = new THREE.CanvasTexture(canvas);
+  return cachedCloudTexture;
 };
 
 // Animated country beacon marker with glow beam & ripples

@@ -412,9 +412,9 @@ const Preloader = ({ brand = 'Portfolio', onComplete }) => {
           {/* Horizontal scan line */}
           {!prefersReducedMotion && (
             <motion.div
-              className="pointer-events-none absolute left-0 right-0 h-px"
+              className="pointer-events-none absolute left-0 right-0 top-0 h-px"
               style={{ background: 'linear-gradient(90deg, transparent, rgb(var(--color-accent-rgb)/0.3), transparent)' }}
-              animate={{ top: ['0%', '100%', '0%'] }}
+              animate={{ y: ['0vh', '100vh', '0vh'] }}
               transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
             />
           )}

@@ -5,12 +5,8 @@ import * as random from 'maath/random/dist/maath-random.esm';
 import { useTheme } from '../context/ThemeContext';
 import { useAccessibility } from '../context/AccessibilityContext';
 import PerformanceMonitor from './PerformanceMonitor';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { shouldDisableHeavyVisuals } from '../utils/runtimeGuards';
 import { useIsMobileCanvas } from '../hooks/useCanvasLifecycle';
-
-gsap.registerPlugin(ScrollTrigger);
 
 /* ─── Floating wireframe shapes ─────────────────────────────────────────── */
 const FloatingShapes = () => {
@@ -55,61 +51,76 @@ const FloatingShapes = () => {
 
 /* ─── Star field ─────────────────────────────────────────────────────────── */
 const Stars = ({ isMobile }) => {
-  const ref     = useRef();
-  const { theme } = useTheme();
-  const { mouse } = useThree();
+  const pointsRef   = useRef();
+  const { theme }   = useTheme();
+  const { mouse }   = useThree();
 
-  const targetRotX = useRef(0);
-  const targetRotY = useRef(0);
+  const targetRotX  = useRef(0);
+  const targetRotY  = useRef(0);
+  const lastScrollY = useRef(typeof window !== 'undefined' ? window.scrollY : 0);
+  const scrollVelX  = useRef(0);
+  const idleWeight  = useRef(1);
 
-  // Fewer stars on mobile = less GPU vertex processing
-  const [sphere] = useState(() =>
-    random.inSphere(new Float32Array((isMobile ? 1500 : 4000) * 3), { radius: 1.5 })
-  );
-
-  useFrame((_, delta) => {
-    if (!ref.current) return;
-
-    // Base rotation — constant, smooth
-    ref.current.rotation.x -= delta / 14;
-    ref.current.rotation.y -= delta / 20;
-
-    // Lerp toward mouse position (factor 0.03 = very smooth, no snapping)
-    targetRotX.current += (mouse.y * 0.12 - targetRotX.current) * 0.03;
-    targetRotY.current += (mouse.x * 0.12 - targetRotY.current) * 0.03;
-
-    ref.current.rotation.x += targetRotX.current * delta * 0.5;
-    ref.current.rotation.y += targetRotY.current * delta * 0.5;
+  // Generate stars uniformly across a wide 3D volume covering 100% of viewport
+  const [positions] = useState(() => {
+    const count = isMobile ? 1500 : 3500;
+    const array = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      array[i * 3]     = (Math.random() - 0.5) * 7.0; // Wide X coverage [-3.5, 3.5]
+      array[i * 3 + 1] = (Math.random() - 0.5) * 5.0; // High Y coverage [-2.5, 2.5]
+      array[i * 3 + 2] = (Math.random() - 0.5) * 2.0 - 0.5; // Z depth [-2.5, -0.5]
+    }
+    return array;
   });
 
-  useEffect(() => {
-    if (!ref.current) return undefined;
-    const tween = gsap.to(ref.current.rotation, {
-      y: Math.PI * 2,
-      scrollTrigger: {
-        trigger: 'body',
-        start:   'top top',
-        end:     'bottom bottom',
-        scrub:   3,          // was 1 — higher = smoother, less laggy feeling
-      },
-      ease: 'none',
-    });
-    return () => {
-      tween.scrollTrigger?.kill();
-      tween.kill();
-    };
-  }, []);
+  useFrame((_, delta) => {
+    if (!pointsRef.current) return;
+
+    // 1. Real-time scroll delta calculation
+    const currentScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+    const rawScrollDelta = currentScrollY - lastScrollY.current;
+    lastScrollY.current  = currentScrollY;
+
+    // 2. Interpolate scroll velocity along X axis (scroll down -> stars move left to right)
+    const targetScrollVel = rawScrollDelta * 0.0018;
+    scrollVelX.current   += (targetScrollVel - scrollVelX.current) * 0.15;
+
+    // 3. Smoothly fade out idle drift during active scrolling to prevent directional conflict
+    const isScrolling      = Math.abs(rawScrollDelta) > 0.5 || Math.abs(scrollVelX.current) > 0.0001;
+    const targetIdleWeight = isScrolling ? 0 : 1;
+    idleWeight.current    += (targetIdleWeight - idleWeight.current) * 0.08;
+
+    // 4. Calculate net linear X drift (idle right-to-left = -X)
+    const idleVelX = -(delta * 0.12) * idleWeight.current;
+
+    // Apply linear translation to group position
+    pointsRef.current.position.x += idleVelX + scrollVelX.current;
+
+    // Seamless infinite wrap bounds
+    if (pointsRef.current.position.x > 3.0) {
+      pointsRef.current.position.x -= 6.0;
+    } else if (pointsRef.current.position.x < -3.0) {
+      pointsRef.current.position.x += 6.0;
+    }
+
+    // 5. Mouse parallax (subtle lerp)
+    targetRotX.current += (mouse.y * 0.08 - targetRotX.current) * 0.04;
+    targetRotY.current += (mouse.x * 0.08 - targetRotY.current) * 0.04;
+
+    pointsRef.current.rotation.x = targetRotX.current;
+    pointsRef.current.rotation.y = targetRotY.current;
+  });
 
   return (
-    <group rotation={[0, 0, Math.PI / 4]}>
-      <Points ref={ref} positions={sphere} stride={3} frustumCulled={false}>
+    <group>
+      <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
         <PointMaterial
           transparent
           color={theme === 'dark' ? '#38bdf8' : '#0284c7'}
-          size={0.003}              // slightly larger — visible on all screens
+          size={0.0035}
           sizeAttenuation={true}
           depthWrite={false}
-          opacity={theme === 'dark' ? 0.9 : 0.6}
+          opacity={theme === 'dark' ? 0.85 : 0.6}
         />
       </Points>
     </group>

@@ -625,6 +625,7 @@ class GameEngine {
       
       for (let j = this.enemies.length - 1; j >= 0; j--) {
         let e = this.enemies[j];
+        if (e.dead) continue;
         if (p.x < e.x + e.width && p.x + p.width > e.x && p.y < e.y + e.height && p.y + p.height > e.y) {
           e.health -= p.dmg;
           this.createExplosion(p.x, p.y, p.type === 'plasma' ? '#a855f7' : '#38bdf8');
@@ -647,17 +648,27 @@ class GameEngine {
           hit = true;
           if (p.type === 'plasma') {
             p.pierceCount--;
-            if (p.pierceCount <= 0) this.projectiles.splice(i, 1);
+            if (p.pierceCount <= 0) {
+               this.projectiles[i] = this.projectiles[this.projectiles.length - 1];
+               this.projectiles.pop();
+            }
             hit = false;
           }
           break;
         }
       }
-      this.enemies = this.enemies.filter(e => !e.dead);
-      if (hit) { if (p.type !== 'plasma') this.projectiles.splice(i, 1); continue; }
+      
+      if (hit) { 
+        if (p.type !== 'plasma') {
+           this.projectiles[i] = this.projectiles[this.projectiles.length - 1];
+           this.projectiles.pop();
+        }
+        continue; 
+      }
 
       for (let j = this.asteroids.length - 1; j >= 0; j--) {
         let a = this.asteroids[j];
+        if (a.dead) continue;
         if (p.x < a.x + a.width && p.x + p.width > a.x && p.y < a.y + a.height && p.y + p.height > a.y) {
           this.createExplosion(p.x, p.y, '#94a3b8');
           this.score += 10;
@@ -666,11 +677,27 @@ class GameEngine {
           this.sessionStats.asteroidsDestroyed++;
           if (this.sessionStats.asteroidsDestroyed === 1) this.onAchievement('galactic-asteroid-destroyer');
 
-          if (p.type !== 'plasma') this.projectiles.splice(i, 1);
+          if (p.type !== 'plasma') {
+             this.projectiles[i] = this.projectiles[this.projectiles.length - 1];
+             this.projectiles.pop();
+          }
           break;
         }
       }
-      this.asteroids = this.asteroids.filter(a => !a.dead);
+    }
+
+    // Single cleanup pass using swap-and-pop
+    for (let i = this.enemies.length - 1; i >= 0; i--) {
+      if (this.enemies[i].dead) {
+        this.enemies[i] = this.enemies[this.enemies.length - 1];
+        this.enemies.pop();
+      }
+    }
+    for (let i = this.asteroids.length - 1; i >= 0; i--) {
+      if (this.asteroids[i].dead) {
+        this.asteroids[i] = this.asteroids[this.asteroids.length - 1];
+        this.asteroids.pop();
+      }
     }
 
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
@@ -679,7 +706,8 @@ class GameEngine {
       if (p.x < this.player.x + this.player.width && p.x + p.width > this.player.x && 
           p.y < this.player.y + this.player.height && p.y + p.height > this.player.y) {
         this.damagePlayer(15);
-        this.projectiles.splice(i, 1);
+        this.projectiles[i] = this.projectiles[this.projectiles.length - 1];
+        this.projectiles.pop();
       }
     }
   }

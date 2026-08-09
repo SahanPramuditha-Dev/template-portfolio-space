@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Menu, X, Gamepad2, Trophy } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
-import GalacticDefender from './GalacticDefender';
-import AchievementsModal from './AchievementsModal';
+const GalacticDefender = React.lazy(() => import('./GalacticDefender'));
+const AchievementsModal = React.lazy(() => import('./AchievementsModal'));
 import { useAchievements } from '../context/AchievementsContext';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
@@ -17,6 +17,17 @@ const Navbar = () => {
   const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
   const { unlockedCount } = useAchievements();
   const [moreOpen, setMoreOpen] = useState(false);
+
+  const [hasOpenedGame, setHasOpenedGame] = useState(false);
+  const [hasOpenedAchievements, setHasOpenedAchievements] = useState(false);
+
+  useEffect(() => {
+    if (isGameOpen) setHasOpenedGame(true);
+  }, [isGameOpen]);
+
+  useEffect(() => {
+    if (isAchievementsOpen) setHasOpenedAchievements(true);
+  }, [isAchievementsOpen]);
 
   const {
     reduceMotion,
@@ -419,10 +430,18 @@ const Navbar = () => {
       </nav>
 
       {/* Game Modal */}
-      <GalacticDefender isOpen={isGameOpen} onClose={() => setIsGameOpen(false)} />
+      {hasOpenedGame && (
+        <React.Suspense fallback={null}>
+          <GalacticDefender isOpen={isGameOpen} onClose={() => setIsGameOpen(false)} />
+        </React.Suspense>
+      )}
 
       {/* Achievements Modal */}
-      <AchievementsModal isOpen={isAchievementsOpen} onClose={() => setIsAchievementsOpen(false)} />
+      {hasOpenedAchievements && (
+        <React.Suspense fallback={null}>
+          <AchievementsModal isOpen={isAchievementsOpen} onClose={() => setIsAchievementsOpen(false)} />
+        </React.Suspense>
+      )}
     </>
   );
 };

@@ -20,11 +20,10 @@ const ISSModel = ({ modelPath }) => {
   const group = useRef();
   const { scene } = useGLTF(modelPath);
 
-  // Optional: normalize scale/orientation for the scene
-  useEffect(() => {
-    if (!scene) return;
-    // Ensure materials use physically‑based shading with reasonable roughness/metalness
-    scene.traverse((child) => {
+  const clonedScene = React.useMemo(() => {
+    if (!scene) return null;
+    const clone = scene.clone();
+    clone.traverse((child) => {
       if (child.isMesh) {
         child.castShadow = true;
         child.receiveShadow = true;
@@ -34,6 +33,7 @@ const ISSModel = ({ modelPath }) => {
         }
       }
     });
+    return clone;
   }, [scene]);
 
   useFrame((state) => {
@@ -48,7 +48,7 @@ const ISSModel = ({ modelPath }) => {
 
   return (
     <group ref={group} scale={0.025} rotation={[0.1, -0.8, 0]}>
-      <primitive object={scene} />
+      {clonedScene && <primitive object={clonedScene} />}
     </group>
   );
 };

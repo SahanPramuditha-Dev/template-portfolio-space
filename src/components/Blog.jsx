@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Calendar, Clock, Tag } from 'lucide-react';
+import { BookOpen, Calendar, Clock, Tag, ArrowRight } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { CmsSectionSkeleton } from './CmsShapeSkeleton';
+import { BLOG_POSTS } from '../data/blogPosts';
 
 const splitCsv = (value) =>
   String(value || '')
@@ -13,8 +14,12 @@ const splitCsv = (value) =>
 
 const Blog = () => {
   const { data, loading } = useCmsDoc(CMS_DOCS.blog, { items: [] });
-  const posts = (Array.isArray(data?.items) ? data.items : []).filter((post) => post.status !== 'Draft');
-  const latestPosts = posts.slice(0, 3);
+  
+  const latestPosts = useMemo(() => {
+    const firestoreItems = (Array.isArray(data?.items) ? data.items : []).filter((post) => post.status !== 'Draft');
+    const items = firestoreItems.length > 0 ? firestoreItems : BLOG_POSTS;
+    return items.slice(0, 3);
+  }, [data]);
 
   const handleMouseMove = (e) => {
     const card = e.currentTarget;
@@ -25,7 +30,7 @@ const Blog = () => {
     card.style.setProperty('--mouse-y', `${y}px`);
   };
 
-  if (loading || data === undefined) {
+  if (loading && latestPosts.length === 0) {
     return <CmsSectionSkeleton id="blog" />;
   }
 
