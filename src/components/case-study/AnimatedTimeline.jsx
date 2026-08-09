@@ -15,7 +15,7 @@ const AnimatedTimeline = ({ steps }) => {
   if (!steps || steps.length === 0) return null;
 
   return (
-    <div ref={containerRef} className="relative max-w-4xl py-12">
+    <div ref={containerRef} className="relative max-w-4xl py-12" style={{ position: 'relative' }}>
       
       {/* Background Line */}
       <div className="absolute top-12 bottom-12 left-[27px] md:left-1/2 w-0.5 bg-white/10 -translate-x-1/2 rounded-full overflow-hidden">

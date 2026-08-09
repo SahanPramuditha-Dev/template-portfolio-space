@@ -1,30 +1,27 @@
-import React, { useMemo, useRef, Suspense, useState, useCallback } from 'react';
+import React, { useMemo, useRef, useEffect, Suspense, useState, useCallback } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Float, OrbitControls, useGLTF } from '@react-three/drei';
+import { Float, OrbitControls, useGLTF, Center, Preload } from '@react-three/drei';
 import * as THREE from 'three';
 import { useCanvasLifecycle, useIsMobileCanvas } from '../hooks/useCanvasLifecycle';
 import PerformanceMonitor from './PerformanceMonitor';
 import DisposeOnUnmount from './DisposeOnUnmount';
 
-const EarthModel = ({ paused, isMobile }) => {
+const EarthModel = ({ paused, isMobile, onLoad }) => {
   const { scene } = useGLTF('/models/earth/earth.glb');
   const earthRef = useRef();
 
-  const scale = useMemo(() => {
-    const box = new THREE.Box3().setFromObject(scene);
+  const { clonedScene, scale } = useMemo(() => {
+    const clone = scene.clone(true);
+    const box = new THREE.Box3().setFromObject(clone);
     const size = new THREE.Vector3();
     box.getSize(size);
+
     const maxDim = Math.max(size.x, size.y, size.z);
     const targetDiameter = 2.2;
     const computedScale = maxDim > 0 ? targetDiameter / maxDim : 0.011;
-    return computedScale;
-  }, [scene]);
 
-  const clonedScene = useMemo(() => {
-    const clone = scene.clone();
     clone.traverse((child) => {
       if (child.isMesh) {
-        // Skip shadow maps on mobile — saves significant GPU fill rate
         child.castShadow = !isMobile;
         child.receiveShadow = !isMobile;
         if (child.material) {
@@ -33,8 +30,16 @@ const EarthModel = ({ paused, isMobile }) => {
         }
       }
     });
-    return clone;
+
+    return { clonedScene: clone, scale: computedScale };
   }, [scene, isMobile]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (onLoad) onLoad();
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [onLoad]);
 
   useFrame((state, delta) => {
     if (!paused && earthRef.current) {
@@ -43,26 +48,28 @@ const EarthModel = ({ paused, isMobile }) => {
   });
 
   return (
-    <primitive
-      ref={earthRef}
-      object={clonedScene}
-      scale={scale}
-      position={[0, 0, 0]}
-    />
+    <Center>
+      <primitive
+        ref={earthRef}
+        object={clonedScene}
+        scale={scale}
+        position={[0, 0, 0]}
+      />
+    </Center>
   );
 };
 
-const EarthScene = ({ paused, isMobile }) => {
+const EarthScene = ({ paused, isMobile, onLoad }) => {
   return (
     <group>
-      {/* Float animation: gentler on mobile to save CPU */}
+      {/* Float animation */}
       <Float
         speed={isMobile ? 0.6 : 1.1}
         rotationIntensity={isMobile ? 0.05 : 0.12}
         floatIntensity={isMobile ? 0.1 : 0.25}
       >
         <Suspense fallback={null}>
-          <EarthModel paused={paused} isMobile={isMobile} />
+          <EarthModel paused={paused} isMobile={isMobile} onLoad={onLoad} />
         </Suspense>
       </Float>
     </group>
@@ -73,6 +80,11 @@ const Earth3D = ({ className = '' }) => {
   const containerRef = useRef(null);
   const { enabled, shouldAnimate } = useCanvasLifecycle(containerRef);
   const isMobile = useIsMobileCanvas();
+  const [isReady, setIsReady] = useState(false);
+
+  const handleLoaded = useCallback(() => {
+    setIsReady(true);
+  }, []);
 
   // Performance Throttling — start already low on mobile
   const [dpr, setDpr] = useState(() => (isMobile ? 1.0 : [1, 1.35]));
@@ -95,7 +107,7 @@ const Earth3D = ({ className = '' }) => {
   return (
     <div
       ref={containerRef}
-      className={`relative h-full w-full overflow-hidden bg-transparent ${className}`}
+      className={`relative h-full w-full overflow-hidden bg-transparent transition-opacity duration-700 ease-out ${isReady ? 'opacity-100' : 'opacity-0'} ${className}`}
       aria-label="Interactive 3D Earth"
     >
       <Canvas
@@ -112,7 +124,7 @@ const Earth3D = ({ className = '' }) => {
         {/* Second fill light skipped on mobile — saves a draw call */}
         {!isMobile && <directionalLight position={[-4, -1, -3]} intensity={0.4} color="#1d4ed8" />}
 
-        <EarthScene paused={!shouldAnimate} isMobile={isMobile} />
+        <EarthScene paused={!shouldAnimate} isMobile={isMobile} onLoad={handleLoaded} />
 
         <OrbitControls
           enablePan={false}
@@ -123,6 +135,7 @@ const Earth3D = ({ className = '' }) => {
           maxPolarAngle={Math.PI / 1.7}
         />
         <DisposeOnUnmount />
+        <Preload all />
       </Canvas>
     </div>
   );

@@ -56,19 +56,29 @@ const Stars = ({ isMobile }) => {
   const { mouse }   = useThree();
 
   const targetRotX  = useRef(0);
-  const targetRotY  = useRef(0);
+  const scrollYRef  = useRef(typeof window !== 'undefined' ? window.scrollY : 0);
   const lastScrollY = useRef(typeof window !== 'undefined' ? window.scrollY : 0);
-  const scrollVelX  = useRef(0);
+  const scrollVelY  = useRef(0);
   const idleWeight  = useRef(1);
 
-  // Generate stars uniformly across a wide 3D volume covering 100% of viewport
+  useEffect(() => {
+    const handleScroll = () => {
+      scrollYRef.current = window.scrollY;
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Generate stars uniformly across a 360-degree skybox cylinder surrounding camera (0, 0, 1)
   const [positions] = useState(() => {
-    const count = isMobile ? 1500 : 3500;
-    const array = new Float32Array(count * 3);
+    const count  = isMobile ? 1800 : 4000;
+    const array  = new Float32Array(count * 3);
+    const radius = 3.5;
     for (let i = 0; i < count; i++) {
-      array[i * 3]     = (Math.random() - 0.5) * 7.0; // Wide X coverage [-3.5, 3.5]
-      array[i * 3 + 1] = (Math.random() - 0.5) * 5.0; // High Y coverage [-2.5, 2.5]
-      array[i * 3 + 2] = (Math.random() - 0.5) * 2.0 - 0.5; // Z depth [-2.5, -0.5]
+      const angle      = Math.random() * Math.PI * 2;
+      array[i * 3]     = Math.cos(angle) * radius;        // X
+      array[i * 3 + 1] = (Math.random() - 0.5) * 7.0;     // Y
+      array[i * 3 + 2] = Math.sin(angle) * radius;        // Z (centered at camera origin)
     }
     return array;
   });
@@ -76,43 +86,33 @@ const Stars = ({ isMobile }) => {
   useFrame((_, delta) => {
     if (!pointsRef.current) return;
 
-    // 1. Real-time scroll delta calculation
-    const currentScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+    // 1. Real-time scroll delta calculation (via passive ref)
+    const currentScrollY = scrollYRef.current;
     const rawScrollDelta = currentScrollY - lastScrollY.current;
     lastScrollY.current  = currentScrollY;
 
-    // 2. Interpolate scroll velocity along X axis (scroll down -> stars move left to right)
-    const targetScrollVel = rawScrollDelta * 0.0018;
-    scrollVelX.current   += (targetScrollVel - scrollVelX.current) * 0.15;
+    // 2. Interpolate scroll velocity (scroll down -> stars move left to right)
+    const targetScrollVel = rawScrollDelta * 0.0012;
+    scrollVelY.current   += (targetScrollVel - scrollVelY.current) * 0.15;
 
     // 3. Smoothly fade out idle drift during active scrolling to prevent directional conflict
-    const isScrolling      = Math.abs(rawScrollDelta) > 0.5 || Math.abs(scrollVelX.current) > 0.0001;
+    const isScrolling      = Math.abs(rawScrollDelta) > 0.5 || Math.abs(scrollVelY.current) > 0.0001;
     const targetIdleWeight = isScrolling ? 0 : 1;
     idleWeight.current    += (targetIdleWeight - idleWeight.current) * 0.08;
 
-    // 4. Calculate net linear X drift (idle right-to-left = -X)
-    const idleVelX = -(delta * 0.12) * idleWeight.current;
+    // 4. Calculate net rotation increment (idle right-to-left drift = negative Y rotation)
+    const idleVelY = -(delta / 22) * idleWeight.current;
 
-    // Apply linear translation to group position
-    pointsRef.current.position.x += idleVelX + scrollVelX.current;
+    // Smooth continuous Y rotation around camera — 100% continuous, zero bounds snapping, zero stuck glitches!
+    pointsRef.current.rotation.y += idleVelY + scrollVelY.current;
 
-    // Seamless infinite wrap bounds
-    if (pointsRef.current.position.x > 3.0) {
-      pointsRef.current.position.x -= 6.0;
-    } else if (pointsRef.current.position.x < -3.0) {
-      pointsRef.current.position.x += 6.0;
-    }
-
-    // 5. Mouse parallax (subtle lerp)
+    // 5. Mouse parallax (subtle X tilt)
     targetRotX.current += (mouse.y * 0.08 - targetRotX.current) * 0.04;
-    targetRotY.current += (mouse.x * 0.08 - targetRotY.current) * 0.04;
-
     pointsRef.current.rotation.x = targetRotX.current;
-    pointsRef.current.rotation.y = targetRotY.current;
   });
 
   return (
-    <group>
+    <group position={[0, 0, 1]}>
       <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
         <PointMaterial
           transparent

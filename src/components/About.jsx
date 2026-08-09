@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useInView, useReducedMotion } from 'framer-motion';
-import { Code2, Server, Users } from 'lucide-react';
+import { Code2, Server, Users, Award } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
 import GithubStats from './GithubStats';
 import TelemetryDashboard from './TelemetryDashboard';
@@ -238,20 +238,40 @@ const About = () => {
         </div>
 
         {aboutStats.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-20">
-            {aboutStats.map((stat, index) => (
-              <motion.div
-                key={stat.label || index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="text-center p-6 bg-secondary/30 rounded-xl border border-secondary/40 hover:bg-secondary/50 transition-colors"
-              >
-                <Counter value={Number(stat.value || 0)} suffix={stat.suffix || ''} />
-                <p className="text-text-muted text-sm mt-2 font-mono">{stat.label}</p>
-              </motion.div>
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20">
+            {aboutStats.map((stat, index) => {
+              const colorSchemes = [
+                { color: 'from-cyan-400 to-blue-500', icon: Award },
+                { color: 'from-purple-400 to-indigo-500', icon: Code2 },
+                { color: 'from-emerald-400 to-teal-500', icon: Users },
+                { color: 'from-amber-400 to-orange-500', icon: Server },
+              ];
+              const scheme = colorSchemes[index % colorSchemes.length];
+              const Icon = scheme.icon;
+              
+              return (
+                <motion.div
+                  key={stat.label || index}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                  className="relative group flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-secondary/20 backdrop-blur-md py-5 px-4 text-center overflow-hidden hover:border-accent/40 hover:bg-secondary/30 transition-all duration-300 shadow-lg"
+                >
+                  {/* Top accent glow gradient bar */}
+                  <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${scheme.color} opacity-70 group-hover:opacity-100 transition-opacity`} />
+                  
+                  <div className="p-2 rounded-xl bg-white/5 border border-white/10 mb-2 group-hover:scale-110 transition-transform">
+                    <Icon size={18} className="text-accent" />
+                  </div>
+
+                  <span className={`text-3xl sm:text-4xl font-extrabold bg-gradient-to-r ${scheme.color} bg-clip-text text-transparent font-display`}>
+                    <Counter value={Number(stat.value || 0)} suffix={stat.suffix || ''} />
+                  </span>
+                  <span className="text-xs text-text-muted font-mono mt-1 font-medium">{stat.label}</span>
+                </motion.div>
+              );
+            })}
           </div>
         ) : (
           <div className="mb-20 rounded-2xl border border-secondary/50 bg-secondary/20 px-6 py-12 text-center text-text-muted">

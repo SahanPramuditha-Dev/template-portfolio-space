@@ -10,15 +10,15 @@ const SmoothScroll = () => {
     const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
 
     const lenis = new Lenis({
-      duration: isTouchDevice ? 0.8 : 1.2,
-      easing: (t) => 1 - Math.pow(1 - t, 4), // quartic ease-out — smoother than cubic
+      duration: isTouchDevice ? 0.6 : 0.8,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // responsive exponential ease-out
       direction: 'vertical',
       gestureDirection: 'vertical',
       smooth: true,
-      mouseMultiplier: 0.9,
-      smoothTouch: isTouchDevice,
-      touchMultiplier: isTouchDevice ? 1.8 : 1.5,
-      lerp: isTouchDevice ? 0.12 : 0.1,
+      mouseMultiplier: 1.0,
+      smoothTouch: false, // Use native GPU momentum scrolling on touch devices
+      touchMultiplier: 1.0,
+      lerp: 0.12,
       wheelMultiplier: 1.0,
     });
 

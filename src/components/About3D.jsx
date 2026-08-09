@@ -1,10 +1,10 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, Icosahedron, Octahedron, Torus, MeshDistortMaterial } from '@react-three/drei';
 import SafeEnvironment from './SafeEnvironment';
 import DisposeOnUnmount from './DisposeOnUnmount';
 import { useTheme } from '../context/ThemeContext';
-import { shouldDisableHeavyVisuals } from '../utils/runtimeGuards';
+import { useCanvasLifecycle } from '../hooks/useCanvasLifecycle';
 
 const FloatingShape = ({ position, color, speed, rotationIntensity, floatIntensity, Component }) => {
   const ref = useRef();
@@ -70,28 +70,21 @@ const About3DScene = () => {
 };
 
 const About3D = () => {
-  const [enabled, setEnabled] = useState(() => !shouldDisableHeavyVisuals());
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => {
-      setEnabled(!shouldDisableHeavyVisuals());
-    };
-    update();
-    reduceMotionQuery.addEventListener('change', update);
-    return () => {
-      reduceMotionQuery.removeEventListener('change', update);
-    };
-  }, []);
+  const containerRef = useRef(null);
+  const { enabled, shouldAnimate } = useCanvasLifecycle(containerRef);
 
   if (!enabled) {
     return <div className="w-full h-full bg-gradient-to-br from-accent/20 via-secondary to-primary" />;
   }
 
   return (
-    <div className="w-full h-[400px] cursor-pointer">
-      <Canvas camera={{ position: [0, 0, 5], fov: 50 }} dpr={[1, 1.5]} gl={{ antialias: false, powerPreference: 'low-power' }}>
+    <div ref={containerRef} className="w-full h-[400px] cursor-pointer">
+      <Canvas
+        camera={{ position: [0, 0, 5], fov: 50 }}
+        dpr={[1, 1.5]}
+        gl={{ antialias: false, powerPreference: 'low-power' }}
+        frameloop={shouldAnimate ? 'always' : 'never'}
+      >
         <ambientLight intensity={0.5} />
         <DisposeOnUnmount />
         <pointLight position={[10, 10, 10]} intensity={1} />

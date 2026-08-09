@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Award, ExternalLink, Calendar, FileText, X, Download, Search, Star, ChevronDown } from 'lucide-react';
+import { Award, ExternalLink, Calendar, FileText, X, Download, Search, Star, ChevronDown, Clock, Layers, Zap, Eye } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { CmsSectionSkeleton } from './CmsShapeSkeleton';
@@ -9,27 +9,27 @@ import AnimatedCounter from './AnimatedCounter';
 /* ─── CONSTANTS ────────────────────────────────────────────── */
 const CATEGORIES = ['All', 'Cloud', 'Data', 'Programming', 'Networking', 'Microsoft', 'AWS', 'Security', 'DevOps', 'AI/ML', 'Other'];
 
-/* ─── PDF Lightbox Modal ────────────────────────────────────── */
-const PdfModal = ({ url, title, onClose }) => (
+/* ─── Image / PDF Lightbox Modal ────────────────────────────── */
+const ImageOrPdfModal = ({ url, title, isPdf, onClose }) => (
   <AnimatePresence>
     {url && (
       <motion.div
-        key="pdf-backdrop"
+        key="lightbox-backdrop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
         className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-        style={{ backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}
+        style={{ backgroundColor: 'rgba(5, 8, 22, 0.88)', backdropFilter: 'blur(12px)' }}
         onClick={onClose}
       >
         <motion.div
-          key="pdf-panel"
+          key="lightbox-panel"
           initial={{ opacity: 0, scale: 0.92, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 20 }}
           transition={{ duration: 0.25, ease: 'easeOut' }}
-          className="relative w-full max-w-4xl flex flex-col rounded-2xl overflow-hidden border border-accent/30 shadow-2xl"
+          className="relative w-full max-w-4xl flex flex-col rounded-2xl overflow-hidden border border-accent/30 shadow-[0_0_50px_rgba(0,0,0,0.8)]"
           style={{ maxHeight: '92vh', background: 'rgb(var(--color-primary-rgb, 10 10 20))' }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -45,17 +45,21 @@ const PdfModal = ({ url, title, onClose }) => (
               </a>
               <a href={url} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-mono text-text-muted hover:text-text transition-colors">
-                <ExternalLink size={13} /> Open
+                <ExternalLink size={13} /> Open Original
               </a>
               <button onClick={onClose}
                 className="rounded-lg border border-white/10 bg-white/5 p-1.5 text-text-muted hover:text-text hover:border-white/25 transition-colors"
-                aria-label="Close PDF preview">
+                aria-label="Close preview">
                 <X size={16} />
               </button>
             </div>
           </div>
-          <div className="flex-1 overflow-hidden bg-black/60">
-            <iframe src={url} title={`${title} — Certificate PDF`} className="w-full h-full" style={{ height: '78vh', border: 'none' }} />
+          <div className="flex-1 overflow-hidden bg-black/70 flex items-center justify-center p-4">
+            {isPdf ? (
+              <iframe src={url} title={`${title} — Certificate PDF`} className="w-full h-full" style={{ height: '78vh', border: 'none' }} />
+            ) : (
+              <img src={url} alt={title} className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-xl" />
+            )}
           </div>
         </motion.div>
       </motion.div>
@@ -90,7 +94,7 @@ const AllCertsModal = ({ certs, onClose, onViewPdf }) => {
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
         className="fixed inset-0 z-[9998] flex items-center justify-center p-4"
-        style={{ backgroundColor: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(10px)' }}
+        style={{ backgroundColor: 'rgba(5, 8, 22, 0.88)', backdropFilter: 'blur(12px)' }}
         onClick={onClose}
       >
         <motion.div
@@ -156,19 +160,21 @@ const AllCertsModal = ({ certs, onClose, onViewPdf }) => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2, delay: i * 0.03 }}
-                    className="flex flex-col gap-3 rounded-xl border border-white/10 bg-secondary/20 p-4 hover:border-accent/30 transition-colors"
+                    className="flex flex-col justify-between gap-3 rounded-xl border border-white/10 bg-secondary/20 p-4 hover:border-accent/30 transition-colors"
                   >
-                    {cert.image && (
-                      <div className="w-full h-20 rounded-lg overflow-hidden bg-black/45 flex items-center justify-center p-2">
-                        <img src={cert.image} alt={cert.title} className="w-full h-full object-contain" />
+                    <div>
+                      {cert.image && (
+                        <div className="w-full h-24 rounded-lg overflow-hidden bg-black/60 border border-white/5 flex items-center justify-center p-2 mb-3">
+                          <img src={cert.image} alt={cert.title} className="max-w-full max-h-full object-contain" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-xs font-mono text-accent mb-0.5">{cert.issuer}</p>
+                        <h4 className="font-semibold text-text text-sm leading-snug line-clamp-2">{cert.title}</h4>
+                        <p className="text-xs text-text-muted mt-1">{cert.date}</p>
                       </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-mono text-accent mb-0.5">{cert.issuer}</p>
-                      <h4 className="font-semibold text-text text-sm leading-snug line-clamp-2">{cert.title}</h4>
-                      <p className="text-xs text-text-muted mt-1">{cert.date}</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 pt-2 border-t border-white/5">
                       {cert.link && (
                         <a href={cert.link} target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs text-accent hover:underline font-mono">
@@ -176,7 +182,7 @@ const AllCertsModal = ({ certs, onClose, onViewPdf }) => {
                         </a>
                       )}
                       {cert.pdfUrl && (
-                        <button onClick={() => onViewPdf(cert.pdfUrl, cert.title)}
+                        <button onClick={() => onViewPdf(cert.pdfUrl, cert.title, true)}
                           className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-accent font-mono transition-colors">
                           <FileText size={11} /> PDF
                         </button>
@@ -212,31 +218,38 @@ const StatsBar = ({ certs }) => {
         hasDurations = true;
       }
     });
-    // Fallback to estimation multiplier if no certificates have hours entered
     return hasDurations ? sum : Math.max(certs.length * 8, 1);
   }, [certs]);
 
   const stats = [
-    { value: certs.length, suffix: '+', label: 'Certificates Earned' },
-    { value: totalHours, suffix: '+', label: 'Learning Hours' },
-    { value: platforms, suffix: '', label: 'Learning Platforms' },
-    { value: allSkills, suffix: '+', label: 'Skills Acquired' },
+    { value: certs.length, suffix: '+', label: 'Certificates Earned', icon: Award, color: 'from-cyan-400 to-blue-500' },
+    { value: totalHours, suffix: '+', label: 'Learning Hours', icon: Clock, color: 'from-purple-400 to-indigo-500' },
+    { value: platforms, suffix: '', label: 'Learning Platforms', icon: Layers, color: 'from-emerald-400 to-teal-500' },
+    { value: allSkills, suffix: '+', label: 'Skills Acquired', icon: Zap, color: 'from-amber-400 to-orange-500' },
   ];
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
-      {stats.map(({ value, suffix, label }) => (
+      {stats.map(({ value, suffix, label, icon: Icon, color }) => (
         <motion.div
           key={label}
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="flex flex-col items-center justify-center rounded-2xl border border-accent/20 bg-accent/5 py-5 px-4 text-center"
+          whileHover={{ y: -3, transition: { duration: 0.2 } }}
+          className="relative group flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-secondary/20 backdrop-blur-md py-5 px-4 text-center overflow-hidden hover:border-accent/40 hover:bg-secondary/30 transition-all duration-300 shadow-lg"
         >
-          <span className="text-3xl font-bold text-accent font-display">
+          {/* Top accent glow gradient bar */}
+          <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${color} opacity-70 group-hover:opacity-100 transition-opacity`} />
+          
+          <div className="p-2 rounded-xl bg-white/5 border border-white/10 mb-2 group-hover:scale-110 transition-transform">
+            <Icon size={18} className="text-accent" />
+          </div>
+
+          <span className={`text-3xl font-extrabold bg-gradient-to-r ${color} bg-clip-text text-transparent font-display`}>
             <AnimatedCounter value={String(value)} suffix={suffix} />
           </span>
-          <span className="text-xs text-text-muted font-mono mt-1">{label}</span>
+          <span className="text-xs text-text-muted font-mono mt-1 font-medium">{label}</span>
         </motion.div>
       ))}
     </div>
@@ -250,21 +263,46 @@ const FilterTabs = ({ certs, active, onChange }) => {
     return ['All', ...CATEGORIES.filter((c) => c !== 'All' && cats.has(c))];
   }, [certs]);
 
+  // Map category counts
+  const categoryCounts = useMemo(() => {
+    const counts = { All: certs.length };
+    certs.forEach((c) => {
+      if (c.category) counts[c.category] = (counts[c.category] || 0) + 1;
+    });
+    return counts;
+  }, [certs]);
+
   return (
-    <div className="flex flex-wrap gap-2 mb-8">
-      {available.map((cat) => (
-        <button
-          key={cat}
-          onClick={() => onChange(cat)}
-          className={`px-4 py-1.5 rounded-full text-xs font-mono transition-all duration-200 ${
-            active === cat
-              ? 'bg-accent text-primary font-semibold shadow-[0_0_16px_rgb(var(--color-accent-rgb)/0.4)]'
-              : 'border border-white/10 text-text-muted hover:border-accent/40 hover:text-accent'
-          }`}
-        >
-          {cat}
-        </button>
-      ))}
+    <div className="flex flex-wrap gap-2 mb-8 items-center">
+      {available.map((cat) => {
+        const isActive = active === cat;
+        const count = categoryCounts[cat] || 0;
+        return (
+          <button
+            key={cat}
+            onClick={() => onChange(cat)}
+            className={`relative px-4 py-2 rounded-full text-xs font-mono transition-all duration-200 flex items-center gap-1.5 ${
+              isActive
+                ? 'text-primary font-semibold z-10'
+                : 'border border-white/10 text-text-muted hover:border-accent/40 hover:text-accent bg-secondary/10'
+            }`}
+          >
+            {isActive && (
+              <motion.div
+                layoutId="activeFilterTab"
+                className="absolute inset-0 bg-accent rounded-full -z-10 shadow-[0_0_18px_rgb(var(--color-accent-rgb)/0.5)]"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
+            <span>{cat}</span>
+            <span className={`px-1.5 py-0.2 text-[10px] rounded-full font-mono ${
+              isActive ? 'bg-primary/30 text-primary-content' : 'bg-white/10 text-text-muted'
+            }`}>
+              {count}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 };
@@ -279,83 +317,111 @@ const handleMouseMoveSpotlight = (e) => {
 };
 
 /* ─── Certificate Card ──────────────────────────────────────── */
-const CertificationCard = ({ cert, index, onViewPdf }) => (
+const CertificationCard = ({ cert, index, onViewPreview }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
-    transition={{ duration: 0.5, delay: index * 0.08 }}
+    transition={{ duration: 0.4, delay: index * 0.06 }}
     onMouseMove={handleMouseMoveSpotlight}
-    className="glass-card flex flex-col rounded-xl border border-secondary/50 hover:border-accent/50 transition-all duration-300 group bg-secondary/20 hover:bg-secondary/30 overflow-hidden"
+    className="glass-card flex flex-col justify-between h-full rounded-2xl border border-white/10 hover:border-accent/40 transition-all duration-300 group bg-secondary/15 hover:bg-secondary/25 overflow-hidden shadow-lg hover:shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
   >
-    {cert.image && (
-      <div className="w-full overflow-hidden bg-black/45 border-b border-white/5 shrink-0 flex items-center justify-center p-3 h-[120px]">
-        <img src={cert.image} alt={`${cert.title} badge`} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500" />
-      </div>
-    )}
-
-    <div className="flex flex-col flex-1 p-5">
-      {/* Category + featured badge */}
-      <div className="flex items-center gap-2 mb-3">
-        {cert.category && cert.category !== 'Other' && (
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono border border-accent/25 text-accent bg-accent/10">{cert.category}</span>
-        )}
-        {cert.featured && (
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono border border-yellow-400/30 text-yellow-300 bg-yellow-400/10">
-            <Star size={9} fill="currentColor" /> Featured
-          </span>
-        )}
-      </div>
-
-      <div className="flex items-start gap-3 mb-3">
-        <div className="p-2.5 bg-accent/20 rounded-lg group-hover:bg-accent/30 transition-colors shrink-0">
-          <Award className="text-accent" size={20} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold text-text mb-0.5 leading-snug">{cert.title}</h3>
-          <p className="text-text-muted text-xs font-mono">{cert.issuer}</p>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3 mb-3 text-xs text-text-muted">
-        <div className="flex items-center gap-1">
-          <Calendar size={12} />
-          <span>{cert.date}</span>
-        </div>
-        {cert.credential && (
-          <span className="font-mono bg-primary/50 px-2 py-0.5 rounded truncate max-w-[140px]">{cert.credential}</span>
-        )}
-      </div>
-
-      {Array.isArray(cert.skills) && cert.skills.length > 0 && (
-        <div className="mb-4">
-          <div className="flex flex-wrap gap-1.5">
-            {cert.skills.slice(0, 3).map((skill) => (
-              <span key={skill} className="px-2 py-0.5 bg-primary/50 text-accent rounded text-[10px] font-mono border border-accent/20">{skill}</span>
-            ))}
-            {cert.skills.length > 3 && (
-              <span className="px-2 py-0.5 text-text-muted text-[10px] font-mono">+{cert.skills.length - 3} more</span>
-            )}
+    <div>
+      {/* Dark Framing for Image Thumbnails */}
+      {cert.image ? (
+        <div
+          onClick={() => onViewPreview(cert.image, cert.title, false)}
+          className="relative w-full overflow-hidden bg-black/60 border-b border-white/10 flex items-center justify-center p-4 h-[145px] cursor-pointer group/img"
+        >
+          <img
+            src={cert.image}
+            alt={`${cert.title} badge`}
+            className="max-w-full max-h-full object-contain group-hover/img:scale-105 transition-transform duration-500"
+          />
+          {/* Dark hover glass overlay with preview hint */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-mono text-xs font-medium">
+            <Eye size={16} className="text-accent" />
+            <span>Click to Preview</span>
           </div>
         </div>
+      ) : (
+        <div className="w-full h-12 bg-gradient-to-r from-accent/10 to-transparent border-b border-white/5" />
       )}
 
-      {/* Action row */}
-      <div className="flex flex-wrap items-center gap-3 mt-auto pt-3 border-t border-white/5">
-        {cert.link && (
-          <a href={cert.link} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-accent hover:text-text transition-colors text-xs font-mono group/link">
-            Verify <ExternalLink size={12} className="group-hover/link:translate-x-0.5 transition-transform" />
-          </a>
-        )}
-        {cert.pdfUrl && (
-          <button type="button" onClick={() => onViewPdf(cert.pdfUrl, cert.title)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-accent/25 bg-accent/10 px-2.5 py-1 text-xs font-mono text-accent hover:bg-accent/20 transition-colors group/pdf">
-            <FileText size={12} className="group-hover/pdf:scale-110 transition-transform" />
-            View PDF
-          </button>
+      <div className="p-5 flex flex-col flex-1">
+        {/* Category + featured badge */}
+        <div className="flex items-center gap-2 mb-3">
+          {cert.category && cert.category !== 'Other' && (
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium border border-accent/30 text-accent bg-accent/10">
+              {cert.category}
+            </span>
+          )}
+          {cert.featured && (
+            <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium border border-amber-400/40 text-amber-300 bg-amber-400/10">
+              <Star size={9} fill="currentColor" /> Featured
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-start gap-3 mb-3">
+          <div className="p-2.5 bg-accent/15 border border-accent/20 rounded-xl group-hover:bg-accent/25 transition-colors shrink-0">
+            <Award className="text-accent" size={20} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base font-bold text-text mb-0.5 leading-snug group-hover:text-accent transition-colors">
+              {cert.title}
+            </h3>
+            <p className="text-text-muted text-xs font-mono">{cert.issuer}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 mb-3 text-xs text-text-muted">
+          <div className="flex items-center gap-1.5">
+            <Calendar size={12} className="text-accent/70" />
+            <span>{cert.date}</span>
+          </div>
+          {cert.credential && (
+            <span className="font-mono bg-white/5 border border-white/10 px-2 py-0.5 rounded truncate max-w-[140px] text-[11px]">
+              {cert.credential}
+            </span>
+          )}
+        </div>
+
+        {Array.isArray(cert.skills) && cert.skills.length > 0 && (
+          <div className="mb-4">
+            <div className="flex flex-wrap gap-1.5">
+              {cert.skills.slice(0, 3).map((skill) => (
+                <span key={skill} className="px-2.5 py-0.5 bg-accent/10 text-accent rounded-md text-[11px] font-mono font-medium">
+                  {skill}
+                </span>
+              ))}
+              {cert.skills.length > 3 && (
+                <span className="px-2 py-0.5 text-text-muted text-[10px] font-mono bg-white/5 rounded-md">
+                  +{cert.skills.length - 3} more
+                </span>
+              )}
+            </div>
+          </div>
         )}
       </div>
+    </div>
+
+    {/* Action row pinned at bottom */}
+    <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-t border-white/10 bg-white/[0.02]">
+      {cert.link ? (
+        <a href={cert.link} target="_blank" rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-accent hover:text-text transition-colors text-xs font-mono group/link">
+          Verify <ExternalLink size={12} className="group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
+        </a>
+      ) : <div />}
+
+      {cert.pdfUrl && (
+        <button type="button" onClick={() => onViewPreview(cert.pdfUrl, cert.title, true)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-mono text-accent hover:bg-accent/20 hover:border-accent/50 transition-all group/pdf shadow-sm">
+          <FileText size={12} className="group-hover/pdf:scale-110 transition-transform" />
+          View PDF
+        </button>
+      )}
     </div>
   </motion.div>
 );
@@ -367,18 +433,16 @@ const Certifications = () => {
 
   const [activeFilter, setActiveFilter] = useState('All');
   const [showAll, setShowAll] = useState(false);
-  const [pdfModal, setPdfModal] = useState({ url: '', title: '' });
+  const [modalState, setModalState] = useState({ url: '', title: '', isPdf: false });
 
-  const openPdf  = (url, title) => setPdfModal({ url, title });
-  const closePdf = () => setPdfModal({ url: '', title: '' });
+  const openPreview  = (url, title, isPdf = false) => setModalState({ url, title, isPdf });
+  const closePreview = () => setModalState({ url: '', title: '', isPdf: false });
 
   const filteredCerts = useMemo(() => {
     const base = activeFilter === 'All' ? certificationsList : certificationsList.filter((c) => c.category === activeFilter);
-    // Always show featured first in the main grid
     return [...base].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
   }, [certificationsList, activeFilter]);
 
-  // Show max 6 in main grid unless "show all" is toggled
   const GRID_LIMIT = 6;
   const visibleCerts = filteredCerts.slice(0, GRID_LIMIT);
   const hasMore = filteredCerts.length > GRID_LIMIT;
@@ -418,10 +482,10 @@ const Certifications = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.25 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch"
               >
                 {visibleCerts.map((cert, index) => (
-                  <CertificationCard key={cert.title || index} cert={cert} index={index} onViewPdf={openPdf} />
+                  <CertificationCard key={cert.title || index} cert={cert} index={index} onViewPreview={openPreview} />
                 ))}
               </motion.div>
             </AnimatePresence>
@@ -452,12 +516,18 @@ const Certifications = () => {
         <AllCertsModal
           certs={certificationsList}
           onClose={() => setShowAll(false)}
-          onViewPdf={(url, title) => { setShowAll(false); openPdf(url, title); }}
+          onViewPdf={(url, title, isPdf) => { setShowAll(false); openPreview(url, title, isPdf); }}
         />
       )}
-      <PdfModal url={pdfModal.url} title={pdfModal.title} onClose={closePdf} />
+      <ImageOrPdfModal
+        url={modalState.url}
+        title={modalState.title}
+        isPdf={modalState.isPdf}
+        onClose={closePreview}
+      />
     </SectionWrapper>
   );
 };
 
 export default Certifications;
+

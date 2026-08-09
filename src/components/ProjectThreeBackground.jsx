@@ -2,6 +2,7 @@ import React, { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, Torus, Points, PointMaterial } from '@react-three/drei';
 import * as random from 'maath/random/dist/maath-random.esm';
+import { useCanvasLifecycle } from '../hooks/useCanvasLifecycle';
 
 const OrbitBackground = () => {
   const groupRef = useRef();
@@ -146,15 +147,21 @@ const ConstellationBackground = () => {
 };
 
 const ProjectThreeBackground = ({ effectMode = 'wireframeGlobe' }) => {
+  const containerRef = useRef(null);
+  const { enabled, shouldAnimate } = useCanvasLifecycle(containerRef);
+
   const normalizedMode = ['wireframeGlobe', 'particleField', 'constellation', 'hologram', 'orbit'].includes(effectMode)
     ? effectMode
     : 'wireframeGlobe';
 
+  if (!enabled) return null;
+
   return (
-    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden h-full w-full bg-transparent">
+    <div ref={containerRef} className="absolute inset-0 z-0 pointer-events-none overflow-hidden h-full w-full bg-transparent">
       <Canvas
         camera={{ position: [0, 0, 4.0], fov: 60 }}
         gl={{ antialias: false, alpha: true, depth: false, stencil: false }}
+        frameloop={shouldAnimate ? 'always' : 'never'}
       >
         {normalizedMode === 'wireframeGlobe' && <WireframeGlobe />}
         {normalizedMode === 'particleField' && <ParticleField />}

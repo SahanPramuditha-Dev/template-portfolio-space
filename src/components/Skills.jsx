@@ -100,23 +100,7 @@ const Skills = () => {
     setSparkCount(15);
   }, []);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
 
-    const handleWheel = (e) => {
-      if (!threeEnabled) return;
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    // Add passive: false to allow preventDefault
-    container.addEventListener('wheel', handleWheel, { passive: false });
-    
-    return () => {
-      container.removeEventListener('wheel', handleWheel);
-    };
-  }, [threeEnabled]);
 
   // Live ISS location (for realism)
   useEffect(() => {

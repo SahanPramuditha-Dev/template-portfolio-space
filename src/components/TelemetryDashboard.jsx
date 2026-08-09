@@ -202,6 +202,12 @@ const TelemetryDashboard = () => {
         console.debug('Telemetry fetch URL:', url);
         const res = await fetch(url);
         if (!res.ok) throw new Error('Uplink query failed');
+
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          throw new Error('Telemetry API endpoint returned non-JSON response');
+        }
+
         const data = await res.json();
         
         if (active) {
@@ -212,7 +218,6 @@ const TelemetryDashboard = () => {
           setLiveActivities(data.activityFeed || []);
         }
       } catch (err) {
-        console.warn('Failed to resolve GA4 telemetry, falling back to sandbox mode:', err);
         if (active) {
           setMetrics(MOCK_DATA);
           setIsSandbox(true);

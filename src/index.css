@@ -38,17 +38,10 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Smooth theme-switch transitions for all color-token consumers.
-   Scoped to color properties only — does not interfere with Framer Motion transforms/opacity */
-:not([style*="transform"]):not([style*="opacity"]) {
-  transition-property: background-color, border-color, color, box-shadow;
-  transition-duration: 0.25s;
-  transition-timing-function: ease;
-}
 
 html {
   scroll-padding-top: 96px;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 :focus-visible {

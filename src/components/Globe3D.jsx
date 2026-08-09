@@ -2,6 +2,7 @@ import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Line } from '@react-three/drei';
 import DisposeOnUnmount from './DisposeOnUnmount';
+import { useCanvasLifecycle } from '../hooks/useCanvasLifecycle';
 import * as THREE from 'three';
 import { WORLD_MAP_PATHS } from './WorldMapPaths';
 
@@ -557,8 +558,16 @@ const Globe3D = ({ activeCountries = [], selectedCountry, onSelectCountry, onHov
     }
   }, [selectedCountry]);
 
+  const containerRef = useRef(null);
+  const { enabled, shouldAnimate } = useCanvasLifecycle(containerRef);
+
+  if (!enabled) {
+    return <div className="w-full h-[480px] bg-black/55 rounded-lg border border-white/5" />;
+  }
+
   return (
     <div 
+      ref={containerRef}
       className="w-full h-[480px] bg-black/55 rounded-lg border border-white/5 relative overflow-hidden select-none cursor-grab active:cursor-grabbing"
       onDoubleClick={() => setTargetFocus(null)}
       title="Double click background to reset camera view"
@@ -572,6 +581,7 @@ const Globe3D = ({ activeCountries = [], selectedCountry, onSelectCountry, onHov
       <Canvas 
         camera={{ position: [0, 0, 4.5], fov: 60 }}
         gl={{ antialias: true }}
+        frameloop={shouldAnimate ? 'always' : 'never'}
       >
         <ambientLight intensity={0.6} />
         <pointLight position={[10, 10, 10]} intensity={1.5} />

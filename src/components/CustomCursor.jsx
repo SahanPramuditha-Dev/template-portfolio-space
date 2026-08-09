@@ -124,7 +124,7 @@ const CustomCursor = () => {
 
       {/* Main Cursor Circle */}
       <motion.div
-        className={`fixed top-0 left-0 rounded-full border border-accent pointer-events-none z-[9999] hidden md:flex items-center justify-center mix-blend-difference backdrop-blur-[1px] gpu-accel`}
+        className={`fixed top-0 left-0 rounded-full border border-accent pointer-events-none z-[9999] hidden md:flex items-center justify-center mix-blend-difference gpu-accel`}
         style={{
           x: cursorXSpring,
           y: cursorYSpring,

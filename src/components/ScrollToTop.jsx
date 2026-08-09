@@ -1,23 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useScroll } from 'framer-motion';
 import { ArrowUp } from 'lucide-react';
 
 const ScrollToTop = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const isVisibleRef = useRef(false);
   const { scrollYProgress } = useScroll();
-  const pathLength = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001
-  });
 
   useEffect(() => {
+    let ticking = false;
+
     const toggleVisibility = () => {
-      if (window.scrollY > 500) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const shouldShow = window.scrollY > 500;
+        if (isVisibleRef.current !== shouldShow) {
+          isVisibleRef.current = shouldShow;
+          setIsVisible(shouldShow);
+        }
+        ticking = false;
+      });
     };
 
     window.addEventListener('scroll', toggleVisibility, { passive: true });
@@ -68,7 +71,7 @@ const ScrollToTop = () => {
                 stroke="currentColor"
                 strokeWidth="4"
                 className="text-accent"
-                style={{ pathLength }}
+                style={{ pathLength: scrollYProgress }}
               />
             </svg>
             

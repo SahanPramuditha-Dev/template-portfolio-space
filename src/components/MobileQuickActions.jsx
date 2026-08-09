@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, FolderOpen, Mail, FileText, ChevronUp, User } from 'lucide-react';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
@@ -14,29 +14,67 @@ const MobileQuickActions = () => {
   const { data: siteDoc, loading } = useCmsDoc(CMS_DOCS.site, null);
   const [active, setActive]       = useState('home');
   const [visible, setVisible]     = useState(true);
-  const [lastY, setLastY]         = useState(0);
   const [cvOpen, setCvOpen]       = useState(false);
+
+  const lastYRef = useRef(0);
+  const visibleRef = useRef(true);
 
   // Hide bar when scrolling down, show when scrolling up
   useEffect(() => {
-    const onScroll = () => {
-      const y = window.scrollY;
-      setVisible(y < lastY || y < 60);
-      setLastY(y);
+    let ticking = false;
 
-      // Active section detection
-      const ids = NAV_ITEMS.map(n => n.id);
-      for (let i = ids.length - 1; i >= 0; i--) {
-        const el = document.getElementById(ids[i]);
-        if (el && el.getBoundingClientRect().top <= 120) {
-          setActive(ids[i]);
-          break;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const shouldBeVisible = y < lastYRef.current || y < 60;
+        lastYRef.current = y;
+        if (visibleRef.current !== shouldBeVisible) {
+          visibleRef.current = shouldBeVisible;
+          setVisible(shouldBeVisible);
         }
-      }
+        ticking = false;
+      });
     };
+
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, [lastY]);
+  }, []);
+
+  // Active section detection using IntersectionObserver
+  useEffect(() => {
+    const ids = NAV_ITEMS.map((n) => n.id);
+    const elements = ids.map((id) => document.getElementById(id)).filter(Boolean);
+    if (elements.length === 0) return undefined;
+
+    const visibleRatios = new Map();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          visibleRatios.set(entry.target.id, entry.isIntersecting ? entry.intersectionRatio : 0);
+        });
+
+        let highestRatio = 0;
+        let mostVisibleId = 'home';
+        visibleRatios.forEach((ratio, id) => {
+          if (ratio > highestRatio) {
+            highestRatio = ratio;
+            mostVisibleId = id;
+          }
+        });
+
+        if (highestRatio > 0) {
+          setActive(mostVisibleId);
+        }
+      },
+      { threshold: [0, 0.2, 0.5, 0.8] }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
 
   if (loading || siteDoc === undefined) return null;
 

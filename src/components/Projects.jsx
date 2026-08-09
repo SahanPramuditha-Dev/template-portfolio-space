@@ -51,7 +51,7 @@ const ProjectCard = ({ project, index, compact = false }) => {
   };
 
   const handleCardClick = (e) => {
-    if (e.target.closest('a[href]')) return;
+    if (e.target.closest('a[href], button')) return;
     navigateToProject();
   };
 
@@ -73,12 +73,13 @@ const ProjectCard = ({ project, index, compact = false }) => {
       aria-label={`Project: ${project.title}. Press Enter to open details.`}
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
-      className={`group relative cursor-pointer overflow-hidden rounded-3xl border border-white/10 bg-secondary/20 backdrop-blur-md shadow-[0_12px_40px_rgba(0,0,0,0.18)] hover:shadow-[0_20px_50px_rgba(56,189,248,0.12)] outline-none transition-all duration-300 hover:border-accent/40 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-accent/50 ${
-        compact ? 'h-full' : ''
+      className={`group relative cursor-pointer overflow-hidden rounded-3xl border border-white/10 bg-secondary/15 backdrop-blur-md shadow-[0_12px_40px_rgba(0,0,0,0.2)] hover:shadow-[0_20px_50px_rgba(6,182,212,0.12)] outline-none transition-all duration-300 hover:border-accent/40 hover:-translate-y-1.5 focus-visible:ring-2 focus-visible:ring-accent/50 ${
+        compact ? 'h-full flex flex-col justify-between' : ''
       }`}
     >
-      <div className="flex h-full flex-col">
-        {hasMedia && (
+      <div className="flex h-full flex-col justify-between">
+        {/* Banner Section */}
+        {hasMedia ? (
           <div
             className="relative shrink-0 overflow-hidden"
             onMouseEnter={() => setMediaHover(true)}
@@ -109,8 +110,8 @@ const ProjectCard = ({ project, index, compact = false }) => {
                   {media.slice(0, 3).map((src, i) => (
                     <div
                       key={`${src}-${i}`}
-                      className={`h-12 w-12 overflow-hidden rounded-lg border bg-black/30 shadow-lg backdrop-blur-sm ${
-                        i === coverIndex ? 'border-accent/60' : 'border-white/20'
+                      className={`h-12 w-12 overflow-hidden rounded-lg border bg-black/40 shadow-lg backdrop-blur-sm ${
+                        i === coverIndex ? 'border-accent' : 'border-white/20'
                       }`}
                     >
                       <img src={src} alt="" className="h-full w-full object-cover smooth-img" loading="lazy" onLoad={(e) => e.currentTarget.classList.add('loaded')} />
@@ -119,159 +120,160 @@ const ProjectCard = ({ project, index, compact = false }) => {
                 </div>
               )}
               {media.some(isAnimatedAsset) && (
-                <div className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full border border-accent/30 bg-black/35 px-2.5 py-1 text-[0.68rem] font-mono uppercase tracking-[0.14em] text-accent">
+                <div className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full border border-accent/30 bg-black/40 px-2.5 py-1 text-[0.68rem] font-mono uppercase tracking-[0.14em] text-accent backdrop-blur-md">
                   <Play size={11} />
                   Motion preview
                 </div>
               )}
-              {media.length > 1 && (
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent py-2 text-center text-[0.65rem] font-mono uppercase tracking-[0.14em] text-white/80 opacity-0 transition-opacity group-hover:opacity-100">
-                  Hover to preview another frame
-                </div>
-              )}
 
-              <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent opacity-80" />
 
               <div className="absolute left-4 top-4 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.16em] text-accent">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-black/50 px-3 py-1 text-[0.68rem] font-mono font-medium uppercase tracking-[0.14em] text-accent backdrop-blur-md">
                   <Folder size={12} />
-                  {project.missionCode}
+                  {project.category || 'Project'}
                 </span>
-                <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.12em] text-white/80">
-                  {project.category}
-                </span>
-                {statusLabel && (
-                  <span className="rounded-full border border-emerald-400/25 bg-emerald-500/15 px-3 py-1 text-[0.65rem] font-mono uppercase tracking-[0.12em] text-emerald-200/90">
-                    {statusLabel}
+                {project.featured && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-400/15 px-2.5 py-1 text-[0.68rem] font-mono text-amber-300 backdrop-blur-md">
+                    <Sparkles size={11} /> Featured
                   </span>
                 )}
               </div>
 
-              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3">
-                <p className="text-[0.7rem] font-mono uppercase tracking-[0.2em] text-white/70">{project.year}</p>
-                <p className="text-[0.7rem] font-mono uppercase tracking-[0.16em] text-white/70">
-                  Preview ready
-                </p>
+              <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between gap-3">
+                <p className="text-[0.7rem] font-mono uppercase tracking-[0.2em] text-white/80 font-medium">{project.year}</p>
               </div>
             </div>
           </div>
+        ) : (
+          /* Abstract Header Banner for Text-only Projects */
+          <div className="relative aspect-[21/9] w-full overflow-hidden border-b border-white/10 bg-gradient-to-br from-slate-900 via-secondary/30 to-slate-950 flex items-center justify-between p-5 group-hover:border-accent/30 transition-colors">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/15 via-transparent to-transparent opacity-70" />
+            <div className="relative z-10 flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-accent/15 border border-accent/30 text-accent shadow-inner group-hover:scale-105 transition-transform">
+                <Folder size={22} />
+              </div>
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent font-semibold block">{project.category || 'SYSTEM SECURITY'}</span>
+                <span className="text-xs font-mono text-text-muted">{project.missionCode || project.year}</span>
+              </div>
+            </div>
+            {project.featured && (
+              <span className="relative z-10 inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-400/15 px-3 py-1 text-[11px] font-mono text-amber-300">
+                <Sparkles size={11} /> Featured
+              </span>
+            )}
+          </div>
         )}
 
-        <div className="flex flex-1 flex-col p-6 sm:p-7">
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            {!hasMedia && (
-              <>
-                <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.16em] text-accent">
-                  <Folder size={12} />
-                  {project.missionCode}
-                </span>
-                <span className="rounded-full border border-secondary/50 bg-secondary/30 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.12em] text-text-muted">
-                  {project.category}
-                </span>
-                {statusLabel && (
-                  <span className="rounded-full border border-emerald-400/25 bg-emerald-500/15 px-3 py-1 text-[0.65rem] font-mono uppercase tracking-[0.12em] text-emerald-200/90">
-                    {statusLabel}
+        {/* Card Body */}
+        <div className="flex flex-1 flex-col p-6 sm:p-7 justify-between">
+          <div>
+            {/* Metadata & Status */}
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              {!hasMedia && (
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2.5 py-0.5 text-[0.68rem] font-mono font-medium text-accent">
+                    {project.category}
                   </span>
-                )}
-              </>
+                  {statusLabel && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-0.5 text-[0.68rem] font-mono text-emerald-300">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      {statusLabel}
+                    </span>
+                  )}
+                </div>
+              )}
+              {hasMedia && statusLabel && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-0.5 text-[0.68rem] font-mono text-emerald-300">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  {statusLabel}
+                </span>
+              )}
+              <span className="text-xs font-mono text-text-muted ml-auto">{project.year}</span>
+            </div>
+
+            <h3 className="text-2xl font-bold text-text mb-1 group-hover:text-accent transition-colors leading-snug">
+              {project.title}
+            </h3>
+            {subtitle && (
+              <p className="mb-2 text-xs font-mono uppercase tracking-[0.12em] text-accent/80">{subtitle}</p>
             )}
-            {project.featured && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.12em] text-amber-300">
-                <Sparkles size={12} />
-                Featured
-              </span>
+            {outcome && (
+              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-mono text-emerald-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>{outcome}</span>
+              </div>
             )}
-            <span className="inline-flex items-center gap-1 rounded-full border border-secondary/50 bg-primary/40 px-3 py-1 text-[0.68rem] font-mono uppercase tracking-[0.12em] text-text-muted">
-              <Calendar size={11} />
-              {project.year}
-            </span>
-          </div>
 
-          <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className="text-2xl font-bold text-text">{project.title}</h3>
-          </div>
-          {subtitle && (
-            <p className="mb-2 text-xs font-mono uppercase tracking-[0.12em] text-accent/90">{subtitle}</p>
-          )}
-          {outcome && (
-            <p className="mb-3 inline-flex max-w-full items-center rounded-full border border-green-400/25 bg-green-500/10 px-3 py-1.5 text-xs font-semibold text-green-100/95">
-              {outcome}
-            </p>
-          )}
+            <p className="text-text-muted text-sm leading-relaxed line-clamp-3 mb-4">{project.shortDescription}</p>
 
-          <p className="text-text-muted text-sm leading-relaxed line-clamp-3">{project.shortDescription}</p>
+            {impact.length > 0 && (
+              <ul className="my-3 space-y-1 border-t border-white/10 pt-3">
+                {impact.slice(0, 3).map((m) => (
+                  <li
+                    key={`${m.label}-${m.value}`}
+                    className="flex flex-wrap items-baseline justify-between gap-2 text-xs text-text-muted"
+                  >
+                    <span className="font-mono uppercase tracking-[0.15em] text-text-muted/80 line-clamp-1 flex-1">{m.label}</span>
+                    <span className="font-semibold text-accent shrink-0">
+                      {m.value}
+                      {m.suffix ? ` ${m.suffix}` : ''}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
 
-          {impact.length > 0 && (
-            <ul className="mt-4 space-y-1.5 border-t border-white/10 pt-4">
-              {impact.slice(0, 3).map((m) => (
-                <li
-                  key={`${m.label}-${m.value}`}
-                  className="flex flex-wrap items-baseline justify-between gap-2 text-xs text-text-muted"
+            {/* Soft tech stack pills */}
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              {(Array.isArray(project.tech) ? project.tech : []).slice(0, 5).map((tech) => (
+                <span
+                  key={tech}
+                  className="rounded-md bg-accent/10 px-2.5 py-1 text-xs font-mono font-medium text-accent border-none"
                 >
-                  <span className="font-mono uppercase tracking-[0.15em] text-text-muted/90 line-clamp-1 flex-1">{m.label}</span>
-                  <span className="font-semibold text-accent shrink-0">
-                    {m.value}
-                    {m.suffix ? ` ${m.suffix}` : ''}
-                  </span>
-                </li>
+                  {tech}
+                </span>
               ))}
-            </ul>
-          )}
-
-          <div className="mt-5 flex flex-wrap gap-2">
-            {(Array.isArray(project.tech) ? project.tech : []).slice(0, 4).map((tech) => (
-              <span
-                key={tech}
-                className="rounded-full border border-accent/20 bg-primary/70 px-3 py-1 text-xs font-mono text-accent"
-              >
-                {tech}
-              </span>
-            ))}
+            </div>
           </div>
 
-          <div className={`mt-auto pt-5 grid gap-3 ${hasLive && hasGithub ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
-            {hasLive ? (
-              <a
-                href={project.external}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative z-10 inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-primary transition-transform duration-300 hover:scale-[1.01]"
-              >
-                <ExternalLink size={14} />
-                Live Demo
-              </a>
-            ) : (
-              <span className="inline-flex items-center justify-center gap-2 rounded-xl border border-secondary/40 bg-secondary/25 px-4 py-3 text-sm font-semibold text-text-muted">
-                <ExternalLink size={14} />
-                No live link
-              </span>
-            )}
-            {hasGithub ? (
-              <a
-                href={project.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative z-10 inline-flex items-center justify-center gap-2 rounded-xl border border-secondary/60 bg-secondary/30 px-4 py-3 text-sm font-semibold text-text transition-colors hover:border-accent/50 hover:text-accent"
-              >
-                <Github size={14} />
-                Source
-              </a>
-            ) : (
-              <span className="inline-flex items-center justify-center gap-2 rounded-xl border border-secondary/40 bg-secondary/25 px-4 py-3 text-sm font-semibold text-text-muted">
-                <Github size={14} />
-                No public repo
-              </span>
-            )}
-          </div>
+          {/* Action Footer */}
+          <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              {hasLive ? (
+                <a
+                  href={project.external}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-3.5 py-2 text-xs font-mono font-semibold text-primary shadow-md hover:bg-accent/90 transition-colors"
+                >
+                  <ExternalLink size={13} />
+                  Live Demo
+                </a>
+              ) : (
+                <span className="text-xs font-mono text-text-muted/60">No Live Demo</span>
+              )}
 
-          <div className="mt-5 flex items-center justify-between gap-3 text-sm">
-            <span className="text-text-muted">Open case study</span>
+              {hasGithub && (
+                <a
+                  href={project.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-xl border border-white/10 bg-white/5 text-text-muted hover:text-accent hover:border-accent/40 transition-colors"
+                  aria-label="View source code on GitHub"
+                >
+                  <Github size={15} />
+                </a>
+              )}
+            </div>
+
             <a
               href={`/projects/${projectSlug}`}
-              className="relative z-10 inline-flex items-center gap-1 font-mono text-accent hover:text-text"
+              className="inline-flex items-center gap-1 font-mono text-xs text-accent hover:text-text transition-colors font-medium group/link"
             >
-              Full page
-              <ChevronRight size={14} className="transition-transform group-hover:translate-x-1" />
+              Case Study
+              <ChevronRight size={14} className="transition-transform group-hover/link:translate-x-1" />
             </a>
           </div>
         </div>

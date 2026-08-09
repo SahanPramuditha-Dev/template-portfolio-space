@@ -18,16 +18,16 @@ const resolveIcon = (name) => ICON_MAP[name] || Briefcase;
 
 /* ── Category colours ─────────────────────────────────────── */
 const CATEGORY_COLORS = {
-  'Web Development':    { accent: 'text-sky-400',    bg: 'bg-sky-400/10',    border: 'border-sky-400/20'  },
-  'Mobile Development': { accent: 'text-purple-400', bg: 'bg-purple-400/10', border: 'border-purple-400/20'},
-  'UI/UX Design':       { accent: 'text-pink-400',   bg: 'bg-pink-400/10',   border: 'border-pink-400/20' },
-  'API & Backend':      { accent: 'text-amber-400',  bg: 'bg-amber-400/10',  border: 'border-amber-400/20'},
-  'Consulting':         { accent: 'text-green-400',  bg: 'bg-green-400/10',  border: 'border-green-400/20'},
-  'Data & Analytics':   { accent: 'text-teal-400',   bg: 'bg-teal-400/10',   border: 'border-teal-400/20' },
-  'DevOps':             { accent: 'text-orange-400', bg: 'bg-orange-400/10', border: 'border-orange-400/20'},
+  'Web Development':    { accent: 'text-sky-400',    bg: 'bg-sky-400/10',    border: 'border-sky-400/20', gradient: 'from-sky-400 to-blue-500'  },
+  'Mobile Development': { accent: 'text-purple-400', bg: 'bg-purple-400/10', border: 'border-purple-400/20', gradient: 'from-purple-400 to-indigo-500'},
+  'UI/UX Design':       { accent: 'text-pink-400',   bg: 'bg-pink-400/10',   border: 'border-pink-400/20', gradient: 'from-pink-400 to-rose-500' },
+  'API & Backend':      { accent: 'text-amber-400',  bg: 'bg-amber-400/10',  border: 'border-amber-400/20', gradient: 'from-amber-400 to-orange-500'},
+  'Consulting':         { accent: 'text-emerald-400',bg: 'bg-emerald-400/10',border: 'border-emerald-400/20', gradient: 'from-emerald-400 to-teal-500'},
+  'Data & Analytics':   { accent: 'text-teal-400',   bg: 'bg-teal-400/10',   border: 'border-teal-400/20', gradient: 'from-teal-400 to-cyan-500' },
+  'DevOps':             { accent: 'text-orange-400', bg: 'bg-orange-400/10', border: 'border-orange-400/20', gradient: 'from-orange-400 to-amber-500'},
 };
 const getColors = (cat) =>
-  CATEGORY_COLORS[cat] || { accent: 'text-accent', bg: 'bg-accent/10', border: 'border-accent/20' };
+  CATEGORY_COLORS[cat] || { accent: 'text-accent', bg: 'bg-accent/10', border: 'border-accent/20', gradient: 'from-cyan-400 to-blue-500' };
 
 /* ── Availability badge ───────────────────────────────────── */
 const AvailBadge = ({ status }) => {
@@ -67,6 +67,9 @@ const ServiceCard = ({ service, index, bookingUrl }) => {
       whileHover={{ y: -5 }}
       className={`group relative flex flex-col rounded-3xl border ${colors.border} bg-secondary/20 backdrop-blur-md hover:shadow-[0_12px_40px_rgba(0,0,0,0.35)] transition-all duration-300 overflow-hidden`}
     >
+      {/* Top accent glow gradient bar */}
+      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${colors.gradient} opacity-70 group-hover:opacity-100 transition-opacity`} />
+
       {/* Glow blob */}
       <div className={`pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full ${colors.bg} blur-3xl opacity-0 group-hover:opacity-60 transition-opacity duration-500`} />
 

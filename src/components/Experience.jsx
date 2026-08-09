@@ -153,7 +153,7 @@ const ExperienceTimeline = ({ experienceItems }) => {
 
   return (
     <SectionWrapper id="experience">
-      <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative" ref={ref}>
+      <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative" ref={ref} style={{ position: 'relative' }}>
         <div>
           <h2 className="flex flex-wrap items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold text-text mb-8 sm:mb-12 md:mb-16 font-display gradient-text">
             <span className="text-accent font-mono text-lg sm:text-xl mr-0 sm:mr-2">04.</span>
