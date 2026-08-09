@@ -12,14 +12,20 @@ Interactive personal portfolio built with React, Vite, Tailwind CSS, Framer Moti
 
 ## Screenshots
 
-![Portfolio screenshot 1](Screenshots/screenshot-01.png)
-![Portfolio screenshot 2](Screenshots/screenshot-02.png)
+A visual tour of the portfolio experience, including the hero section, projects, 3D interactions, services, and contact flow.
 
-![Portfolio screenshot 3](Screenshots/screenshot-03.png)
-![Portfolio screenshot 4](Screenshots/screenshot-04.png)
-
-![Portfolio screenshot 5](Screenshots/screenshot-05.png)
-![Portfolio screenshot 6](Screenshots/screenshot-06.png)
+| Hero & CTA | Projects | About & Stats | 3D Experiences |
+| --- | --- | --- | --- |
+| ![Hero section](Screenshots/screenshot-01.png) | ![Projects page](Screenshots/screenshot-02.png) | ![About section](Screenshots/screenshot-03.png) | ![3D model interaction](Screenshots/screenshot-04.png) |
+| Home hero and CTA | Project list and case studies | About + experience stats | Interactive 3D canvas preview |
+| | | | |
+| ![Resume section](Screenshots/screenshot-05.png) | ![Services section](Screenshots/screenshot-06.png) | ![Contact section](Screenshots/screenshot-07.png) | ![Keyboard shortcuts](Screenshots/screenshot-08.png) |
+| Resume preview and download | Service cards and ordering flow | Contact form and booking CTA | Command palette and hotkeys |
+| | | | |
+| ![Blog and testimonials](Screenshots/screenshot-09.png) | ![SEO metadata preview](Screenshots/screenshot-10.png) | ![Settings panel](Screenshots/screenshot-11.png) | ![Mobile layout](Screenshots/screenshot-12.png) |
+| Blog, testimonials, and dynamic content | SEO + metadata preview | Theme and accent controls | Responsive mobile layout |
+| ![Launch details](Screenshots/screenshot-13.png) | | | |
+| Launch checklist / project highlights | | | |
 
 ## Features
 
