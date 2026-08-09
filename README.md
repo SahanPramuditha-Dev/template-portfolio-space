@@ -10,6 +10,17 @@ Interactive personal portfolio built with React, Vite, Tailwind CSS, Framer Moti
 
 - Production: https://www.sahanpramuditha.me
 
+## Screenshots
+
+![Portfolio screenshot 1](Screenshots/screenshot-01.png)
+![Portfolio screenshot 2](Screenshots/screenshot-02.png)
+
+![Portfolio screenshot 3](Screenshots/screenshot-03.png)
+![Portfolio screenshot 4](Screenshots/screenshot-04.png)
+
+![Portfolio screenshot 5](Screenshots/screenshot-05.png)
+![Portfolio screenshot 6](Screenshots/screenshot-06.png)
+
 ## Features
 
 - Smooth single-page sections with scroll progress and scroll-to-top.
