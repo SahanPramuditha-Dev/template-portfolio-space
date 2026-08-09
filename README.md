@@ -12,20 +12,27 @@ Interactive personal portfolio built with React, Vite, Tailwind CSS, Framer Moti
 
 ## Screenshots
 
-A visual tour of the portfolio experience, including the hero section, projects, 3D interactions, services, and contact flow.
+A visual tour of the portfolio experience, including the homepage, about, projects, skills, services, contact, blog, resources, and resume.
 
-| Hero & CTA | Projects | About & Stats | 3D Experiences |
+| Homepage | About | Open Source | Skills |
 | --- | --- | --- | --- |
-| ![Hero section](Screenshots/screenshot-01.png) | ![Projects page](Screenshots/screenshot-02.png) | ![About section](Screenshots/screenshot-03.png) | ![3D model interaction](Screenshots/screenshot-04.png) |
-| Home hero and CTA | Project list and case studies | About + experience stats | Interactive 3D canvas preview |
-| | | | |
-| ![Resume section](Screenshots/screenshot-05.png) | ![Services section](Screenshots/screenshot-06.png) | ![Contact section](Screenshots/screenshot-07.png) | ![Keyboard shortcuts](Screenshots/screenshot-08.png) |
-| Resume preview and download | Service cards and ordering flow | Contact form and booking CTA | Command palette and hotkeys |
-| | | | |
-| ![Blog and testimonials](Screenshots/screenshot-09.png) | ![SEO metadata preview](Screenshots/screenshot-10.png) | ![Settings panel](Screenshots/screenshot-11.png) | ![Mobile layout](Screenshots/screenshot-12.png) |
-| Blog, testimonials, and dynamic content | SEO + metadata preview | Theme and accent controls | Responsive mobile layout |
-| ![Launch details](Screenshots/screenshot-13.png) | | | |
-| Launch checklist / project highlights | | | |
+| ![Homepage hero](Screenshots/screenshot-01.png) | ![About section](Screenshots/screenshot-02.png) | ![GitHub activity](Screenshots/screenshot-03.png) | ![Skills and ISS telemetry](Screenshots/screenshot-04.png) |
+| Homepage hero with 3D globe and CTA | About section with stats and profile | Open source presence and GitHub activity | Skills, tools, and live ISS feed |
+
+| Featured Projects | Certifications | Contact | Services |
+| --- | --- | --- | --- |
+| ![Featured projects](Screenshots/screenshot-05.png) | ![Certifications](Screenshots/screenshot-06.png) | ![Contact section](Screenshots/screenshot-07.png) | ![Service packages](Screenshots/screenshot-08.png) |
+| Project cards and case studies | Certifications and achievements | Contact form and email CTA | Service offerings and consultation CTA |
+
+| Testimonials | Blog Loading | Blog Posts | Resources |
+| --- | --- | --- | --- |
+| ![Client testimonials](Screenshots/screenshot-09.png) | ![Blog loading](Screenshots/screenshot-10.png) | ![Blog posts](Screenshots/screenshot-11.png) | ![Resources](Screenshots/screenshot-12.png) |
+| Client feedback and social proof | Article loading state | Tutorials, case studies, and notes | Curated resources and downloads |
+
+| Resume |
+| --- |
+| ![Resume summary](Screenshots/screenshot-13.png) |
+| Resume preview and professional summary |
 
 ## Features
 
