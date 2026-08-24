@@ -5,21 +5,21 @@ import SectionWrapper from './SectionWrapper';
 import GithubStats from './GithubStats';
 import TelemetryDashboard from './TelemetryDashboard';
 import ImageWithFallback from './ImageWithFallback';
-import profilePhoto from '../assets/profilephoto.jpeg';
+import profilePhoto from '../assets/sahan-pramuditha-profile-photo.jpeg';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { CmsSectionSkeleton } from './CmsShapeSkeleton';
 
-const profilePhotoVariants = import.meta.glob('../assets/profilephoto.{avif,webp,jpg,jpeg,png}', {
+const profilePhotoVariants = import.meta.glob('../assets/sahan-pramuditha-profile-photo.{avif,webp,jpg,jpeg,png}', {
   eager: true,
   import: 'default',
 });
 
 const profilePhotoSources = [
-  profilePhotoVariants['../assets/profilephoto.avif']
-    ? { srcSet: profilePhotoVariants['../assets/profilephoto.avif'], type: 'image/avif' }
+  profilePhotoVariants['../assets/sahan-pramuditha-profile-photo.avif']
+    ? { srcSet: profilePhotoVariants['../assets/sahan-pramuditha-profile-photo.avif'], type: 'image/avif' }
     : null,
-  profilePhotoVariants['../assets/profilephoto.webp']
-    ? { srcSet: profilePhotoVariants['../assets/profilephoto.webp'], type: 'image/webp' }
+  profilePhotoVariants['../assets/sahan-pramuditha-profile-photo.webp']
+    ? { srcSet: profilePhotoVariants['../assets/sahan-pramuditha-profile-photo.webp'], type: 'image/webp' }
     : null,
 ].filter(Boolean);
 
@@ -174,7 +174,7 @@ const About = () => {
                 <div className="absolute inset-0 w-full h-full rounded-full overflow-hidden border-4 border-accent/30 bg-secondary [backface-visibility:hidden] [webkit-backface-visibility:hidden]">
                   <ImageWithFallback
                     src={profilePhotoUrl}
-                    alt="Sahan Pramuditha"
+                    alt="Sahan Pramuditha, software engineer and creative developer"
                     className="w-full h-full object-cover rounded-full"
                     loading="eager"
                     sources={profilePhotoUrl === profilePhoto ? profilePhotoSources : []}
