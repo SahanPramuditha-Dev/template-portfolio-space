@@ -36,6 +36,9 @@ service cloud.firestore {
       allow read: if resource.data.status in ['published', 'Published', 'Live', 'Active'] || isAdmin();
       allow write: if isAdmin();
     }
+    match /{collection}/{itemId}/revisions/{revId} {
+      allow read, write: if isAdmin();
+    }
     match /testimonials/{itemId} {
       allow read: if resource.data.status in ['published', 'Published', 'Live', 'Active'] || isAdmin();
       allow write: if isAdmin();
