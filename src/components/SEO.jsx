@@ -1,7 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
-const DEFAULT_SITE_URL = 'https://www.sahanpramuditha.me';
+const DEFAULT_SITE_URL = 'https://sahanpramuditha.me';
 
 const normalizeSiteUrl = (rawUrl) => {
   if (!rawUrl) return DEFAULT_SITE_URL;

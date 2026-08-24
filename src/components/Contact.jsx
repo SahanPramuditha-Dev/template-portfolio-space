@@ -302,7 +302,6 @@ const Contact = () => {
                     value={formData.website}
                     onChange={handleChange}
                     className="hidden"
-                    aria-hidden="true"
                   />
                   {errorMessage && (
                     <motion.div
@@ -345,11 +344,13 @@ const Contact = () => {
 
                   <div className="grid gap-5 md:grid-cols-3">
                     <div className="relative group">
+                      <label htmlFor="contact-project-type" className="sr-only">Project type</label>
                       <select
                         name="projectType"
                         value={formData.projectType}
                         onChange={handleChange}
                         id="contact-project-type"
+                        aria-label="Project type"
                         className="w-full appearance-none bg-primary/50 border border-secondary rounded-lg px-4 py-3 pr-10 text-text outline-none focus:border-accent transition-colors cursor-pointer"
                       >
                         <option value="" className="bg-primary text-text">Project type</option>
@@ -365,11 +366,13 @@ const Contact = () => {
                       </span>
                     </div>
                     <div className="relative group">
+                      <label htmlFor="contact-budget" className="sr-only">Budget range</label>
                       <select
                         name="budget"
                         value={formData.budget}
                         onChange={handleChange}
                         id="contact-budget"
+                        aria-label="Budget range"
                         className="w-full appearance-none bg-primary/50 border border-secondary rounded-lg px-4 py-3 pr-10 text-text outline-none focus:border-accent transition-colors cursor-pointer"
                       >
                         <option value="" className="bg-primary text-text">Budget range</option>
@@ -386,11 +389,13 @@ const Contact = () => {
                       </span>
                     </div>
                     <div className="relative group">
+                      <label htmlFor="contact-timeline" className="sr-only">Timeline</label>
                       <select
                         name="timeline"
                         value={formData.timeline}
                         onChange={handleChange}
                         id="contact-timeline"
+                        aria-label="Timeline"
                         className="w-full appearance-none bg-primary/50 border border-secondary rounded-lg px-4 py-3 pr-10 text-text outline-none focus:border-accent transition-colors cursor-pointer"
                       >
                         <option value="" className="bg-primary text-text">Timeline</option>
