@@ -348,7 +348,7 @@ VITE_FIREBASE_API_KEY="AIzaSyD2jARZLL75tRWQ5_gOZ71nLkQXF7tek3Y"
 \`\`\`
 
 In GitHub Repository Secrets, someone had pasted the key surrounded by trailing quotes or inline newline breaks (\`\\n\`). When the build runner injected the secret into Vite, the quotation marks were bundled literally inside the build string, resulting in:
-\`"\"AIzaSyD2jARZLL75tRWQ5_gOZ71nLkQXF7tek3Y\""\`
+\`"AIzaSyD2jARZLL75tRWQ5_gOZ71nLkQXF7tek3Y""\`
 
 **The Solution**: Always sanitize and validate environment variables at Vite/Webpack build startup:
 
@@ -870,7 +870,7 @@ Consider two API endpoints with an average latency of 100ms:
 - **Endpoint A**: 99ms, 101ms, 100ms, 98ms, 102ms (Stable).
 - **Endpoint B**: 10ms, 10ms, 10ms, 10ms, 460ms (High Jitter!).
 
-Endpoint B has severe **latency jitter** ($\sigma^2$), indicating intermittent thread pool exhaustion or database lock contention. 
+Endpoint B has severe **latency jitter** ($\\sigma^2$), indicating intermittent thread pool exhaustion or database lock contention. 
 
 In Interlink, we implement **Standard Deviation and 99th Percentile (p99) metrics**:
 
@@ -901,7 +901,7 @@ Instead of hardcoding fixed alert thresholds (e.g. *"Alert if latency > 500ms"*)
 [ Current Window (Past 3 Mins)  ] ──► Compare Current Mean against (μ + 3σ)
 \`\`\`
 
-If current 3-minute latency exceeds the baseline by more than **3 standard deviations ($3\sigma$)**, Interlink flags a statistical anomaly—even if absolute latency is still under 300ms. This alerts engineers to subtle performance regressions immediately after a new deployment.
+If current 3-minute latency exceeds the baseline by more than **3 standard deviations ($3\\sigma$)**, Interlink flags a statistical anomaly—even if absolute latency is still under 300ms. This alerts engineers to subtle performance regressions immediately after a new deployment.
 
 ---
 

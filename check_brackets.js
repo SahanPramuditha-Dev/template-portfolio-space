@@ -3,7 +3,6 @@ const fs = require('fs');
 const content = fs.readFileSync('src/pages/ProjectPage.jsx', 'utf8');
 let openBraces = 0;
 let openParens = 0;
-let openTags = [];
 
 for (let i = 0; i < content.length; i++) {
   const char = content[i];

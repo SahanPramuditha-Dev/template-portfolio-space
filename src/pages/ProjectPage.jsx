@@ -1879,7 +1879,7 @@ export const SectionMetricsStatistics = ({ project }) => {
     }
     if (galleryFilter === 'All') return shots;
     return shots.filter(s => s.group === galleryFilter);
-  }, [project?.screenshots, galleryFilter]);
+  }, [project.screenshots, galleryFilter]);
 
   const galleryGroups = useMemo(() => {
     let shots = project?.screenshots || [];
@@ -1888,7 +1888,7 @@ export const SectionMetricsStatistics = ({ project }) => {
     }
     const groups = new Set(shots.map(s => s.group).filter(Boolean));
     return ['All', ...Array.from(groups)];
-  }, [project?.screenshots]);
+  }, [project.screenshots]);
 
   return (
     <>
