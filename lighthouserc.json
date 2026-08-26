@@ -1,0 +1,52 @@
+{
+  "ci": {
+    "collect": {
+      "numberOfRuns": 1,
+      "startServerCommand": "npm run preview -- --host 127.0.0.1 --port 4173",
+      "url": ["http://127.0.0.1:4173"],
+      "settings": {
+        "chromeFlags": "--no-sandbox --disable-dev-shm-usage",
+        "preset": "desktop",
+        "skipAudits": [
+          "uses-rel-preconnect",
+          "uses-long-cache-ttl",
+          "valid-source-maps",
+          "legacy-javascript",
+          "render-blocking-resources",
+          "render-blocking-insight",
+          "network-dependency-tree-insight",
+          "cache-insight",
+          "dom-size",
+          "first-contentful-paint",
+          "speed-index",
+          "interactive",
+          "largest-contentful-paint",
+          "mainthread-work-breakdown",
+          "max-potential-fid",
+          "bootup-time",
+          "modern-image-formats",
+          "offscreen-images",
+          "uses-responsive-images",
+          "uses-optimized-images",
+          "uses-passive-event-listeners",
+          "image-delivery-insight",
+          "total-byte-weight",
+          "unsized-images",
+          "unused-css-rules",
+          "unused-javascript",
+          "uses-webp-images"
+        ]
+      }
+    },
+    "assert": {
+      "assertions": {
+        "aria-prohibited-attr": ["error", { "minScore": 0.9 }],
+        "color-contrast": ["error", { "minScore": 0.9 }],
+        "categories:performance": ["warn", { "minScore": 0.5 }],
+        "categories:accessibility": ["error", { "minScore": 0.9 }],
+        "categories:best-practices": ["warn", { "minScore": 0.5 }],
+        "categories:seo": ["warn", { "minScore": 0.5 }]
+      }
+    }
+  }
+}
