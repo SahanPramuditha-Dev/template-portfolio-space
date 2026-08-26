@@ -259,20 +259,20 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
         try {
           const field = fields.find((f) => f.key === key);
           const isCertificateImage = section.uploadFolder === 'certificates' && key === 'image';
+          const isBadgeImage = (section.uploadFolder === 'badges' || docId === CMS_DOCS.badges) && key === 'image';
           const aspect = 'aspect' in (field || {})
             ? field.aspect
-            : isCertificateImage
+            : (isCertificateImage || isBadgeImage)
               ? null
               : (key === 'thumbnail' || key === 'image' ? 16/9 : null);
           file = await requestImageCrop(file, aspect);
 
-          // Disable forced resize for certificate image uploads to preserve the full certificate aspect ratio.
-          const shouldResize = !isCertificateImage && (['thumbnail', 'architectureImage', 'image'].includes(key) || key.startsWith('screenshot') || key === 'heroArtworkUrl');
+          // Only resize large landscape thumbnails, never badges or certificate sheets
+          const shouldResize = !isCertificateImage && !isBadgeImage && (['thumbnail', 'architectureImage'].includes(key) || key.startsWith('screenshot') || key === 'heroArtworkUrl');
           if (shouldResize && file instanceof Blob && file.type.startsWith('image/')) {
             try {
               file = await resizeImageTo(file, 1920, 1080);
             } catch (err) {
-              // ignore resize errors and continue with original blob
               console.warn('Image resize failed, uploading original', err);
             }
           }
@@ -282,15 +282,20 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
       }
       setBusy(true);
       try {
-        const url = await uploadCmsAsset(file, `${section.uploadFolder || 'uploads'}/${docId}`);
+        const targetFolder = section.uploadFolder || docId || 'uploads';
+        const url = await uploadCmsAsset(file, targetFolder);
         updateField(key, url);
-        setStatus(file.type === 'application/pdf' ? 'PDF uploaded.' : 'Media uploaded.');
+        setStatus(file.type === 'application/pdf' ? 'PDF uploaded successfully.' : 'Media uploaded successfully.');
+      } catch (err) {
+        console.error('Upload asset error:', err);
+        setStatus(`Upload failed: ${err.message || 'Storage permission denied'}`);
       } finally {
         setBusy(false);
       }
     };
     input.click();
   };
+
 
   // Helper: resize an image Blob to target width x height (JPEG output)
   const resizeImageTo = (blob, targetW, targetH) => {

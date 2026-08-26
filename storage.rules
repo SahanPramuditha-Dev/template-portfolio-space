@@ -28,9 +28,10 @@ service firebase.storage {
     }
 
     match /{folder}/{allPaths=**} {
-      allow read: if folder in ['public', 'uploads', 'site', 'projects', 'certificates', 'resources'];
+      allow read: if folder in ['public', 'uploads', 'site', 'projects', 'certificates', 'badges', 'resources'];
       allow write: if isAdmin() && isValidPublicUpload();
     }
+
 
     match /{allPaths=**} {
       allow read: if false;
