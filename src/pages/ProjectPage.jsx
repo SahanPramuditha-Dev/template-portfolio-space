@@ -17,9 +17,71 @@ import ImageWithFallback from '../components/ImageWithFallback';
 import ProjectThreeBackground from '../components/ProjectThreeBackground';
 import { CMS_DOCS, useCmsDoc } from '../lib/cms';
 import { isUsableHttpUrl } from '../utils/projectUrls';
-import { getImpactMetrics, getMediaSlides } from '../utils/projectNormalize';
+import { getImpactMetrics, getMediaSlides, getProjectMetaDescription, getProjectSlug, isProjectPublished } from '../utils/projectNormalize';
 import { slugify } from '../utils/slugify';
 import { renderSimpleMarkdown } from '../utils/markdown';
+
+const ShareProjectButton = ({ project }) => {
+  const [status, setStatus] = useState('');
+
+  const share = async () => {
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: project.title, text: project.shortDescription, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+      }
+      setStatus(navigator.share ? 'Shared' : 'Link copied');
+    } catch {
+      setStatus('Unable to share');
+    }
+    window.setTimeout(() => setStatus(''), 2200);
+  };
+
+  return (
+    <button type="button" onClick={share} className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-6 font-mono text-xs font-bold uppercase tracking-wider text-white hover:border-accent/40 hover:text-accent transition-all" aria-label="Share project">
+      <Share2 size={14} /> {status || 'Share'}
+    </button>
+  );
+};
+
+const RelatedProjects = ({ project, projects }) => {
+  const explicit = Array.isArray(project.relatedProjects)
+    ? project.relatedProjects
+    : String(project.relatedProjects || '').split(',').map((value) => value.trim()).filter(Boolean);
+  const related = projects
+    .filter((candidate) => candidate.id !== project.id && isProjectPublished(candidate))
+    .filter((candidate) => {
+      const candidateSlug = getProjectSlug(candidate);
+      return explicit.includes(candidateSlug) || explicit.includes(candidate.title) || candidate.category === project.category;
+    })
+    .slice(0, 3);
+
+  if (related.length === 0) return null;
+  return (
+    <section className="py-16">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="mb-8 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-mono uppercase tracking-widest text-accent">Continue exploring</p>
+            <h2 className="mt-2 text-3xl font-display font-bold text-white">Related projects</h2>
+          </div>
+          <Link to="/projects" className="text-sm font-mono text-accent hover:text-white transition-colors">View archive</Link>
+        </div>
+        <div className="grid gap-5 md:grid-cols-3">
+          {related.map((candidate) => (
+            <Link key={candidate.id || candidate.title} to={`/projects/${getProjectSlug(candidate)}`} className="rounded-2xl border border-white/10 bg-secondary/20 p-5 hover:border-accent/40 transition-colors">
+              <p className="text-xs font-mono uppercase tracking-widest text-text-muted">{candidate.category || 'Project'}</p>
+              <h3 className="mt-3 text-xl font-bold text-white">{candidate.title}</h3>
+              <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-text-muted">{candidate.shortDescription || candidate.description}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
 
 // ================= SUB-COMPONENT: BEFORE/AFTER COMPARISON SLIDER =================
 const ProblemSolutionSlider = ({ beforeCards, afterCards, fallbackProblem, fallbackSolution }) => {
@@ -1389,7 +1451,7 @@ export const SectionHero = ({ project, techList, hasLive, hasGithub, slides, her
               </div>
 
               {/* Glowing buttons */}
-              <div className="flex flex-wrap gap-4 pt-6">
+                      <div className="flex flex-wrap gap-4 pt-6">
                 {hasLive && (
                   <a href={project.external} target="_blank" rel="noreferrer" className="inline-flex h-12 items-center justify-center rounded-2xl bg-accent px-8 font-mono text-xs font-bold uppercase tracking-wider text-primary hover:bg-white hover:text-black transition-all hover:scale-105 shadow-[0_0_20px_rgba(56,189,248,0.3)]">
                     LAUNCH SITE <ExternalLink size={14} className="ml-2" />
@@ -1400,6 +1462,7 @@ export const SectionHero = ({ project, techList, hasLive, hasGithub, slides, her
                     <Github size={14} className="mr-2" /> SOURCE CODE
                   </a>
                 )}
+                <ShareProjectButton project={project} />
               </div>
             </motion.div>
 
@@ -2352,13 +2415,17 @@ export const DynamicProjectLayout = (props) => {
     { id: 'ScalabilityStrategy', enabled: true },
     { id: 'LessonsLearned', enabled: true },
   ];
+  const supportedSectionIds = new Set(defaultLayout.map((section) => section.id));
   
   // Use CMS layout if it exists and isn't empty, otherwise use fallback
   let layout = project?.layoutJson;
   if (typeof layout === 'string') {
     try { layout = JSON.parse(layout); } catch { layout = null; }
   }
-  if (!layout || layout.length === 0) {
+  if (Array.isArray(layout)) {
+    layout = layout.filter((section) => section && supportedSectionIds.has(section.id));
+  }
+  if (!Array.isArray(layout) || layout.length === 0) {
     layout = defaultLayout;
   }
   
@@ -2409,8 +2476,8 @@ const ProjectPage = () => {
   const { slug } = useParams();
 
 
-  const { data, loading } = useCmsDoc(CMS_DOCS.projects, { items: [] });
-  const projects = useMemo(() => (Array.isArray(data?.items) ? data.items : []), [data]);
+  const { data, loading, error } = useCmsDoc(CMS_DOCS.projects, { items: [] });
+  const projects = useMemo(() => (Array.isArray(data?.items) ? data.items : []).filter(isProjectPublished), [data]);
 
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
@@ -2418,7 +2485,7 @@ const ProjectPage = () => {
   const project = useMemo(() => {
     return projects.find((item) => {
       const candidates = [item.id, item.slug, item.title, item.missionCode].map(slugify).filter(Boolean);
-      return candidates.includes(slug);
+      return candidates.includes(slugify(slug));
     });
   }, [projects, slug]);
 
@@ -2445,6 +2512,15 @@ const ProjectPage = () => {
     );
   }
 
+  if (error) {
+    return (
+      <>
+        <SEO title="Project unavailable" description="The project details could not be loaded." canonicalPath={`/projects/${slug || ''}`} noindex />
+        <PageShell eyebrow="Portfolio" title="Project unavailable" description="The project service could not be reached. Please try again shortly." backHref="/projects" />
+      </>
+    );
+  }
+
   if (!project || data === undefined) {
     return (
       <>
@@ -2461,9 +2537,9 @@ const ProjectPage = () => {
   return (
     <>
       <SEO
-        title={`${project.title || 'Project'} | Sahan Pramuditha`}
-        description={description}
-        canonicalPath={`/projects/${pageSlug}`}
+        title={project.seoTitle || `${project.title || 'Project'} | Sahan Pramuditha`}
+        description={getProjectMetaDescription(project)}
+        canonicalPath={`/projects/${getProjectSlug(project) || pageSlug}`}
         ogImage={heroSlide?.kind === 'image' ? heroSlide.url : undefined}
       />
       
@@ -2473,7 +2549,9 @@ const ProjectPage = () => {
       <PageShell backHref="/#projects">
         
         
-        <DynamicProjectLayout project={project} techList={techList} hasLive={hasLive} hasGithub={hasGithub} slides={slides} heroSlide={heroSlide} scaleX={scaleX} />
+        <DynamicProjectLayout project={project} projects={projects} techList={techList} hasLive={hasLive} hasGithub={hasGithub} slides={slides} heroSlide={heroSlide} scaleX={scaleX} />
+
+        <RelatedProjects project={project} projects={projects} />
 
         {/* ================= NEXT PROJECT DIRECTION ================= */}
         <div className="mt-24 w-full border-t border-white/10 pt-12 pb-20 relative z-20">

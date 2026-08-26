@@ -8,8 +8,6 @@ const HeroWordsEditor = ({ label, helper, placeholder, value, onChange }) => {
 
   useEffect(() => {
     const nextItems = Array.isArray(value) ? value : [];
-    // Keep the local row IDs stable when the source array changes externally.
-    // This is intentional state syncing for a controlled editor, not an effect side-effect.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRows((currentRows) => {
       if (
@@ -46,39 +44,39 @@ const HeroWordsEditor = ({ label, helper, placeholder, value, onChange }) => {
   const removeItem = (id) => commitRows(rows.filter((item) => item.id !== id));
 
   return (
-    <div className="rounded-3xl border border-accent/20 bg-[radial-gradient(circle_at_top_left,rgb(var(--color-accent-rgb)/0.12),transparent_42%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(15,23,42,0.78))] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.18)]">
+    <div className="rounded-2xl border border-sky-500/20 bg-slate-950/70 p-5 shadow-inner">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h4 className="text-sm font-semibold text-text">{label}</h4>
-            <span className="rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-[0.16em] text-accent">
-              {items.length} items
+            <h4 className="text-xs font-bold uppercase tracking-[0.08em] text-slate-200">{label}</h4>
+            <span className="rounded-full border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-mono font-semibold text-sky-400">
+              {items.length} phrases
             </span>
           </div>
-          <p className="mt-1 text-xs leading-relaxed text-text-muted">{helper}</p>
+          {helper && <p className="mt-1 text-xs text-slate-400 leading-relaxed">{helper}</p>}
         </div>
         <button
           type="button"
           onClick={addItem}
-          className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-accent/90"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-500/15 px-3.5 py-1.5 text-xs font-bold text-sky-400 hover:bg-sky-500/25 transition-all shadow-sm"
         >
-          <Plus size={14} />
+          <Plus size={13} strokeWidth={2.5} />
           Add phrase
         </button>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {items.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-secondary/50 bg-secondary/10 px-4 py-6 text-sm text-text-muted">
+          <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/30 px-4 py-5 text-center text-xs text-slate-500">
             Start with 3-5 short phrases. Keep them punchy and readable.
           </div>
         ) : (
           rows.map((item, index) => (
             <div
               key={item.id}
-              className="flex items-center gap-3 rounded-2xl border border-white/10 bg-secondary/15 px-3 py-3"
+              className="flex items-center gap-2.5 rounded-xl border border-slate-800 bg-slate-900/60 p-2 sm:p-2.5"
             >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-accent/20 bg-accent/10 font-mono text-[11px] uppercase tracking-[0.12em] text-accent">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-sky-500/20 bg-sky-500/10 font-mono text-[10px] font-bold text-sky-400">
                 {String(index + 1).padStart(2, '0')}
               </span>
               <input
@@ -86,15 +84,15 @@ const HeroWordsEditor = ({ label, helper, placeholder, value, onChange }) => {
                 value={item.value}
                 onChange={(e) => updateItem(item.id, e.target.value)}
                 placeholder={placeholder}
-                className="min-w-0 flex-1 rounded-xl border border-secondary/50 bg-primary/50 px-4 py-3 text-text outline-none transition-colors placeholder:text-text-muted focus:border-accent"
+                className="min-w-0 flex-1 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20"
               />
               <button
                 type="button"
                 onClick={() => removeItem(item.id)}
-                className="rounded-full border border-red-400/20 bg-red-400/10 p-2 text-red-300 transition-colors hover:bg-red-400/20"
+                className="rounded-lg border border-red-500/20 bg-red-500/10 p-2 text-red-300 hover:bg-red-500/20 transition-colors"
                 aria-label={`Remove ${label} item ${index + 1}`}
               >
-                <Trash2 size={14} />
+                <Trash2 size={13} />
               </button>
             </div>
           ))
@@ -105,3 +103,4 @@ const HeroWordsEditor = ({ label, helper, placeholder, value, onChange }) => {
 };
 
 export default HeroWordsEditor;
+

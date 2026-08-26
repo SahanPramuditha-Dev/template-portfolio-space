@@ -2,6 +2,7 @@ import { CMS_DOCS } from '../../../lib/cms';
 import {
   initialProject,
   initialCertificate,
+  initialBadge,
   initialSkillGroup,
   initialExperienceItem,
   initialResource,
@@ -12,7 +13,7 @@ import {
   initialFaq,
   initialMaintenancePlan,
 } from './adminConstants';
-import { Folder, Award, Wrench, Link as LinkIcon, Sparkles, BookOpen, Quote, Briefcase, Github, HelpCircle, Activity } from 'lucide-react';
+import { Folder, Award, ShieldCheck, Wrench, Link as LinkIcon, Sparkles, BookOpen, Quote, Briefcase, Github, HelpCircle, Activity } from 'lucide-react';
 
 export const projectFields = [
   {
@@ -27,6 +28,7 @@ export const projectFields = [
     type: 'layout-builder',
     group: 'summary',
   },
+  { key: 'slug', label: 'URL Slug', type: 'text', group: 'summary', placeholder: 'e.g. studyos', helper: 'Lowercase, unique URL identifier. Leave blank only for legacy records.' },
   { key: 'missionCode', label: 'Mission Code', type: 'text', group: 'summary', placeholder: 'e.g. STUDYOS' },
   { key: 'year', label: 'Year', type: 'number', group: 'summary', placeholder: 'e.g. 2026' },
   { key: 'title', label: 'Title', type: 'text', group: 'summary', placeholder: 'e.g. StudyOS' },
@@ -478,6 +480,20 @@ export const certificateFields = [
   { key: 'pdfUrl', label: 'Certificate PDF', type: 'pdf', group: 'media', accept: 'application/pdf,.pdf' },
 ];
 
+export const badgeFields = [
+  { key: 'title', label: 'Badge Title', type: 'text', group: 'identity', placeholder: 'e.g. MongoDB Node.js Developer Path' },
+  { key: 'issuer', label: 'Issuer / Platform', type: 'text', group: 'identity', placeholder: 'e.g. MongoDB, Google Cloud, AWS, Credly, Postman', suggestions: ['MongoDB', 'Google Cloud', 'AWS', 'Microsoft Learn', 'Postman', 'Credly', 'Holopin', 'GitHub', 'LeetCode', 'HackerRank', 'Other'] },
+  { key: 'category', label: 'Category', type: 'select', group: 'identity',
+    options: ['Database', 'Cloud', 'Backend', 'Frontend', 'AI/ML', 'DevOps', 'Security', 'Data', 'Problem Solving', 'Other'] },
+  { key: 'issueDate', label: 'Earned Date / Period', type: 'text', group: 'identity', placeholder: 'e.g. Feb 2026' },
+  { key: 'link', label: 'Verification / Credly URL', type: 'text', group: 'identity', placeholder: 'https://www.credly.com/... or verification link' },
+  { key: 'skills', label: 'Skills Covered', type: 'list', placeholder: 'e.g. Aggregation, Atlas, Indexing', group: 'identity' },
+  { key: 'image', label: 'Badge Emblem Image', type: 'image', group: 'media', aspect: null },
+  { key: 'featured', label: 'Featured (highlight on homepage)', type: 'checkbox', group: 'identity' },
+  { key: 'status', label: 'Status', type: 'select', options: ['Published', 'Draft', 'Archived'], group: 'identity' },
+  { key: 'order', label: 'Sort Order', type: 'number', group: 'identity' },
+];
+
 export const skillFields = [
   { key: 'title', label: 'Group Title', type: 'text', group: 'summary' },
   { key: 'order', label: 'Order', type: 'number', group: 'summary' },
@@ -538,13 +554,16 @@ export const blogFields = [
 ];
 
 export const testimonialFields = [
-  { key: 'name', label: 'Name', type: 'text', group: 'author' },
-  { key: 'role', label: 'Role', type: 'text', group: 'author' },
-  { key: 'company', label: 'Company', type: 'text', group: 'author' },
-  { key: 'content', label: 'Quote', type: 'textarea', group: 'testimonialBody' },
-  { key: 'rating', label: 'Rating', type: 'number', group: 'testimonialBody' },
-  { key: 'context', label: 'Context', type: 'text', group: 'testimonialBody' },
-  { key: 'link', label: 'Link', type: 'text', group: 'testimonialBody' },
+  { key: 'status', label: 'Status', type: 'select', options: ['Published', 'Draft', 'Archived'], group: 'author' },
+  { key: 'order', label: 'Sort Order (lower = first)', type: 'number', group: 'author' },
+  { key: 'name', label: 'Full Name', type: 'text', group: 'author', placeholder: 'e.g. John Smith' },
+  { key: 'role', label: 'Job Title / Role', type: 'text', group: 'author', placeholder: 'e.g. Lead Architect' },
+  { key: 'company', label: 'Company / Organization', type: 'text', group: 'author', placeholder: 'e.g. NexusTech Canada' },
+  { key: 'avatar', label: 'Profile Photo', type: 'image', group: 'author' },
+  { key: 'content', label: 'Testimonial Quote', type: 'textarea', group: 'testimonialBody', placeholder: 'Write what they said about you...' },
+  { key: 'rating', label: 'Star Rating (1–5)', type: 'number', group: 'testimonialBody' },
+  { key: 'context', label: 'Context / Project Reference', type: 'text', group: 'testimonialBody', placeholder: 'e.g. E-commerce platform rebuild' },
+  { key: 'link', label: 'LinkedIn / Profile URL', type: 'text', group: 'testimonialBody', placeholder: 'https://linkedin.com/in/...' },
 ];
 
 export const serviceFields = [
@@ -699,6 +718,14 @@ export const sectionConfig = {
     initialItem: initialCertificate,
     uploadFolder: 'certificates',
     help: 'Manage certs, issuers, and verification links.',
+  },
+  [CMS_DOCS.badges]: {
+    title: 'Digital Badges',
+    icon: ShieldCheck,
+    collectionKey: 'items',
+    initialItem: initialBadge,
+    uploadFolder: 'badges',
+    help: 'Manage digital badges from MongoDB, Google Cloud, AWS, Credly, etc.',
   },
   [CMS_DOCS.skills]: {
     title: 'Skills',

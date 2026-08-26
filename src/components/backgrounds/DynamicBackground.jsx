@@ -20,8 +20,6 @@ const DynamicBackground = () => {
     bgContent = <WireframeBackground />;
   } else if (path.includes('/blog')) {
     bgContent = <NebulaBackground />;
-  } else if (path.includes('/testimonials')) {
-    bgContent = <WarpBackground />;
   } else if (path.includes('/resources')) {
     bgContent = <NetworkBackground />;
   } else if (path.includes('/opensource')) {

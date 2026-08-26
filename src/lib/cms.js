@@ -8,6 +8,7 @@ export const CMS_DOCS = {
   site: 'site',
   projects: 'projects',
   certifications: 'certifications',
+  badges: 'badges',
   skills: 'skills',
   experience: 'experience',
   blog: 'blog',
@@ -27,6 +28,7 @@ export const HOMEPAGE_CMS_DOC_IDS = [
   CMS_DOCS.experience,
   CMS_DOCS.skills,
   CMS_DOCS.certifications,
+  CMS_DOCS.badges,
   CMS_DOCS.testimonials,
   CMS_DOCS.blog,
 ];
@@ -36,7 +38,7 @@ export const HOMEPAGE_CMS_DOC_IDS = [
  * Used by the boot preloader so the first paint is never fed from placeholder CMS shapes.
  */
 export const waitForHomepageCms = (timeoutMs = 20000) => {
-  const reads = HOMEPAGE_CMS_DOC_IDS.map((id) => getDoc(doc(db, 'content', id)));
+  const reads = HOMEPAGE_CMS_DOC_IDS.map((id) => getDoc(doc(db, 'content', id)).catch(() => null));
   // After migration, most of these will be collections, so we should also prefetch collections
   const collections = [
     CMS_DOCS.projects,
@@ -47,7 +49,7 @@ export const waitForHomepageCms = (timeoutMs = 20000) => {
     CMS_DOCS.blog,
   ];
   const collectionReads = collections.map((name) => 
-    getDocs(query(collection(db, name), where('status', 'in', ['published', 'Published', 'Live', 'Active'])))
+    getDocs(query(collection(db, name), where('status', 'in', ['published', 'Published', 'Live', 'Active']))).catch(() => null)
   );
   
   const pending = Promise.all([...reads, ...collectionReads]).then(() => undefined);
@@ -63,6 +65,7 @@ export const waitForHomepageCms = (timeoutMs = 20000) => {
 const MIGRATED_COLLECTIONS = [
   'projects',
   'certifications',
+  'badges',
   'skills',
   'experience',
   'blog',
@@ -81,7 +84,10 @@ export const subscribeCmsDoc = (docId, onChange, onError) => {
   if (MIGRATED_COLLECTIONS.includes(docId)) {
     // Public frontend should only fetch published items to satisfy Firestore security rules
     // Support legacy statuses like 'Live', 'Active', and 'Published'
-    const q = query(collection(db, docId), where('status', 'in', ['published', 'Published', 'Live', 'Active']));
+    const statuses = docId === CMS_DOCS.projects
+      ? ['published', 'Published', 'Live', 'Active', 'Scheduled']
+      : ['published', 'Published', 'Live', 'Active'];
+    const q = query(collection(db, docId), where('status', 'in', statuses));
     return onSnapshot(
       q,
       (snapshot) => {

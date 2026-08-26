@@ -454,11 +454,37 @@ const Certifications = () => {
   return (
     <SectionWrapper id="certifications">
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative">
-        <h2 className="flex flex-wrap items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold text-text mb-8 sm:mb-10 font-display gradient-text">
-          <span className="text-accent font-mono text-lg sm:text-xl mr-0 sm:mr-2">06.</span>
-          <span className="flex-grow min-w-0">Certifications &amp; Achievements</span>
-          <span className="h-px bg-secondary flex-grow min-w-[60px] ml-0 sm:ml-4 opacity-50 w-full sm:w-auto order-3 sm:order-none"></span>
-        </h2>
+        {/* Section Header */}
+        <div className="flex flex-col items-center text-center mb-10 md:mb-14">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-accent text-xs font-mono uppercase tracking-widest mb-3"
+          >
+            <Award size={14} /> Verified Credentials & Courses
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.05 }}
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-text font-display mb-4"
+          >
+            Certifications & <span className="text-accent">Qualifications</span>
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="max-w-2xl text-text-muted text-sm sm:text-base"
+          >
+            Formally accredited courses, diplomas, and technical specializations with verifiable certificates.
+          </motion.p>
+        </div>
 
         {/* Stats Bar */}
         {certificationsList.length > 0 && <StatsBar certs={certificationsList} />}

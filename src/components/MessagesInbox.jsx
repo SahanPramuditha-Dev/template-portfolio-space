@@ -127,27 +127,27 @@ const MessagesInbox = () => {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-text-muted">Loading messages...</div>;
+    return <div className="p-12 text-center text-slate-400">Loading messages…</div>;
   }
 
   if (messages.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 text-center border border-white/5 rounded-2xl bg-secondary/20">
-        <Mail size={48} className="mb-4 text-white/10" />
-        <h3 className="text-xl font-bold text-text mb-2">No messages yet</h3>
-        <p className="text-text-muted">When someone fills out your contact form, it will appear here.</p>
+      <div className="flex flex-col items-center justify-center p-12 text-center border border-dashed border-slate-800 rounded-3xl bg-slate-900/40">
+        <Mail size={44} className="mb-3 text-slate-600" />
+        <h3 className="text-base font-bold text-slate-200 mb-1">No messages yet</h3>
+        <p className="text-xs text-slate-400">When someone contacts you through your portfolio contact form, their message will arrive here instantly.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between border-b border-white/10 pb-4">
+    <div className="space-y-6 rounded-3xl border border-slate-800/80 bg-slate-900/40 p-5 sm:p-7 shadow-2xl backdrop-blur-xl">
+      <div className="flex items-center justify-between border-b border-slate-800/80 pb-5">
         <div>
-          <h2 className="text-2xl font-bold text-text">Inbox</h2>
-          <p className="text-sm text-text-muted">Manage your contact form submissions.</p>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-100">Inbox & Form Submissions</h2>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">Review contact inquiries, client telemetry, and reply directly.</p>
         </div>
-        <div className="px-4 py-2 bg-accent/10 text-accent rounded-full text-sm font-bold border border-accent/20">
+        <div className="px-3.5 py-1.5 bg-sky-500/10 text-sky-400 rounded-full text-xs font-mono font-bold border border-sky-500/25 shadow-[0_0_12px_rgba(56,189,248,0.15)]">
           {messages.filter(m => !m.read).length} Unread
         </div>
       </div>
@@ -160,8 +160,13 @@ const MessagesInbox = () => {
           return (
             <div 
               key={msg.id} 
-              className={`p-6 rounded-2xl border transition-colors relative ${msg.read ? 'bg-secondary/20 border-white/5' : 'bg-accent/5 border-accent/30 shadow-[0_0_15px_rgba(var(--color-accent-rgb),0.1)]'}`}
+              className={`p-5 sm:p-6 rounded-2xl border transition-all relative ${
+                msg.read 
+                  ? 'bg-slate-950/60 border-slate-800/80 hover:border-slate-700' 
+                  : 'bg-sky-500/[0.04] border-sky-500/30 shadow-[0_0_20px_rgba(56,189,248,0.08)]'
+              }`}
             >
+
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="font-bold text-lg text-text flex items-center gap-2 flex-wrap">

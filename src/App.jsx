@@ -21,9 +21,11 @@ import { BlockRenderer } from './blocks/BlockRenderer';
 const ThreeBackground = lazy(() => import('./components/ThreeBackground'));
 const CustomCursor = lazy(() => import('./components/CustomCursor'));
 const Skills = lazy(() => import('./components/Skills'));
+const Badges = lazy(() => import('./components/Badges'));
 const Experience = lazy(() => import('./components/Experience'));
 const Projects = lazy(() => import('./components/Projects'));
 const Certifications = lazy(() => import('./components/Certifications'));
+const Testimonials = lazy(() => import('./components/Testimonials'));
 const Contact = lazy(() => import('./components/Contact'));
 const Footer = lazy(() => import('./components/Footer'));
 
@@ -123,6 +125,12 @@ function App() {
                   </Suspense>
                   <Suspense fallback={<CmsSectionSkeleton id="certifications" />}>
                     <Certifications />
+                  </Suspense>
+                  <Suspense fallback={<CmsSectionSkeleton id="badges" />}>
+                    <Badges />
+                  </Suspense>
+                  <Suspense fallback={<CmsSectionSkeleton id="testimonials" />}>
+                    <Testimonials />
                   </Suspense>
                   <Suspense fallback={<CmsSectionSkeleton id="contact" />}>
                     <Contact />

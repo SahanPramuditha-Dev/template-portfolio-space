@@ -1,9 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { useMemo } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 export const COLLECTION_FIELD_GROUPS = {
   summary: {
-    label: 'Summary & classification',
+    label: 'Summary & Classification',
     hint: 'What appears on cards, filters, and list views.',
   },
   hero: {
@@ -11,7 +12,7 @@ export const COLLECTION_FIELD_GROUPS = {
     hint: 'Cinematic hero details, 3D settings, custom metrics, and calls-to-action.',
   },
   story: {
-    label: 'Case study & narrative',
+    label: 'Case Study & Narrative',
     hint: 'Long-form content, objectives, story milestones, and roadmap.',
   },
   architecture: {
@@ -22,27 +23,27 @@ export const COLLECTION_FIELD_GROUPS = {
     label: 'Engineering Integrity',
     hint: 'Technical dilemmas, challenges, lessons learned, and folder structures.',
   },
-  metrics: { label: 'Impact metrics', hint: 'Optional headline numbers.' },
-  links: { label: 'Outbound links', hint: 'Demo and source URLs.' },
-  media: { label: 'Media', hint: 'Thumbnails, GIFs, and screenshots.' },
+  metrics: { label: 'Impact Metrics', hint: 'Optional headline numbers.' },
+  links: { label: 'Outbound Links', hint: 'Demo and source URLs.' },
+  media: { label: 'Media & Visuals', hint: 'Thumbnails, GIFs, and screenshots.' },
   meta: {
-    label: 'Metadata & publishing',
+    label: 'Metadata & Publishing',
     hint: 'Slug, dates, categories, and flags.',
   },
-  content: { label: 'Article body', hint: 'Main text and optional code block.' },
-  identity: { label: 'Basics', hint: 'Names, titles, and verification.' },
-  stats: { label: 'Repository stats', hint: 'Stars, forks, and watchers.' },
-  skills: { label: 'Skill entries', hint: 'Cards inside this group.' },
-  resourceMeta: { label: 'Listing', hint: 'How this resource appears in lists.' },
-  resourceLink: { label: 'URL & description', hint: 'Link target and optional blurb.' },
-  author: { label: 'Author', hint: 'Who the testimonial is from.' },
-  testimonialBody: { label: 'Quote & details', hint: 'Quote text, rating, and references.' },
-  serviceOffer:    { label: 'Offer headline',     hint: 'Title, category, icon, pitch, and availability.' },
-  serviceDelivery: { label: 'Scope & delivery',   hint: 'Pricing (LKR), timeline, features, CTA, and tech tags.' },
-  serviceProcess:  { label: 'Process steps',      hint: 'Numbered workflow shown on the service card.' },
-  role: { label: 'Role & place', hint: 'Title, organization, location, and timeframe.' },
-  detail: { label: 'Story & skills', hint: 'Description and skill tags.' },
-  general: { label: 'Fields', hint: '' },
+  content: { label: 'Article Body', hint: 'Main text and optional code block.' },
+  identity: { label: 'Basics & Identity', hint: 'Names, titles, and verification.' },
+  stats: { label: 'Repository Stats', hint: 'Stars, forks, and watchers.' },
+  skills: { label: 'Skill Entries', hint: 'Cards inside this group.' },
+  resourceMeta: { label: 'Listing Details', hint: 'How this resource appears in lists.' },
+  resourceLink: { label: 'URL & Description', hint: 'Link target and optional blurb.' },
+  author: { label: 'Author Information', hint: 'Who the testimonial is from.' },
+  testimonialBody: { label: 'Quote & Details', hint: 'Quote text, rating, and references.' },
+  serviceOffer:    { label: 'Offer Headline',     hint: 'Title, category, icon, pitch, and availability.' },
+  serviceDelivery: { label: 'Scope & Delivery',   hint: 'Pricing, timeline, features, CTA, and tech tags.' },
+  serviceProcess:  { label: 'Process Steps',      hint: 'Numbered workflow shown on the service card.' },
+  role: { label: 'Role & Timeline', hint: 'Title, organization, location, and timeframe.' },
+  detail: { label: 'Story & Skills', hint: 'Description and skill tags.' },
+  general: { label: 'General Fields', hint: '' },
 };
 
 const FieldGroups = ({ fields, renderField }) => {
@@ -69,20 +70,27 @@ const FieldGroups = ({ fields, renderField }) => {
           <details
             key={groupId}
             open={index === 0}
-            className="rounded-2xl border border-white/10 bg-primary/20 open:border-accent/30 open:bg-primary/35"
+            className="group rounded-2xl border border-slate-800/80 bg-slate-950/50 transition-all open:border-sky-500/30 open:bg-slate-900/40"
           >
-            <summary className="cursor-pointer list-none rounded-2xl px-4 py-3.5 transition-colors hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-display text-sm font-semibold text-text">{meta.label}</p>
-                  {meta.hint ? <p className="mt-1 text-xs text-text-muted">{meta.hint}</p> : null}
+            <summary className="cursor-pointer list-none rounded-2xl px-4 py-3.5 transition-colors hover:bg-slate-800/30 [&::-webkit-details-marker]:hidden select-none">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-sm font-bold tracking-tight text-slate-200 group-open:text-sky-400 transition-colors">
+                      {meta.label}
+                    </span>
+                    <span className="rounded-full border border-slate-700/80 bg-slate-800/70 px-2 py-0.5 text-[10px] font-mono font-semibold text-slate-400">
+                      {groupFields.length}
+                    </span>
+                  </div>
+                  {meta.hint && <p className="mt-1 text-xs text-slate-400 leading-relaxed truncate">{meta.hint}</p>}
                 </div>
-                <span className="shrink-0 rounded-full border border-white/10 bg-primary/40 px-2.5 py-0.5 text-[11px] font-mono text-text-muted">
-                  {groupFields.length}
-                </span>
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-transform duration-200 group-open:rotate-180 group-open:text-sky-400">
+                  <ChevronDown size={16} />
+                </div>
               </div>
             </summary>
-            <div className="grid gap-5 border-t border-white/10 px-4 pb-5 pt-4">
+            <div className="grid gap-5 border-t border-slate-800/70 px-4 pb-5 pt-4">
               {groupFields.map((field) => renderField(field))}
             </div>
           </details>
@@ -93,3 +101,4 @@ const FieldGroups = ({ fields, renderField }) => {
 };
 
 export default FieldGroups;
+

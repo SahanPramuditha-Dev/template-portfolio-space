@@ -16,19 +16,42 @@ const Testimonials = () => {
   return (
     <SectionWrapper id="testimonials" className="relative overflow-hidden py-24">
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
-        <div className="text-center mb-12 md:mb-16">
-          <h2 className="flex items-center justify-center text-2xl md:text-3xl font-bold text-text mb-4 font-display gradient-text">
-            <span className="text-accent font-mono text-xl mr-2">07.</span> Social Proof
-          </h2>
-          <p className="text-text-muted max-w-lg mx-auto">
-            Feedback from clients, peers, and collaborators can live here once added in the admin panel.
-          </p>
+        {/* Section Header */}
+        <div className="flex flex-col items-center text-center mb-10 md:mb-14">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-accent text-xs font-mono uppercase tracking-widest mb-3"
+          >
+            <Quote size={14} /> Endorsements & Reviews
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.05 }}
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-text font-display mb-4"
+          >
+            Client & Peer <span className="text-accent">Testimonials</span>
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="max-w-2xl text-text-muted text-sm sm:text-base"
+          >
+            Feedback and recommendations from team members, clients, and mentors I've collaborated with.
+          </motion.p>
         </div>
 
         {testimonials.length === 0 ? (
           <div className="rounded-3xl border border-white/10 bg-secondary/20 px-6 py-16 text-center text-text-muted">
             <p className="mx-auto max-w-2xl">
-              No testimonials have been added yet. Open the admin panel and publish your first recommendation card.
+              No testimonials published yet. Open the admin panel → Testimonials → Add New, fill in the details and set Status to <strong className="text-accent">Published</strong>.
             </p>
             <a
               href="/admin"
@@ -56,11 +79,38 @@ const Testimonials = () => {
                     <p className="text-sm leading-relaxed text-slate-300">"{item.content}"</p>
                   </div>
                   <div className="mt-5 flex items-center justify-between gap-4 border-t border-white/5 pt-4">
-                    <div>
-                      <h3 className="text-sm font-bold text-white">{item.name}</h3>
-                      <p className="text-[11px] text-text-muted mt-0.5">
-                        {item.role}{item.company ? `, ${item.company}` : ''}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      {item.avatar ? (
+                        <img
+                          src={item.avatar}
+                          alt={item.name}
+                          className="w-9 h-9 rounded-full object-cover border border-white/10 shrink-0"
+                        />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center shrink-0">
+                          <span className="text-accent text-xs font-bold">{(item.name || '?')[0]}</span>
+                        </div>
+                      )}
+                      <div>
+                        {item.link ? (
+                          <a
+                            href={item.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-bold text-white hover:text-accent transition-colors"
+                          >
+                            {item.name}
+                          </a>
+                        ) : (
+                          <h3 className="text-sm font-bold text-white">{item.name}</h3>
+                        )}
+                        <p className="text-[11px] text-text-muted mt-0.5">
+                          {item.role}{item.company ? `, ${item.company}` : ''}
+                        </p>
+                        {item.context && (
+                          <p className="text-[10px] text-accent/70 mt-0.5 italic">{item.context}</p>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-0.5 text-yellow-400 shrink-0">
                       {[...Array(Number(item.rating || 5))].map((_, starIndex) => (

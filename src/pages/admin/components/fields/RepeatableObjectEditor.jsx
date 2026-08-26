@@ -33,8 +33,6 @@ const RepeatableObjectEditor = ({ label, helper, value, onChange, createItem, fi
 
   useEffect(() => {
     const nextItems = Array.isArray(value) ? value : [];
-    // Keep the local row IDs stable when the source array changes externally.
-    // This is intentional state syncing for a controlled editor, not an effect side-effect.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRows((currentRows) => {
       const normalizedNextItems = nextItems.map((item) => normalizeItem(item));
@@ -72,64 +70,69 @@ const RepeatableObjectEditor = ({ label, helper, value, onChange, createItem, fi
   const addItem = () => commitRows([...rows, makeEditorRow(createItem())]);
   const removeItem = (id) => commitRows(rows.filter((item) => item.id !== id));
 
+  const inputClass =
+    'w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20';
+
   return (
-    <div className="space-y-3 rounded-2xl border border-secondary/40 bg-primary/30 p-4">
+    <div className="space-y-3 rounded-2xl border border-slate-800/80 bg-slate-950/60 p-4 sm:p-5 shadow-inner">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h4 className="text-sm font-semibold text-text">{label}</h4>
-          <p className="text-xs text-text-muted">{helper}</p>
+          <h4 className="text-xs font-bold uppercase tracking-[0.08em] text-slate-300">{label}</h4>
+          {helper && <p className="text-[11px] text-slate-500 mt-0.5">{helper}</p>}
         </div>
         <button
           type="button"
           onClick={addItem}
-          className="inline-flex items-center gap-2 rounded-lg border border-accent/20 bg-accent/10 px-3 py-2 text-xs font-semibold text-accent"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/30 bg-sky-500/10 px-3 py-1.5 text-xs font-bold text-sky-400 hover:bg-sky-500/20 transition-all shrink-0"
         >
-          <Plus size={14} />
-          Add
+          <Plus size={13} strokeWidth={2.5} />
+          Add card
         </button>
       </div>
 
       <div className="space-y-3">
         {items.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-secondary/50 bg-secondary/10 px-4 py-6 text-sm text-text-muted">
-            No entries yet. Add the first card.
+          <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/30 px-4 py-6 text-center text-xs text-slate-500">
+            No entries yet. Click &quot;Add card&quot; above to create one.
           </div>
         ) : (
           rows.map((item, index) => (
-            <div key={item.id} className="rounded-2xl border border-secondary/40 bg-secondary/10 p-4">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <p className="text-xs font-mono uppercase tracking-[0.18em] text-text-muted">{label} {index + 1}</p>
+            <div key={item.id} className="rounded-xl border border-slate-800/90 bg-slate-900/50 p-4 shadow-sm">
+              <div className="mb-3 flex items-center justify-between gap-3 border-b border-slate-800/60 pb-2.5">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-[0.14em] text-sky-400">
+                  {label} #{index + 1}
+                </span>
                 <button
                   type="button"
                   onClick={() => removeItem(item.id)}
-                  className="rounded-full border border-red-400/20 bg-red-400/10 p-2 text-red-300"
+                  className="rounded-lg border border-red-500/20 bg-red-500/10 p-1.5 text-red-300 hover:bg-red-500/20 transition-colors"
                   aria-label={`Remove ${label} ${index + 1}`}
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={13} />
                 </button>
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-3.5 md:grid-cols-2">
                 {fields.map((field) => (
                   <div key={field.key} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
-                    <label className="mb-2 block text-sm font-semibold text-text">{field.label}</label>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-300">{field.label}</label>
                     {field.type === 'textarea' ? (
                       <textarea
                         value={item.value?.[field.key] ?? ''}
                         onChange={(e) => updateItem(item.id, field.key, e.target.value)}
-                        rows={4}
-                        className="w-full rounded-xl border border-secondary/50 bg-primary/50 px-4 py-3 text-text outline-none transition-colors focus:border-accent"
+                        rows={3}
+                        className={inputClass}
                       />
                     ) : field.type === 'select' ? (
                       <select
                         value={item.value?.[field.key] ?? ''}
                         onChange={(e) => updateItem(item.id, field.key, e.target.value)}
-                        className="w-full rounded-xl border border-secondary/50 bg-primary/50 px-4 py-3 text-text outline-none transition-colors focus:border-accent"
+                        className={inputClass}
                       >
-                        <option value="" disabled className="bg-secondary text-text">
+                        <option value="" disabled className="bg-slate-900 text-slate-400">
                           Select {field.label.toLowerCase()}
                         </option>
                         {(field.options || []).map((option) => (
-                          <option key={option} value={option} className="bg-secondary text-text">
+                          <option key={option} value={option} className="bg-slate-900 text-slate-100">
                             {option}
                           </option>
                         ))}
@@ -139,7 +142,7 @@ const RepeatableObjectEditor = ({ label, helper, value, onChange, createItem, fi
                         type="number"
                         value={item.value?.[field.key] ?? ''}
                         onChange={(e) => updateItem(item.id, field.key, e.target.value)}
-                        className="w-full rounded-xl border border-secondary/50 bg-primary/50 px-4 py-3 text-text outline-none transition-colors focus:border-accent"
+                        className={inputClass}
                       />
                     ) : field.type === 'image' || field.type === 'file' ? (
                       <div className="flex flex-col gap-2 min-w-0">
@@ -148,8 +151,8 @@ const RepeatableObjectEditor = ({ label, helper, value, onChange, createItem, fi
                             type="text"
                             value={item.value?.[field.key] ?? ''}
                             onChange={(e) => updateItem(item.id, field.key, e.target.value)}
-                            placeholder={field.type === 'image' ? "Enter image URL or upload file" : "Enter file URL or upload file"}
-                            className="flex-1 min-w-0 rounded-xl border border-secondary/50 bg-primary/50 px-4 py-3 text-text outline-none transition-colors focus:border-accent"
+                            placeholder={field.type === 'image' ? "Enter image URL or upload" : "Enter file URL or upload"}
+                            className={`${inputClass} flex-1`}
                           />
                           {onUpload && (
                             <button
@@ -160,16 +163,16 @@ const RepeatableObjectEditor = ({ label, helper, value, onChange, createItem, fi
                                   updateItem(item.id, field.key, url);
                                 }
                               }}
-                              className="shrink-0 relative z-10 rounded-xl border border-accent/30 bg-accent/10 px-3 py-3 text-accent"
+                              className="shrink-0 rounded-xl border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-sky-400 hover:bg-sky-500/20 transition-colors"
                               aria-label={`Upload ${field.label}`}
                             >
-                              {field.type === 'image' ? <ImageIcon size={16} /> : <UploadCloud size={16} />}
+                              {field.type === 'image' ? <ImageIcon size={15} /> : <UploadCloud size={15} />}
                             </button>
                           )}
                         </div>
                         {field.type === 'image' && item.value?.[field.key] && (
-                          <div className="mt-1 w-full max-w-sm rounded-lg overflow-hidden border border-white/10 bg-black/20">
-                            <img src={item.value[field.key]} alt="Preview" className="w-full h-auto max-h-48 object-contain" />
+                          <div className="mt-1 w-full max-w-sm rounded-lg overflow-hidden border border-slate-800 bg-slate-950 p-1.5">
+                            <img src={item.value[field.key]} alt="Preview" className="w-full h-auto max-h-36 object-contain rounded" />
                           </div>
                         )}
                       </div>
@@ -178,7 +181,7 @@ const RepeatableObjectEditor = ({ label, helper, value, onChange, createItem, fi
                         type="text"
                         value={item.value?.[field.key] ?? ''}
                         onChange={(e) => updateItem(item.id, field.key, e.target.value)}
-                        className="w-full rounded-xl border border-secondary/50 bg-primary/50 px-4 py-3 text-text outline-none transition-colors focus:border-accent"
+                        className={inputClass}
                       />
                     )}
                   </div>
@@ -193,3 +196,4 @@ const RepeatableObjectEditor = ({ label, helper, value, onChange, createItem, fi
 };
 
 export default RepeatableObjectEditor;
+

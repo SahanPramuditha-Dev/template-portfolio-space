@@ -24,6 +24,10 @@ service cloud.firestore {
       allow read: if resource.data.status in ['published', 'Published', 'Live', 'Active'] || isAdmin();
       allow write: if isAdmin();
     }
+    match /badges/{itemId} {
+      allow read: if resource.data.status in ['published', 'Published', 'Live', 'Active'] || isAdmin();
+      allow write: if isAdmin();
+    }
     match /skills/{itemId} {
       allow read: if resource.data.status in ['published', 'Published', 'Live', 'Active'] || isAdmin();
       allow write: if isAdmin();
@@ -66,7 +70,7 @@ service cloud.firestore {
     }
 
     match /projects/{projectId} {
-      allow read: if resource.data.status in ['published', 'Published', 'Live', 'Active'] || isAdmin();
+      allow read: if resource.data.status in ['published', 'Published', 'Live', 'Active', 'Scheduled'] || isAdmin();
       allow write: if isAdmin();
 
       match /versions/{versionId} {

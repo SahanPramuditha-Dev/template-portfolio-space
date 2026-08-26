@@ -71,7 +71,7 @@ const Navbar = () => {
 
   // Active section highlighting on scroll
   useEffect(() => {
-    const sections = ['home', 'about', 'skills', 'experience', 'projects', 'certifications', 'contact'];
+    const sections = ['home', 'about', 'skills', 'experience', 'projects', 'certifications', 'badges', 'contact'];
     const sectionElements = sections.map(id => document.getElementById(id)).filter(Boolean);
     let activeRatios = new Map();
 
@@ -115,6 +115,7 @@ const Navbar = () => {
     { name: 'Skills', href: '#skills', id: 'skills' },
     { name: 'Experience', href: '#experience', id: 'experience' },
     { name: 'Certifications', href: '#certifications', id: 'certifications' },
+    { name: 'Badges', href: '#badges', id: 'badges' },
     { name: 'Contact', href: '#contact', id: 'contact' },
   ];
 
@@ -137,7 +138,7 @@ const Navbar = () => {
 
   const moreLinks = [
     { name: 'Services', href: '/services', id: 'services' },
-    { name: 'Testimonials', href: '/testimonials', id: 'testimonials' },
+    { name: 'Testimonials', href: '/#testimonials', id: 'testimonials' },
     { name: 'Blog', href: '/blog', id: 'blog' },
     { name: 'Resources', href: '/resources', id: 'resources' },
     { name: 'Resume', href: '/resume', id: 'resume' },
@@ -175,9 +176,25 @@ const Navbar = () => {
         }`}
       >
         <div className="container mx-auto px-4 sm:px-6 flex justify-between items-center max-w-7xl">
-          <a href="#home" onClick={(e) => handleClick(e, '#home')} className="text-2xl font-bold text-accent">
-            S<span className="text-text">ahan.</span>
-          </a>
+          <div className="flex items-center gap-3">
+            <a href="#home" onClick={(e) => handleClick(e, '#home')} className="text-2xl font-bold text-accent">
+              S<span className="text-text">ahan.</span>
+            </a>
+            {siteDoc?.openToWork !== false && (
+              <a
+                href="#contact"
+                onClick={(e) => handleClick(e, '#contact')}
+                className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[11px] font-mono hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-all duration-200"
+                title="Available for freelance and engineering roles"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span>Available for work</span>
+              </a>
+            )}
+          </div>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-6">
@@ -340,6 +357,19 @@ const Navbar = () => {
                 className="md:hidden bg-primary/95 backdrop-blur-lg border-b border-secondary overflow-hidden absolute top-full left-0 w-full shadow-2xl"
               >
                 <div className="flex flex-col items-center py-8 space-y-6">
+                  {siteDoc?.openToWork !== false && (
+                    <a
+                      href="#contact"
+                      onClick={(e) => handleClick(e, '#contact')}
+                      className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-mono"
+                    >
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                      <span>Open to Work / Available</span>
+                    </a>
+                  )}
                   {navLinks.map((link, i) => (
                     <motion.a
                       key={link.name}

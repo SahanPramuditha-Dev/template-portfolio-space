@@ -15,13 +15,14 @@ import './index.print.css'
 import App from './App.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import RouteAnalytics from './components/RouteAnalytics.jsx'
 import RouteFallback from './components/RouteFallback.jsx'
 import { initWebVitals } from './utils/analytics.js'
 import SmoothScroll from './components/SmoothScroll.jsx'
 import ScrollProgress from './components/ScrollProgress.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
+import OrbitalAiModal from './components/OrbitalAiModal.jsx'
 import { AccessibilityProvider } from './context/AccessibilityContext.jsx'
 import { AchievementsProvider } from './context/AchievementsContext.jsx'
 
@@ -32,7 +33,6 @@ const ProjectsPage = lazy(() => import('./pages/ProjectsPage.jsx'))
 const ProjectPage = lazy(() => import('./pages/ProjectPage.jsx'))
 const ResumePage = lazy(() => import('./pages/ResumePage.jsx'))
 const ResourcesPage = lazy(() => import('./pages/ResourcesPage.jsx'))
-const TestimonialsPage = lazy(() => import('./pages/TestimonialsPage.jsx'))
 const ServicesPage = lazy(() => import('./pages/ServicesPage.jsx'))
 const OpenSourcePage = lazy(() => import('./pages/OpenSourcePage.jsx'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage.jsx'))
@@ -81,6 +81,7 @@ createRoot(document.getElementById('root')).render(
                 <SmoothScroll />
                 <ScrollProgress />
                 <ScrollToTop />
+                <OrbitalAiModal />
                 <Suspense fallback={<RouteFallback />}>
                   <Routes>
                     <Route path="/" element={<App />} />
@@ -91,7 +92,7 @@ createRoot(document.getElementById('root')).render(
                     <Route path="/projects/:slug" element={<ProjectPage />} />
                     <Route path="/resume" element={<ResumePage />} />
                     <Route path="/resources" element={<ResourcesPage />} />
-                    <Route path="/testimonials" element={<TestimonialsPage />} />
+                    <Route path="/testimonials" element={<Navigate to="/#testimonials" replace />} />
                     <Route path="/services" element={<ServicesPage />} />
                     <Route path="/opensource" element={<OpenSourcePage />} />
                     <Route path="/contact" element={<ContactPage />} />

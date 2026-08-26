@@ -121,3 +121,27 @@ export function getProjectStatusLabel(project) {
   const s = String(project?.status || '').trim();
   return STATUS_LABEL[s] || (s || null);
 }
+
+export function getProjectSlug(project) {
+  if (!project) return '';
+  return String(project.slug || project.id || project.title || project.missionCode || '').trim().toLowerCase();
+}
+
+export function getProjectSearchText(value) {
+  return String(value ?? '').replace(/<[^>]+>/g, ' ').replace(/[*_`#[\]()>-]/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+export function getProjectMetaDescription(project) {
+  return getProjectSearchText(project?.seoDescription || project?.shortDescription || project?.description || 'Project case study and build details.')
+    .slice(0, 160);
+}
+
+export function isProjectPublished(project, now = Date.now()) {
+  const status = String(project?.status || '').trim().toLowerCase();
+  if (status === 'draft' || status === 'archived') return false;
+  if (status === 'scheduled') {
+    const publishTime = Date.parse(project?.publishDate || '');
+    return Number.isFinite(publishTime) && publishTime <= now;
+  }
+  return true;
+}

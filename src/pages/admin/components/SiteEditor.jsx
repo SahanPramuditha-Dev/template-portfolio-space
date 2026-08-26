@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
-import { Settings2, Save, Link as LinkIcon } from 'lucide-react';
+import { Settings2, Save, Sparkles, Mail, User, Compass, LayoutGrid, Globe } from 'lucide-react';
 import { useCmsDoc, CMS_DOCS, saveCmsDoc, uploadCmsAsset } from '../../../lib/cms';
 import AdminStatus from './AdminStatus';
 import SectionBanner from './SectionBanner';
@@ -11,6 +11,7 @@ import HeroWordsEditor from './fields/HeroWordsEditor';
 import RepeatableObjectEditor from './fields/RepeatableObjectEditor';
 import { requestImageCrop } from './CropModalRoot';
 import { initialSiteContent, isLikelyAssetUrl, getCmsErrorMessage } from '../utils/adminConstants';
+
 
 const parseArrayValue = (value, fallback = []) => {
   if (Array.isArray(value)) return value;
@@ -43,6 +44,7 @@ const normalizeSiteDraft = (source = initialSiteContent) => ({
   hobbiesJson: parseArrayValue(source.hobbiesJson ?? initialSiteContent.hobbiesJson, JSON.parse(initialSiteContent.hobbiesJson)),
   educationJson: parseArrayValue(source.educationJson ?? initialSiteContent.educationJson, JSON.parse(initialSiteContent.educationJson)),
   availability: source.availability ?? initialSiteContent.availability,
+  openToWork: source.openToWork !== undefined ? Boolean(source.openToWork) : initialSiteContent.openToWork,
   contactEmail: source.contactEmail ?? initialSiteContent.contactEmail,
   preferredContact: source.preferredContact ?? initialSiteContent.preferredContact,
   responseSla: source.responseSla ?? initialSiteContent.responseSla,
@@ -65,7 +67,7 @@ const normalizeSiteDraft = (source = initialSiteContent) => ({
   seoTitle: source.seoTitle ?? initialSiteContent.seoTitle,
   seoDescription: source.seoDescription ?? initialSiteContent.seoDescription,
   seoImage: source.seoImage ?? initialSiteContent.seoImage,
-  seoFavicon: source.seoFavicon ?? initialSiteContent.seoFavicon,
+  geminiApiKey: source.geminiApiKey ?? initialSiteContent.geminiApiKey,
   headerLinksJson: parseArrayValue(source.headerLinksJson ?? initialSiteContent.headerLinksJson, JSON.parse(initialSiteContent.headerLinksJson || '[]')),
   footerLinksJson: parseArrayValue(source.footerLinksJson ?? initialSiteContent.footerLinksJson, JSON.parse(initialSiteContent.footerLinksJson || '[]')),
 });
@@ -139,12 +141,12 @@ const objectEditorConfigs = {
 };
 
 const SITE_CONTENT_TABS = [
-  { id: 'hero', label: 'Hero', hint: 'Homepage headline & artwork' },
-  { id: 'contact', label: 'Contact', hint: 'Email, availability, résumé' },
-  { id: 'about', label: 'About', hint: 'Bio, lists, education, stats' },
-  { id: 'navigation', label: 'Navigation', hint: 'Header & footer links' },
-  { id: 'footer', label: 'Footer', hint: 'Footer copy & social links' },
-  { id: 'seo', label: 'SEO', hint: 'Global site metadata' },
+  { id: 'hero', label: 'Hero & Intro', icon: Sparkles, hint: 'Homepage headline & artwork' },
+  { id: 'contact', label: 'Contact & Hire', icon: Mail, hint: 'Email, availability, résumé' },
+  { id: 'about', label: 'About & Bio', icon: User, hint: 'Bio, lists, education, stats' },
+  { id: 'navigation', label: 'Navigation', icon: Compass, hint: 'Header & footer links' },
+  { id: 'footer', label: 'Footer & Social', icon: LayoutGrid, hint: 'Footer copy & social links' },
+  { id: 'seo', label: 'SEO & Meta', icon: Globe, hint: 'Global site metadata' },
 ];
 
 const SiteEditor = () => {
@@ -173,7 +175,7 @@ const SiteEditor = () => {
       const isCropExempt = file.type === 'image/gif' || file.type === 'image/svg+xml' || file.type === 'image/x-icon' || file.name.endsWith('.ico') || file.name.endsWith('.svg');
       if (file.type.startsWith('image/') && !isCropExempt) {
         try {
-          const aspect = key === 'profilePhotoUrl' || key === 'avatarPhotoUrl' || key === 'ogImage' || key === 'seoFavicon' ? 1 : 16/9;
+          const aspect = key === 'profilePhotoUrl' || key === 'avatarPhotoUrl' || key === 'ogImage' ? 1 : 16/9;
           file = await requestImageCrop(file, aspect);
         } catch {
           return;
@@ -183,7 +185,7 @@ const SiteEditor = () => {
       try {
         const url = await uploadCmsAsset(file, `site/${key}`);
         updateField(key, url);
-        setStatus('Media uploaded.');
+        setStatus('Media uploaded successfully.');
       } finally {
         setBusy(false);
       }
@@ -219,6 +221,7 @@ const SiteEditor = () => {
         hobbiesJson: draft.hobbiesJson,
         educationJson: draft.educationJson,
         availability: draft.availability,
+        openToWork: Boolean(draft.openToWork),
         contactEmail: draft.contactEmail,
         preferredContact: draft.preferredContact,
         responseSla: draft.responseSla,
@@ -241,9 +244,9 @@ const SiteEditor = () => {
         seoTitle: draft.seoTitle || '',
         seoDescription: draft.seoDescription || '',
         seoImage: draft.seoImage || '',
-        seoFavicon: draft.seoFavicon || '',
+        geminiApiKey: draft.geminiApiKey || '',
       });
-      setStatus('Site content saved.');
+      setStatus('Site content saved successfully!');
     } catch (error) {
       setStatus(getCmsErrorMessage(error));
     } finally {
@@ -253,8 +256,8 @@ const SiteEditor = () => {
 
   if (loading) {
     return (
-      <div className="rounded-3xl border border-white/10 bg-secondary/25 p-10 text-center text-text-muted">
-        Loading site settings…
+      <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-12 text-center text-slate-400">
+        Loading website settings…
       </div>
     );
   }
@@ -262,12 +265,12 @@ const SiteEditor = () => {
   const labelFromKey = (key) => key.replace(/([A-Z])/g, ' $1').replace(/^./, (char) => char.toUpperCase());
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-secondary/25 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-md">
-      <div className="space-y-6 p-4 pb-20 sm:p-8 sm:pb-28">
+    <div className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-slate-900/40 shadow-2xl backdrop-blur-xl">
+      <div className="space-y-6 p-5 sm:p-8 pb-28">
         <SectionBanner
           icon={Settings2}
           title="Website Content"
-          help="Configure general website metadata, sections bio text, career statistics, and social handles."
+          help="Configure general website copy, hero introduction, bios, career stats, social handles, and SEO."
           onSave={save}
           onReset={() => setDraft(normalizeSiteDraft(initialSiteContent))}
           hidePrimarySave
@@ -275,24 +278,26 @@ const SiteEditor = () => {
 
         <AdminStatus message={status} />
 
-        <div className="flex flex-col gap-6 pt-2">
-          {/* Horizontal Section Index Navigation Menu */}
-          <div className="flex flex-wrap gap-2 pb-4 border-b border-white/5">
+        <div className="flex flex-col gap-6">
+          {/* Horizontal Section Index Navigation Tabs */}
+          <div className="flex flex-wrap gap-2 p-1.5 rounded-2xl border border-slate-800 bg-slate-950/60 shadow-inner">
             {SITE_CONTENT_TABS.map((tab) => {
               const active = siteTab === tab.id;
+              const TabIcon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   type="button"
                   onClick={() => setSiteTab(tab.id)}
                   className={clsx(
-                    'rounded-full border px-4 py-2 text-xs font-mono whitespace-nowrap transition-colors outline-none focus-visible:ring-1 focus-visible:ring-accent/40',
+                    'flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-all outline-none',
                     active
-                      ? 'border-accent/40 bg-accent/15 font-bold text-accent shadow-[0_0_0_1px_rgb(var(--color-accent-rgb)/0.12)]'
-                      : 'border-white/10 bg-primary/30 text-text-muted hover:border-accent/25 hover:text-text'
+                      ? 'border border-sky-500/40 bg-sky-500/15 font-bold text-sky-300 shadow-[0_0_16px_rgba(56,189,248,0.15)]'
+                      : 'border border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
                   )}
                 >
-                  {tab.label}
+                  <TabIcon size={14} className={active ? 'text-sky-400' : 'text-slate-500'} />
+                  <span>{tab.label}</span>
                 </button>
               );
             })}
@@ -302,10 +307,11 @@ const SiteEditor = () => {
           <div className="space-y-6 min-w-0">
             {siteTab === 'hero' && (
               <SiteSection
-                title="Hero & intro"
+                title="Hero & Introduction"
                 description="Headline, intro paragraph, rotating phrases, and hero artwork shown on the homepage."
               >
                 <div className="grid gap-4 md:grid-cols-2">
+
                   {['heroTitle', 'heroSubtitle'].map((key) => (
                     <FieldEditor
                       key={key}
@@ -348,6 +354,17 @@ const SiteEditor = () => {
                 title="Contact & availability"
                 description="How visitors reach you, response expectations, and résumé / CV links."
               >
+                <div className="mb-4">
+                  <FieldEditor
+                    field={{
+                      key: 'openToWork',
+                      label: 'Open to Work / Available for Hire (Pulsing badge in Navbar)',
+                      type: 'checkbox',
+                    }}
+                    value={draft.openToWork}
+                    onChange={(value) => updateField('openToWork', value)}
+                  />
+                </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   {['availability', 'contactEmail', 'preferredContact', 'responseSla', 'baseLocation', 'currentFocus', 'bookingUrl', 'cvVersion', 'cvUpdatedAt', 'githubUsername'].map(
                     (key) => (
@@ -504,29 +521,36 @@ const SiteEditor = () => {
                   onChange={(value) => updateField('seoImage', value)}
                   onUpload={() => uploadAsset('seoImage')}
                 />
-                <FieldEditor
-                  field={{ key: 'seoFavicon', label: 'Favicon URL (.ico, .png, .svg)', type: 'image' }}
-                  value={draft.seoFavicon}
-                  onChange={(value) => updateField('seoFavicon', value)}
-                  onUpload={() => uploadAsset('seoFavicon')}
-                />
+                <div className="pt-4 mt-4 border-t border-white/10">
+                  <FieldEditor
+                    field={{
+                      key: 'geminiApiKey',
+                      label: 'Google Gemini API Key (Optional for Orbital AI LLM Upgrade)',
+                      type: 'password',
+                      placeholder: 'AIzaSy...',
+                      helper: 'Leave empty to use the instant built-in offline intelligence engine.'
+                    }}
+                    value={draft.geminiApiKey}
+                    onChange={(value) => updateField('geminiApiKey', value)}
+                  />
+                </div>
               </SiteSection>
             )}
           </div>
         </div>
       </div>
 
-      <div className="sticky bottom-0 z-10 border-t border-white/10 bg-primary/85 px-4 py-4 backdrop-blur-md sm:px-8">
+      <div className="sticky bottom-0 z-20 border-t border-slate-800/90 bg-slate-950/90 px-6 py-4 backdrop-blur-xl sm:px-8">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-text-muted">Saving updates the live site content document in Firestore.</p>
+          <p className="text-xs text-slate-400">Saving publishes website content changes live to your portfolio.</p>
           <button
             type="button"
             onClick={save}
             disabled={busy}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-primary shadow-[0_4px_24px_rgb(var(--color-accent-rgb)/0.25)] transition-transform hover:scale-[1.01] disabled:opacity-60 sm:w-auto"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500 px-6 py-2.5 text-xs sm:text-sm font-bold text-slate-950 shadow-[0_4px_20px_rgba(56,189,248,0.25)] transition-all hover:bg-sky-400 hover:shadow-[0_4px_28px_rgba(56,189,248,0.35)] active:scale-[0.99] disabled:opacity-60 sm:w-auto"
           >
             <Save size={16} />
-            {busy ? 'Saving…' : 'Save site content'}
+            {busy ? 'Saving changes…' : 'Save Website Content'}
           </button>
         </div>
       </div>
@@ -535,3 +559,4 @@ const SiteEditor = () => {
 };
 
 export default SiteEditor;
+

@@ -11,10 +11,17 @@ export const renderSimpleMarkdown = (text) => {
 
   const parseInline = (str) => {
     if (typeof str !== 'string') return str;
-    let html = str
+    const escapeHtml = (value) => value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+    const safeText = escapeHtml(str);
+    let html = safeText
       .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-white">$1</strong>')
       .replace(/\*(.*?)\*/g, '<em class="italic text-white/80">$1</em>')
-      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="font-medium text-accent hover:underline">$1</a>');
+      .replace(/\[(.*?)\]\((https?:\/\/[^\s)]+|mailto:[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="font-medium text-accent hover:underline">$1</a>');
     return <span dangerouslySetInnerHTML={{ __html: html }} />;
   };
 

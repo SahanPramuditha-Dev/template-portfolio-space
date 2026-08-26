@@ -44,45 +44,45 @@ const SeoPreviewField = ({ draft }) => {
 
   const titleLen = title.length;
   const descLen = description.length;
-  const titleColor = titleLen > 60 ? 'text-amber-500' : 'text-emerald-500';
-  const descColor = descLen > 160 ? 'text-amber-500' : 'text-emerald-500';
+  const titleColor = titleLen > 60 ? 'text-amber-400' : 'text-emerald-400';
+  const descColor = descLen > 160 ? 'text-amber-400' : 'text-emerald-400';
 
   return (
-    <div className="space-y-3 p-5 rounded-2xl border border-white/10 bg-black/20 shadow-inner mt-2">
-      <div className="flex items-center gap-2 text-text-muted mb-3">
-        <SearchIcon size={16} />
-        <h4 className="text-sm font-semibold tracking-wide">Google Search Preview</h4>
+    <div className="space-y-3 p-5 rounded-2xl border border-slate-800 bg-slate-950/60 shadow-inner mt-2">
+      <div className="flex items-center gap-2 text-slate-300 mb-3">
+        <SearchIcon size={16} className="text-sky-400" />
+        <h4 className="text-sm font-bold tracking-wide">Google Search Snippet Preview</h4>
       </div>
       
       {/* Google-like snippet preview */}
-      <div className="bg-white p-4 rounded-lg font-sans max-w-[600px]">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">
-            W
+      <div className="bg-white p-4 rounded-xl font-sans max-w-[600px] shadow-sm">
+        <div className="flex items-center gap-2 mb-1.5">
+          <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
+            P
           </div>
           <div>
-            <div className="text-[14px] text-[#202124] leading-tight">Your Portfolio</div>
-            <div className="text-[12px] text-[#4d5156] leading-tight truncate max-w-[500px]">{url}</div>
+            <div className="text-[13px] text-[#202124] font-medium leading-tight">Your Portfolio</div>
+            <div className="text-[11px] text-[#4d5156] leading-tight truncate max-w-[500px]">{url}</div>
           </div>
         </div>
-        <div className="text-[20px] text-[#1a0dab] hover:underline cursor-pointer leading-tight mb-1 truncate">
+        <div className="text-[18px] text-[#1a0dab] hover:underline cursor-pointer font-medium leading-tight mb-1 truncate">
           {title}
         </div>
-        <div className="text-[14px] text-[#4d5156] leading-[1.58] line-clamp-2">
+        <div className="text-[13px] text-[#4d5156] leading-[1.5] line-clamp-2">
           {description}
         </div>
       </div>
 
-      <div className="flex gap-6 mt-4 text-xs font-mono">
+      <div className="flex flex-wrap gap-6 mt-3 text-xs font-mono">
         <div>
-          <span className="text-text-muted">Title Length: </span>
+          <span className="text-slate-400">Title Length: </span>
           <span className={`${titleColor} font-bold`}>{titleLen}/60</span>
-          {titleLen > 60 && <span className="text-amber-500 ml-2">May truncate</span>}
+          {titleLen > 60 && <span className="text-amber-400 ml-2">May truncate</span>}
         </div>
         <div>
-          <span className="text-text-muted">Description: </span>
+          <span className="text-slate-400">Description: </span>
           <span className={`${descColor} font-bold`}>{descLen}/160</span>
-          {descLen > 160 && <span className="text-amber-500 ml-2">May truncate</span>}
+          {descLen > 160 && <span className="text-amber-400 ml-2">May truncate</span>}
         </div>
       </div>
     </div>
@@ -144,35 +144,35 @@ const GithubImportField = ({ onChangeDraft, draft }) => {
   };
 
   return (
-    <div className="space-y-3 p-6 rounded-2xl border border-accent/20 bg-accent/5 shadow-inner mb-4">
-      <div className="flex items-center gap-2 text-accent mb-1">
-        <Github size={20} />
+    <div className="space-y-3 p-5 rounded-2xl border border-sky-500/20 bg-sky-500/5 shadow-inner mb-4">
+      <div className="flex items-center gap-2 text-sky-400 mb-1">
+        <Github size={18} />
         <h4 className="text-sm font-bold tracking-wide">GitHub Repository Auto-Import</h4>
       </div>
-      <p className="text-xs text-text-muted leading-relaxed">
-        Paste a public GitHub repository URL (or <code className="text-accent bg-accent/10 px-1.5 py-0.5 rounded font-mono">owner/repo</code>) to automatically fetch and fill the project details below.
+      <p className="text-xs text-slate-400 leading-relaxed">
+        Paste a public GitHub repository URL (or <code className="text-sky-300 bg-sky-500/15 px-1.5 py-0.5 rounded font-mono">owner/repo</code>) to automatically fetch and fill the project details below.
       </p>
       
-      <div className="flex flex-col sm:flex-row gap-3 mt-3">
+      <div className="flex flex-col sm:flex-row gap-2.5 mt-2">
         <input
           type="text"
           value={repoUrl}
           onChange={(e) => setRepoUrl(e.target.value)}
           placeholder="e.g. facebook/react"
-          className="flex-1 px-4 py-3 rounded-xl border border-white/10 bg-slate-900 text-sm text-white placeholder:text-text-muted/40 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/50 transition-all shadow-inner"
+          className="flex-1 px-4 py-2.5 rounded-xl border border-slate-800 bg-slate-950 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 transition-all shadow-inner"
           onKeyDown={(e) => e.key === 'Enter' && handleImport()}
         />
         <button
           onClick={handleImport}
           disabled={isFetching || !repoUrl.trim()}
-          className="px-6 py-3 rounded-xl bg-accent text-slate-950 text-sm font-bold hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap shadow-lg shadow-accent/20"
+          className="px-5 py-2.5 rounded-xl bg-sky-500 text-slate-950 text-xs font-bold hover:bg-sky-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap shadow-lg shadow-sky-500/20"
         >
-          {isFetching ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-          {isFetching ? 'Fetching data...' : 'Fetch & Auto-fill'}
+          {isFetching ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+          {isFetching ? 'Fetching...' : 'Fetch & Auto-fill'}
         </button>
       </div>
       {errorMsg && (
-        <p className="text-xs text-red-400 mt-2 flex items-center gap-1.5 bg-red-500/10 p-2 rounded-lg border border-red-500/20">
+        <p className="text-xs text-red-300 mt-2 flex items-center gap-1.5 bg-red-500/10 p-2 rounded-lg border border-red-500/20">
           <span className="font-bold">Error:</span> {errorMsg}
         </p>
       )}
@@ -217,22 +217,23 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId, draft, 
     return (
       <label
         htmlFor={fieldId}
-        className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-primary/30 px-4 py-3.5 transition-colors hover:border-accent/25"
+        className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-3 transition-all hover:border-sky-500/30 hover:bg-slate-900/60"
       >
         <input
           id={fieldId}
           type="checkbox"
           checked={value}
           onChange={(e) => onChange(e.target.checked)}
-          className="h-4 w-4 rounded border-secondary/50 text-accent focus:ring-accent"
+          className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-400 accent-sky-500"
         />
-        <span className="text-sm font-medium text-text">{field.label}</span>
+        <span className="text-sm font-semibold text-slate-200">{field.label}</span>
       </label>
     );
   }
 
   if (field.type === 'list') {
     return (
+
       <RepeatableTextEditor
         label={field.label}
         helper={field.helper || 'Add one item per row.'}
@@ -779,12 +780,12 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId, draft, 
   }
 
   const commonClass =
-    'w-full rounded-xl border border-white/10 bg-primary/40 px-4 py-3 text-sm text-text outline-none transition-colors placeholder:text-text-muted/60 focus:border-accent focus:ring-1 focus:ring-accent/40';
+    'w-full rounded-xl border border-slate-800 bg-slate-950/70 px-4 py-2.5 text-sm text-slate-100 outline-none transition-all placeholder:text-slate-500 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 shadow-inner';
 
   if (field.type === 'color') {
     return (
-      <div className="space-y-2">
-        <label htmlFor={fieldId} className="text-xs font-semibold uppercase tracking-[0.08em] text-text-muted">
+      <div className="space-y-1.5">
+        <label htmlFor={fieldId} className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-400">
           {field.label}
         </label>
         <div className="flex gap-3 items-center">
@@ -793,7 +794,7 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId, draft, 
             type="color"
             value={value || '#38bdf8'}
             onChange={(e) => onChange(e.target.value)}
-            className="w-12 h-10 p-1 bg-primary/40 rounded-xl border border-white/10 cursor-pointer shrink-0"
+            className="w-12 h-10 p-1 bg-slate-950 rounded-xl border border-slate-800 cursor-pointer shrink-0"
           />
           <input
             type="text"
@@ -808,10 +809,13 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId, draft, 
   }
 
   return (
-    <div className="space-y-2">
-      <label htmlFor={fieldId} className="text-xs font-semibold uppercase tracking-[0.08em] text-text-muted">
-        {field.label}
-      </label>
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <label htmlFor={fieldId} className="text-xs font-bold uppercase tracking-[0.08em] text-slate-300">
+          {field.label}
+        </label>
+        {field.helper && <span className="text-[11px] text-slate-500 truncate max-w-xs">{field.helper}</span>}
+      </div>
       {field.type === 'select' ? (
         <select
           id={fieldId}
@@ -819,17 +823,17 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId, draft, 
           onChange={(e) => onChange(e.target.value)}
           className={commonClass}
         >
-          <option value="" disabled className="bg-secondary text-text">
+          <option value="" disabled className="bg-slate-900 text-slate-400">
             Select {field.label.toLowerCase()}
           </option>
           {(field.options || []).map((option) => (
-            <option key={option} value={option} className="bg-secondary text-text">
+            <option key={option} value={option} className="bg-slate-900 text-slate-100">
               {option}
             </option>
           ))}
         </select>
       ) : field.type === 'markdown' ? (
-        <div className="prose-editor-wrapper bg-primary/40 rounded-xl overflow-hidden border border-white/10 [&_.editor-toolbar]:border-none [&_.editor-toolbar]:bg-secondary/50 [&_.editor-toolbar>button]:text-text [&_.editor-toolbar>button.active]:bg-accent/20 [&_.CodeMirror]:border-none [&_.CodeMirror]:bg-transparent [&_.CodeMirror]:text-text">
+        <div className="prose-editor-wrapper bg-slate-950/60 rounded-xl overflow-hidden border border-slate-800 shadow-inner">
           <SimpleMdeReact
             id={fieldId}
             value={value || ''}
@@ -847,7 +851,7 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId, draft, 
           value={value}
           onChange={(e) => onChange(e.target.value)}
           rows={field.type === 'json' ? 8 : 4}
-          className={`${commonClass} font-mono text-sm`}
+          className={`${commonClass} font-mono text-sm leading-relaxed`}
         />
       ) : (
         <div className="flex flex-col gap-2">
@@ -871,27 +875,28 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId, draft, 
               <button
                 type="button"
                 onClick={onUpload}
-                className="shrink-0 rounded-xl border border-accent/30 bg-accent/10 px-3 py-3 text-accent"
+                className="shrink-0 rounded-xl border border-sky-500/30 bg-sky-500/10 px-3.5 py-2.5 text-sky-400 hover:bg-sky-500/20 hover:border-sky-500/50 transition-colors"
                 aria-label={`Upload ${field.label}`}
+                title={`Upload ${field.label}`}
               >
                 {field.type === 'pdf' ? <FileText size={16} /> : field.type === 'file' ? <FileText size={16} /> : <ImageIcon size={16} />}
               </button>
             )}
           </div>
           {field.type === 'image' && value && (
-            <div className="mt-1 w-full max-w-sm rounded-lg overflow-hidden border border-white/10 bg-black/20">
-              <img src={value} alt="Preview" className="w-full h-auto max-h-48 object-contain" />
+            <div className="mt-1 w-full max-w-sm rounded-xl overflow-hidden border border-slate-800 bg-slate-950/80 p-2">
+              <img src={value} alt="Preview" className="w-full h-auto max-h-48 object-contain rounded-lg" />
             </div>
           )}
           {field.type === 'pdf' && value && (
-            <div className="mt-2 w-full rounded-xl overflow-hidden border border-accent/20 bg-black/30">
-              <div className="flex items-center justify-between px-4 py-2 bg-accent/10 border-b border-accent/15">
-                <span className="text-xs font-mono text-accent uppercase tracking-widest">PDF Preview</span>
+            <div className="mt-2 w-full rounded-xl overflow-hidden border border-sky-500/20 bg-slate-950/80">
+              <div className="flex items-center justify-between px-4 py-2 bg-sky-500/10 border-b border-sky-500/15">
+                <span className="text-xs font-mono text-sky-300 uppercase tracking-widest">PDF Preview</span>
                 <a
                   href={value}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-accent hover:underline flex items-center gap-1"
+                  className="text-xs text-sky-400 hover:underline flex items-center gap-1"
                 >
                   <ExternalLink size={12} /> Open in new tab
                 </a>
@@ -906,11 +911,12 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId, draft, 
           )}
         </div>
       )}
-      {field.type === 'csv' && <p className="text-xs text-text-muted">Separate values with commas.</p>}
-      {field.type === 'json' && <p className="text-xs text-text-muted">Must be valid JSON.</p>}
+      {field.type === 'csv' && <p className="text-xs text-slate-400">Separate values with commas.</p>}
+      {field.type === 'json' && <p className="text-xs text-slate-400">Must be valid JSON.</p>}
     </div>
   );
 };
+
 
 
 // ================= SUB-COMPONENT: VISUAL TOPOLOGY CANVAS EDITOR =================

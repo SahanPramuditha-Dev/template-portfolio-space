@@ -1,4 +1,6 @@
 import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Cpu, Wrench } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Sparkles } from '@react-three/drei';
 import DisposeOnUnmount from './DisposeOnUnmount';
@@ -176,16 +178,37 @@ const Skills = () => {
   return (
     <SectionWrapper id="skills" className="bg-secondary/30 transition-colors duration-300">
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl" ref={sectionRef}>
-        <h2 className="flex flex-wrap items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold text-text mb-8 sm:mb-12 md:mb-16 gradient-text">
-          <span className="text-accent font-mono text-lg sm:text-xl mr-0 sm:mr-2">03.</span>
-          <span className="flex-grow min-w-0">Skills & Technologies</span>
-          <span className="h-px bg-secondary flex-grow min-w-[60px] ml-0 sm:ml-4 opacity-50 w-full sm:w-auto order-3 sm:order-none"></span>
-        </h2>
-        <p className="text-text-muted text-sm md:text-base mb-8 sm:mb-10 max-w-2xl">
-          This section maps my core skills onto a mission-style visualization. Each module in the interface
-          represents a capability — from frontend systems to backend services — all working together like an
-          orbiting station.
-        </p>
+        {/* Section Header */}
+        <div className="flex flex-col items-center text-center mb-12 md:mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-accent text-xs font-mono uppercase tracking-widest mb-3"
+          >
+            <Cpu size={14} /> Technical Competencies
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.05 }}
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-text font-display mb-4"
+          >
+            Skills & <span className="text-accent">Technologies</span>
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="max-w-2xl text-text-muted text-sm sm:text-base"
+          >
+            A breakdown of my technical proficiencies, frameworks, toolsets, and workflow ecosystem.
+          </motion.p>
+        </div>
 
         <div className="mb-8 grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-white/10 bg-secondary/20 p-5">

@@ -201,12 +201,37 @@ const Contact = () => {
   return (
     <SectionWrapper id="contact" className="min-h-[80vh] flex items-center">
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative">
-        <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-accent font-mono text-lg mb-4">09. What's Next?</h2>
-          <h2 className="text-4xl md:text-5xl font-bold text-text mb-6 gradient-text">Get In Touch</h2>
-          <p className="text-text-muted text-lg max-w-2xl mx-auto mb-6">
-            Whether you're looking to build a high-performance Web app, discuss network architecture, or collaborate on WebGL simulations—drop a transmission below. I keep the first reply practical so we can establish a connection quickly.
-          </p>
+        {/* Section Header */}
+        <div className="flex flex-col items-center text-center mb-10 md:mb-14">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-accent text-xs font-mono uppercase tracking-widest mb-3"
+          >
+            <Mail size={14} /> Establish Communication
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.05 }}
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-text font-display mb-4"
+          >
+            Let's Build Something <span className="text-accent">Together</span>
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="max-w-2xl text-text-muted text-sm sm:text-base mb-6"
+          >
+            Whether you're looking to build a high-performance web app, discuss system architecture, or collaborate on creative engineering—drop a transmission below.
+          </motion.p>
+
           <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
             <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm font-mono text-emerald-300">
               {availability}

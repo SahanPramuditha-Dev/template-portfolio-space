@@ -56,32 +56,32 @@ const MediaLibrary = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/10 pb-4 gap-4">
+    <div className="space-y-6 rounded-3xl border border-slate-800/80 bg-slate-900/40 p-5 sm:p-7 shadow-2xl backdrop-blur-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800/80 pb-5 gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-text">Media Library</h2>
-          <p className="text-sm text-text-muted">Manage images and assets uploaded to your portfolio.</p>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-100">Media Library</h2>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">Manage images, certificates, and assets uploaded to your portfolio storage.</p>
         </div>
         
-        <label className="flex items-center gap-2 px-4 py-2 bg-accent text-primary font-bold rounded-lg cursor-pointer hover:bg-accent/90 transition-colors">
-          {uploading ? <Loader2 size={18} className="animate-spin" /> : <UploadCloud size={18} />}
-          {uploading ? 'Uploading...' : 'Upload Image'}
-          <input type="file" accept="image/*" onChange={handleFileUpload} disabled={uploading} className="hidden" />
+        <label className="flex items-center justify-center gap-2 px-4 py-2 bg-sky-500 text-slate-950 font-bold text-xs rounded-xl cursor-pointer hover:bg-sky-400 transition-all shadow-[0_4px_16px_rgba(56,189,248,0.25)] shrink-0">
+          {uploading ? <Loader2 size={15} className="animate-spin" /> : <UploadCloud size={15} />}
+          {uploading ? 'Uploading…' : 'Upload New Media'}
+          <input type="file" accept="image/*,.pdf,.doc,.docx" onChange={handleFileUpload} disabled={uploading} className="hidden" />
         </label>
       </div>
 
       {loading ? (
         <div className="flex justify-center p-12">
-          <Loader2 size={32} className="animate-spin text-accent" />
+          <Loader2 size={32} className="animate-spin text-sky-400" />
         </div>
       ) : assets.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 text-center border border-white/5 rounded-2xl bg-secondary/20">
-          <ImageIcon size={48} className="mb-4 text-white/10" />
-          <h3 className="text-xl font-bold text-text mb-2">No media yet</h3>
-          <p className="text-text-muted">Upload images to use them in your projects and blog posts.</p>
+        <div className="flex flex-col items-center justify-center p-12 text-center border border-dashed border-slate-800 rounded-2xl bg-slate-950/40">
+          <ImageIcon size={44} className="mb-3 text-slate-600" />
+          <h3 className="text-base font-bold text-slate-200 mb-1">No media uploaded yet</h3>
+          <p className="text-xs text-slate-400">Upload images or documents to attach them to your projects and site content.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
           {assets.map((asset) => {
             const isPdf = asset.name.toLowerCase().endsWith('.pdf');
             const isDoc = /\.(docx|doc|xls|xlsx|ppt|pptx|txt|csv)$/i.test(asset.name);
@@ -90,26 +90,26 @@ const MediaLibrary = () => {
               <div 
                 key={asset.fullPath} 
                 onClick={() => window.open(asset.url, '_blank')}
-                className="group relative rounded-xl overflow-hidden border border-white/10 bg-secondary/30 aspect-square flex flex-col items-center justify-center p-4 cursor-pointer hover:border-accent/40 transition-colors"
+                className="group relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-950/70 aspect-square flex flex-col items-center justify-center p-2.5 cursor-pointer hover:border-sky-500/50 transition-all shadow-sm"
               >
                 {isPdf || isDoc ? (
                   // Document card preview
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-black/40 rounded-lg p-3 text-center border border-white/5">
-                    <FileIcon size={40} className="text-accent mb-2" />
-                    <p className="text-[10px] font-mono text-text-muted break-all line-clamp-3">{asset.name}</p>
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900/60 rounded-xl p-3 text-center border border-slate-800/80">
+                    <FileIcon size={36} className="text-sky-400 mb-2" />
+                    <p className="text-[10px] font-mono text-slate-300 break-all line-clamp-2">{asset.name}</p>
                   </div>
                 ) : (
                   // Full view Image block using object-contain to avoid crops
-                  <div className="w-full h-full relative bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:16px_16px] flex items-center justify-center rounded-lg overflow-hidden">
-                    <img src={asset.url} alt={asset.name} className="max-w-full max-h-full object-contain" />
+                  <div className="w-full h-full relative bg-slate-900/50 flex items-center justify-center rounded-xl overflow-hidden p-1">
+                    <img src={asset.url} alt={asset.name} className="max-w-full max-h-full object-contain rounded-lg" />
                   </div>
                 )}
                 
                 <div 
-                  className="absolute inset-0 bg-black/85 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3 backdrop-blur-md p-4"
-                  onClick={(e) => e.stopPropagation()} // Prevent double open when copying/deleting
+                  className="absolute inset-0 bg-slate-950/90 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2.5 backdrop-blur-md p-3"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <p className="text-[10px] font-mono text-text font-semibold text-center break-all line-clamp-2 w-full mb-1">
+                  <p className="text-[10px] font-mono text-slate-200 font-semibold text-center break-all line-clamp-2 w-full">
                     {asset.name}
                   </p>
                   <div className="flex gap-2">
@@ -117,24 +117,24 @@ const MediaLibrary = () => {
                       href={asset.url} 
                       target="_blank" 
                       rel="noreferrer"
-                      className="p-2.5 bg-accent/20 hover:bg-accent text-accent hover:text-primary rounded-xl transition-all border border-accent/30 shadow-lg"
+                      className="p-2 bg-sky-500/20 hover:bg-sky-500 text-sky-400 hover:text-slate-950 rounded-xl transition-all border border-sky-500/30"
                       title="View / Open File"
                     >
-                      <Eye size={15} />
+                      <Eye size={13} />
                     </a>
                     <button 
                       onClick={() => copyToClipboard(asset.url)}
-                      className="p-2.5 bg-white/5 hover:bg-white text-text-muted hover:text-primary rounded-xl transition-all border border-white/10 shadow-lg"
+                      className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all border border-slate-700"
                       title="Copy URL"
                     >
-                      <Copy size={15} />
+                      <Copy size={13} />
                     </button>
                     <button 
                       onClick={() => handleDelete(asset.fullPath)}
-                      className="p-2.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-xl transition-all border border-red-500/20 shadow-lg"
-                      title="Delete Image"
+                      className="p-2 bg-red-500/15 hover:bg-red-500 text-red-300 hover:text-white rounded-xl transition-all border border-red-500/30"
+                      title="Delete Asset"
                     >
-                      <Trash2 size={15} />
+                      <Trash2 size={13} />
                     </button>
                   </div>
                 </div>
@@ -145,6 +145,7 @@ const MediaLibrary = () => {
       )}
     </div>
   );
+
 };
 
 export default MediaLibrary;

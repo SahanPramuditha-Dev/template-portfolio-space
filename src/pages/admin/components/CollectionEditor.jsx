@@ -11,6 +11,7 @@ import FieldEditor from './fields/FieldEditor';
 import SortableCollectionItem from './SortableCollectionItem';
 import { requestImageCrop } from './CropModalRoot';
 import { collectMediaValidationErrors, getCmsErrorMessage } from '../utils/adminConstants';
+import { slugify } from '../../../utils/slugify';
 
 const toFormValue = (field, value) => {
   if (field.type === 'list') {
@@ -114,11 +115,11 @@ const itemFromForm = (draft, fields) => {
 };
 
 const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) => {
-  const { data, loading } = useCmsCollection(docId, []);
+  const { data, loading, error } = useCmsCollection(docId, []);
   const { data: siteDoc } = useCmsDoc(CMS_DOCS.site, null);
   const [items, setItems] = useState([]);
-  const [selectedIndex, setSelectedIndex] = useState(null);
-  const [draft, setDraft] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [draft, setDraft] = useState(() => formFromItem(section.initialItem, fields, section.initialItem));
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
   const [syncBusy, setSyncBusy] = useState(false);
@@ -129,6 +130,12 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
   const [listQuery, setListQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  useEffect(() => {
+    if (error) {
+      setStatus(getCmsErrorMessage(error));
+    }
+  }, [error]);
 
   const syncGithubCache = async () => {
     const githubUsername = siteDoc?.githubUsername || 'SahanPramuditha-Dev';
@@ -174,6 +181,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
       setDraft(formFromItem(section.initialItem, fields, section.initialItem));
     }
   }, [data, collectionKey, fields, section.initialItem, selectedIndex]);
+
 
   const loadRevisions = async (index) => {
     if (index === -1 || !items[index]?.id) {
@@ -333,6 +341,15 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
     if (silent) setAutoSaveStatus('Saving...');
     try {
       const normalized = itemFromForm(draft, fields);
+      if (docId === CMS_DOCS.projects) {
+        normalized.slug = slugify(normalized.slug || normalized.title);
+        const duplicate = items.some((item, index) => index !== selectedIndex && slugify(item.slug || item.title || item.id) === normalized.slug);
+        if (duplicate) {
+          if (!silent) setStatus('Please use a unique project URL slug.');
+          if (silent) setAutoSaveStatus('Validation failed');
+          return;
+        }
+      }
       const validationErrors = collectMediaValidationErrors(normalized, fields);
       if (validationErrors.length > 0) {
         if (!silent) setStatus(`Please fix media before publishing: ${validationErrors.slice(0, 3).join(' ')}`);
@@ -352,8 +369,8 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
           ? [itemToSave, ...items]
           : items.map((item, index) => (index === selectedIndex ? itemToSave : item));
       
-      setItems(nextItems);
       await saveCmsItem(docId, itemId, itemToSave);
+      setItems(nextItems);
       setSelectedIndex(selectedIndex === -1 ? 0 : selectedIndex);
       if (!silent) loadRevisions(selectedIndex === -1 ? 0 : selectedIndex);
       
@@ -497,16 +514,17 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
     }
   };
 
-  if (loading || !draft) {
+  if (loading && !draft) {
     return (
-      <div className="rounded-3xl border border-white/10 bg-secondary/20 p-6 text-text-muted">
-        Loading {section.title.toLowerCase()}...
+      <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-12 text-center text-slate-400">
+        Loading {section.title.toLowerCase()}…
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 rounded-3xl border border-white/10 bg-secondary/25 p-4 sm:p-6 lg:p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-md">
+    <div className="space-y-6 rounded-3xl border border-slate-800/80 bg-slate-900/40 p-5 sm:p-7 shadow-2xl backdrop-blur-xl">
+
       <SectionBanner
         icon={section.icon}
         title={section.title}
@@ -523,14 +541,14 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
       <AdminStatus message={status} />
 
       {docId === CMS_DOCS.openSource && (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl border border-purple-500/15 bg-purple-500/5 backdrop-blur-sm gap-4 mb-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl border border-purple-500/20 bg-purple-500/10 backdrop-blur-sm gap-4">
           <div className="flex items-start gap-3">
-            <div className="p-2 bg-purple-500/10 text-purple-400 rounded-xl mt-0.5 shrink-0">
-              <Github size={20} />
+            <div className="p-2 bg-purple-500/20 text-purple-300 rounded-xl mt-0.5 shrink-0 border border-purple-500/30">
+              <Github size={18} />
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-text">GitHub API Repository Cache</h4>
-              <p className="text-xs text-text-muted mt-0.5 max-w-xl leading-relaxed">
+              <h4 className="text-sm font-bold text-slate-100">GitHub API Repository Cache</h4>
+              <p className="text-xs text-slate-400 mt-0.5 max-w-xl leading-relaxed">
                 Pre-fetch and store repositories in Firestore. This speeds up public page loading and ensures immunity from GitHub API rate limiting.
               </p>
             </div>
@@ -539,7 +557,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
             type="button"
             disabled={syncBusy}
             onClick={syncGithubCache}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-500 transition-colors disabled:opacity-50 shadow-[0_4px_20px_rgba(168,85,247,0.15)] hover:scale-[1.02] active:scale-[0.98] transition-transform duration-100"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white hover:bg-purple-500 transition-all disabled:opacity-50 shadow-[0_4px_16px_rgba(168,85,247,0.25)] active:scale-[0.98]"
           >
             <RefreshCw size={14} className={syncBusy ? 'animate-spin' : ''} />
             {syncBusy ? 'Syncing...' : 'Sync GitHub Cache'}
@@ -548,122 +566,139 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
       )}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)] items-start">
-        <div className="flex flex-col xl:sticky xl:top-24 xl:h-[calc(100vh-8rem)] rounded-3xl border border-white/5 bg-primary/10 p-4 shadow-inner">
-          <div className="rounded-2xl border border-white/10 bg-primary/30 p-2 shrink-0 mb-4">
+        {/* Left Master List Sidebar */}
+        <div className="flex flex-col xl:sticky xl:top-24 xl:h-[calc(100vh-8.5rem)] rounded-2xl border border-slate-800/90 bg-slate-950/70 p-4 shadow-inner">
+          <div className="mb-3 shrink-0">
             <label className="sr-only" htmlFor={`list-search-${docId}`}>
               Filter {section.title} list
             </label>
-            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-primary/50 px-3 py-2">
-              <Search size={16} className="shrink-0 text-text-muted" aria-hidden />
+            <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/90 px-3.5 py-2 focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400/20 transition-all">
+              <Search size={14} className="shrink-0 text-slate-500" aria-hidden />
               <input
                 id={`list-search-${docId}`}
                 type="search"
                 value={listQuery}
                 onChange={(e) => setListQuery(e.target.value)}
-                placeholder="Filter list…"
-                className="min-w-0 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-text-muted"
+                placeholder="Search collection…"
+                className="min-w-0 flex-1 bg-transparent text-xs text-slate-100 outline-none placeholder:text-slate-500"
               />
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3 pb-4">
-          {items.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/15 bg-primary/25 p-6 text-center text-sm text-text-muted">
-              No items yet. Use <span className="text-accent">Add new</span> above to create the first entry.
-            </div>
-          ) : listEntries.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/15 bg-primary/25 p-6 text-center text-sm text-text-muted">
-              No items match your filter. Clear the search box to see all entries.
-            </div>
-          ) : (
-            <>
-              {selectedIndices.size > 0 && (
-                <div className="flex items-center justify-between mb-4 p-3 rounded-xl bg-primary/40 border border-white/10">
-                  <span className="text-sm font-medium text-text-muted">{selectedIndices.size} selected</span>
-                  <div className="flex items-center gap-2">
+
+          <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 space-y-2 pb-2">
+            {items.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/30 p-6 text-center text-xs text-slate-500">
+                No items yet. Use <span className="text-sky-400 font-bold">Add new</span> above to create the first entry.
+              </div>
+            ) : listEntries.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/30 p-6 text-center text-xs text-slate-500">
+                No items match your filter query.
+              </div>
+            ) : (
+              <>
+                {selectedIndices.size > 0 && (
+                  <div className="flex items-center justify-between mb-3 p-2.5 rounded-xl bg-slate-900 border border-slate-700/80 shadow-md">
+                    <span className="text-xs font-semibold text-slate-300">{selectedIndices.size} selected</span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => updateMultipleStatus('published')}
+                        disabled={busy}
+                        className="px-2.5 py-1 text-[11px] font-bold bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-lg transition-colors"
+                      >
+                        Publish
+                      </button>
+                      <button
+                        onClick={() => updateMultipleStatus('Draft')}
+                        disabled={busy}
+                        className="px-2.5 py-1 text-[11px] font-bold bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/20 rounded-lg transition-colors"
+                      >
+                        Draft
+                      </button>
+                      <button
+                        onClick={removeMultipleItems}
+                        disabled={busy}
+                        className="px-2.5 py-1 text-[11px] font-bold bg-red-500/10 text-red-300 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors ml-1"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <DndContext 
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext 
+                    items={paginatedEntries.map(e => e.index.toString())}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <ul className="space-y-1.5">
+                      {paginatedEntries.map(({ item, index }) => (
+                        <SortableCollectionItem
+                          key={index.toString()}
+                          id={index.toString()}
+                          index={index}
+                          item={item}
+                          selectedIndex={selectedIndex}
+                          editItem={editItem}
+                          removeItem={removeItem}
+                          sectionTitle={section.title}
+                          isSelected={selectedIndices.has(index)}
+                          toggleSelection={toggleSelection}
+                        />
+                      ))}
+                    </ul>
+                  </SortableContext>
+                </DndContext>
+                
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-3 border-t border-slate-800/80 pt-3">
                     <button
-                      onClick={() => updateMultipleStatus('published')}
-                      disabled={busy}
-                      className="px-3 py-1.5 text-xs font-bold bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-lg transition-colors"
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-2.5 py-1 rounded-lg border border-slate-800 text-[11px] font-semibold text-slate-300 disabled:opacity-40 hover:bg-slate-800 transition-colors"
                     >
-                      Publish
+                      Previous
                     </button>
+                    <span className="text-[10px] font-mono text-slate-500">
+                      {currentPage} / {totalPages}
+                    </span>
                     <button
-                      onClick={() => updateMultipleStatus('Draft')}
-                      disabled={busy}
-                      className="px-3 py-1.5 text-xs font-bold bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/20 rounded-lg transition-colors"
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-2.5 py-1 rounded-lg border border-slate-800 text-[11px] font-semibold text-slate-300 disabled:opacity-40 hover:bg-slate-800 transition-colors"
                     >
-                      Unpublish
-                    </button>
-                    <button
-                      onClick={removeMultipleItems}
-                      disabled={busy}
-                      className="px-3 py-1.5 text-xs font-bold bg-red-500/10 text-red-300 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors ml-2"
-                    >
-                      Delete
+                      Next
                     </button>
                   </div>
-                </div>
-              )}
-              <DndContext 
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext 
-                  items={paginatedEntries.map(e => e.index.toString())}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <ul className="space-y-2">
-                    {paginatedEntries.map(({ item, index }) => (
-                      <SortableCollectionItem
-                        key={index.toString()}
-                        id={index.toString()}
-                        index={index}
-                        item={item}
-                        selectedIndex={selectedIndex}
-                        editItem={editItem}
-                        removeItem={removeItem}
-                        sectionTitle={section.title}
-                        isSelected={selectedIndices.has(index)}
-                        toggleSelection={toggleSelection}
-                      />
-                    ))}
-                  </ul>
-                </SortableContext>
-              </DndContext>
-              
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4 border-t border-white/10 pt-4">
-                  <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1.5 rounded-lg border border-white/10 text-xs font-medium text-text disabled:opacity-50 hover:bg-white/5 transition-colors"
-                  >
-                    Previous
-                  </button>
-                  <span className="text-xs text-text-muted">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1.5 rounded-lg border border-white/10 text-xs font-medium text-text disabled:opacity-50 hover:bg-white/5 transition-colors"
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
-            </>
-          )}
+                )}
+              </>
+            )}
           </div>
         </div>
 
-        <div className="space-y-5">
-          <div className="rounded-2xl border border-white/10 bg-primary/30 p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
-            <p className="mb-4 text-xs font-mono uppercase tracking-[0.14em] text-text-muted">Edit selected item</p>
-            <p className="mb-5 text-xs text-text-muted">
-              Expand a group to edit fields. Nested image uploads use your Storage folder for this section.
-            </p>
+        {/* Right Detail Form Area */}
+        <div className="space-y-6 min-w-0 pb-28">
+          <div className="rounded-2xl border border-slate-800/90 bg-slate-950/60 p-5 sm:p-6 shadow-inner">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-800/70 pb-3">
+              <div>
+                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-sky-400">
+                  {selectedIndex === -1 ? 'Creating New Entry' : 'Editing Selected Item'}
+                </p>
+                <h3 className="text-base sm:text-lg font-bold text-slate-100 mt-0.5">
+                  {draft?.title || draft?.name || draft?.url || `${section.title} Item`}
+                </h3>
+              </div>
+              {draft?.status && (
+                <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider ${
+                  draft.status === 'Draft' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                }`}>
+                  {draft.status}
+                </span>
+              )}
+            </div>
+
             <FieldGroups
               fields={fields}
               renderField={(field) => (
@@ -689,29 +724,29 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
           <DraftPreview draft={draft} fields={fields} title={section.title} />
 
           {selectedIndex !== -1 && (
-            <div className="rounded-2xl border border-white/10 bg-primary/30 p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-xs font-mono uppercase tracking-[0.14em] text-text-muted">Revision History</p>
+            <div className="rounded-2xl border border-slate-800/90 bg-slate-950/60 p-5 shadow-inner">
+              <div className="flex items-center justify-between mb-4 border-b border-slate-800/70 pb-3">
+                <p className="text-xs font-mono font-bold uppercase tracking-[0.14em] text-slate-300">Revision History</p>
                 <button 
                   onClick={() => loadRevisions(selectedIndex)}
                   disabled={loadingRevisions}
-                  className="text-xs text-accent hover:underline disabled:opacity-50"
+                  className="text-xs font-semibold text-sky-400 hover:underline disabled:opacity-50"
                 >
                   {loadingRevisions ? 'Loading...' : 'Refresh'}
                 </button>
               </div>
               
               {revisions.length === 0 ? (
-                <p className="text-xs text-text-muted italic">No revisions found.</p>
+                <p className="text-xs text-slate-500 italic">No revisions found.</p>
               ) : (
-                <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                <div className="space-y-2 max-h-[260px] overflow-y-auto custom-scrollbar pr-2">
                   {revisions.map((rev) => {
                     const date = rev.savedAt?.toDate ? rev.savedAt.toDate() : new Date();
                     return (
-                      <div key={rev.id} className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-secondary/10 hover:bg-secondary/20 transition-colors">
+                      <div key={rev.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-slate-900 transition-colors">
                         <div>
-                          <p className="text-xs font-medium text-text">{date.toLocaleString()}</p>
-                          <p className="text-[10px] text-text-muted font-mono">{rev.id}</p>
+                          <p className="text-xs font-semibold text-slate-200">{date.toLocaleString()}</p>
+                          <p className="text-[10px] text-slate-500 font-mono">{rev.id}</p>
                         </div>
                         <button
                           onClick={() => {
@@ -720,7 +755,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
                               setStatus('Version restored to draft. Click Save to commit.');
                             }
                           }}
-                          className="px-3 py-1.5 text-xs font-bold bg-accent/10 text-accent hover:bg-accent/20 rounded-lg transition-colors"
+                          className="px-3 py-1.5 text-xs font-bold bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 rounded-lg transition-colors border border-sky-500/20"
                         >
                           Restore
                         </button>
@@ -732,12 +767,13 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
             </div>
           )}
 
-          <div className="sticky bottom-2 z-10 rounded-2xl border border-white/10 bg-primary/90 px-4 py-3 backdrop-blur-md sm:bottom-4">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          {/* Fixed Save Bar with clear shadow and padding */}
+          <div className="sticky bottom-4 z-20 rounded-2xl border border-slate-800 bg-slate-950/95 px-5 py-3.5 backdrop-blur-xl shadow-2xl shadow-black/80">
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <p className="text-[11px] text-text-muted">Save applies the full item, including collapsed groups.</p>
+                <p className="text-xs text-slate-400">Save commits changes for this item to Firestore.</p>
                 {autoSaveStatus && (
-                  <span className="text-[11px] font-mono text-accent bg-accent/10 px-2 py-0.5 rounded border border-accent/20">
+                  <span className="text-[10px] font-mono font-semibold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">
                     {autoSaveStatus}
                   </span>
                 )}
@@ -746,9 +782,9 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
                 type="button"
                 onClick={saveItem}
                 disabled={busy}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-primary shadow-[0_4px_20px_rgb(var(--color-accent-rgb)/0.2)] transition-transform hover:scale-[1.01] disabled:opacity-60 sm:w-auto"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500 px-6 py-2.5 text-xs sm:text-sm font-bold text-slate-950 shadow-[0_4px_20px_rgba(56,189,248,0.25)] transition-all hover:bg-sky-400 hover:shadow-[0_4px_28px_rgba(56,189,248,0.35)] active:scale-[0.99] disabled:opacity-60 sm:w-auto"
               >
-                <Save size={16} />
+                <Save size={15} />
                 {busy ? 'Saving…' : 'Save item'}
               </button>
             </div>
@@ -760,3 +796,4 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
 };
 
 export default CollectionEditor;
+

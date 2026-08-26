@@ -4,9 +4,11 @@ import About from '../components/About';
 import { CmsSectionSkeleton } from '../components/CmsShapeSkeleton';
 
 const Skills = lazy(() => import('../components/Skills'));
+const Badges = lazy(() => import('../components/Badges'));
 const Experience = lazy(() => import('../components/Experience'));
 const Projects = lazy(() => import('../components/Projects'));
 const Certifications = lazy(() => import('../components/Certifications'));
+const Testimonials = lazy(() => import('../components/Testimonials'));
 const Contact = lazy(() => import('../components/Contact'));
 
 export const BlockRegistry = {
@@ -32,6 +34,17 @@ export const BlockRegistry = {
     Component: ({ block }) => (
       <Suspense fallback={<CmsSectionSkeleton id="skills" />}>
         <Skills />
+      </Suspense>
+    )
+  },
+  'Badges': {
+    id: 'Badges',
+    label: 'Digital Badges',
+    category: 'Homepage',
+    schema: [],
+    Component: ({ block }) => (
+      <Suspense fallback={<CmsSectionSkeleton id="badges" />}>
+        <Badges />
       </Suspense>
     )
   },
@@ -65,6 +78,17 @@ export const BlockRegistry = {
     Component: ({ block }) => (
       <Suspense fallback={<CmsSectionSkeleton id="certifications" />}>
         <Certifications />
+      </Suspense>
+    )
+  },
+  'Testimonials': {
+    id: 'Testimonials',
+    label: 'Testimonials',
+    category: 'Homepage',
+    schema: [],
+    Component: ({ block }) => (
+      <Suspense fallback={<CmsSectionSkeleton id="testimonials" />}>
+        <Testimonials />
       </Suspense>
     )
   },

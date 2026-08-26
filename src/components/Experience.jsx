@@ -154,12 +154,39 @@ const ExperienceTimeline = ({ experienceItems }) => {
   return (
     <SectionWrapper id="experience">
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative" ref={ref} style={{ position: 'relative' }}>
+        {/* Section Header */}
+        <div className="flex flex-col items-center text-center mb-12 md:mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-accent text-xs font-mono uppercase tracking-widest mb-3"
+          >
+            <Briefcase size={14} /> Career Timeline
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.05 }}
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-text font-display mb-4"
+          >
+            Experience & <span className="text-accent">Education</span>
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="max-w-2xl text-text-muted text-sm sm:text-base"
+          >
+            A chronological timeline of my professional roles, key deliverables, and academic background.
+          </motion.p>
+        </div>
+
         <div>
-          <h2 className="flex flex-wrap items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold text-text mb-8 sm:mb-12 md:mb-16 font-display gradient-text">
-            <span className="text-accent font-mono text-lg sm:text-xl mr-0 sm:mr-2">04.</span>
-            <span className="flex-grow min-w-0">Experience & Education</span>
-            <span className="h-px bg-secondary flex-grow min-w-[60px] ml-0 sm:ml-4 opacity-50 w-full sm:w-auto order-3 sm:order-none"></span>
-          </h2>
 
           {experienceItems.length === 0 ? (
             <div className="rounded-2xl border border-secondary/50 bg-secondary/20 px-6 py-16 text-center text-text-muted">

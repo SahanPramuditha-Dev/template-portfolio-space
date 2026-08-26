@@ -31,6 +31,16 @@ export const initialSiteContent = {
     "enabled": true
   },
   {
+    "id": "Badges",
+    "type": "Badges",
+    "enabled": true
+  },
+  {
+    "id": "Testimonials",
+    "type": "Testimonials",
+    "enabled": true
+  },
+  {
     "id": "Contact",
     "type": "Contact",
     "enabled": true
@@ -73,6 +83,7 @@ export const initialSiteContent = {
     2
   ),
   availability: 'Open to freelance, part-time, and select full-time roles.',
+  openToWork: true,
   contactEmail: 'contact@sahanpramuditha.com',
   preferredContact: 'Email is best for detailed project discussions.',
   responseSla: 'Usually replies within 1-2 business days.',
@@ -156,7 +167,7 @@ export const initialSiteContent = {
   seoTitle: 'Sahan Pramuditha | Software Engineer and Creative Developer',
   seoDescription: 'Sahan Pramuditha is a software engineer and creative developer building accessible, high-performance digital experiences.',
   seoImage: '',
-  seoFavicon: '',
+  geminiApiKey: '',
 };
 
 export const initialExperienceItem = {
@@ -187,15 +198,13 @@ export const getAuthErrorMessage = (error) => {
 };
 
 export const getCmsErrorMessage = (error) => {
-  if (!(error instanceof Error)) {
-    return 'Failed to save content.';
-  }
+  const code = error?.code;
 
-  if (error.code === 'permission-denied') {
+  if (code === 'permission-denied') {
     return 'Firestore blocked the save. Sign in with the owner account or add this email to the admins collection.';
   }
 
-  return error.message || 'Failed to save content.';
+  return error?.message || 'Failed to save content.';
 };
 
 export const isLikelyAssetUrl = (value) => {
@@ -212,6 +221,15 @@ export const isLikelyAssetUrl = (value) => {
 
 export const collectMediaValidationErrors = (item, fields) => {
   const errors = [];
+
+  if (fields.some((field) => field.key === 'title') && !String(item.title || '').trim()) errors.push('Title is required.');
+  if (fields.some((field) => field.key === 'slug')) {
+    const slug = String(item.slug || '').trim();
+    if (slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) errors.push('URL Slug must use lowercase letters, numbers, and hyphens.');
+  }
+  if (fields.some((field) => field.key === 'shortDescription') && !String(item.shortDescription || '').trim()) errors.push('Short Description is required.');
+  if (fields.some((field) => field.key === 'status') && !String(item.status || '').trim()) errors.push('Status is required.');
+  if (String(item.status || '').toLowerCase() === 'scheduled' && !Number.isFinite(Date.parse(item.publishDate || ''))) errors.push('Scheduled projects need a valid Publish Date.');
 
   fields.forEach((field) => {
     if ((field.type === 'image' || field.type === 'file') && item[field.key] && !isLikelyAssetUrl(item[field.key])) {
@@ -238,6 +256,7 @@ export const collectMediaValidationErrors = (item, fields) => {
 };
 
 export const initialProject = {
+  slug: '',
   layoutJson: [
     { id: 'Hero', enabled: true },
     { id: 'ProblemStatement', enabled: true },
@@ -356,6 +375,19 @@ export const initialCertificate = {
   featured: false,
 };
 
+export const initialBadge = {
+  title: '',
+  issuer: 'MongoDB',
+  category: 'Database',
+  image: '',
+  issueDate: '',
+  link: '',
+  skills: '',
+  featured: false,
+  status: 'Published',
+  order: 0,
+};
+
 export const initialSkillGroup = {
   title: '',
   order: 0,
@@ -398,6 +430,9 @@ export const initialTestimonial = {
   rating: 5,
   context: '',
   link: '',
+  avatar: '',
+  status: 'Published',
+  order: 0,
 };
 
 export const initialService = {

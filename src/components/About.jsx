@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useInView, useReducedMotion } from 'framer-motion';
-import { Code2, Server, Users, Award } from 'lucide-react';
+import { Code2, Server, Users, Award, User } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
 import GithubStats from './GithubStats';
 import TelemetryDashboard from './TelemetryDashboard';
@@ -148,6 +148,38 @@ const About = () => {
   return (
     <SectionWrapper id="about">
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative">
+        {/* Section Header */}
+        <div className="flex flex-col items-center text-center mb-12 md:mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-accent text-xs font-mono uppercase tracking-widest mb-3"
+          >
+            <User size={14} /> Profile & Overview
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.05 }}
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-text font-display mb-4"
+          >
+            About <span className="text-accent">Me</span> & My Background
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="max-w-2xl text-text-muted text-sm sm:text-base"
+          >
+            An introduction to my background, engineering philosophy, and what drives my work.
+          </motion.p>
+        </div>
+
         <div className="flex flex-col md:flex-row gap-10 sm:gap-12 items-center mb-12 md:mb-20">
           <div className="md:w-1/3 flex justify-center w-full">
             <motion.div 
@@ -209,11 +241,6 @@ const About = () => {
           </div>
 
           <div className="md:w-2/3">
-            <h2 className="flex flex-wrap items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold text-text mb-6 sm:mb-8 font-display gradient-text">
-              <span className="text-accent font-mono text-lg sm:text-xl mr-0 sm:mr-2">01.</span>
-              <span className="flex-grow min-w-0">About Me</span>
-              <span className="h-px bg-secondary flex-grow min-w-[60px] ml-0 sm:ml-4 opacity-50 w-full sm:w-auto order-3 sm:order-none" />
-            </h2>
 
             {aboutParagraphs.length > 0 ? (
               <div className="text-text-muted space-y-4 text-lg">

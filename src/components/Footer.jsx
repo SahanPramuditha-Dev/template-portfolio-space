@@ -32,7 +32,7 @@ const Footer = () => {
     { label: 'Resume', href: '/resume' },
     { label: 'Resources', href: '/resources' },
     { label: 'Services', href: '/services' },
-    { label: 'Testimonials', href: '/testimonials' },
+    { label: 'Testimonials', href: '/#testimonials' },
     { label: 'Contact', href: '/contact' },
   ];
 

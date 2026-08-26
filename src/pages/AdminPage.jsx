@@ -18,6 +18,7 @@ import {
   Folder,
   Briefcase,
   Award,
+  ShieldCheck,
   Wrench,
   Sparkles,
   BookOpen,
@@ -42,6 +43,7 @@ import {
   sectionConfig,
   projectFields,
   certificateFields,
+  badgeFields,
   skillFields,
   experienceFields,
   blogFields,
@@ -104,6 +106,7 @@ const AdminPage = () => {
         { id: CMS_DOCS.projects, label: 'Projects List', icon: Folder },
         { id: CMS_DOCS.services, label: 'Services Config', icon: Briefcase },
         { id: CMS_DOCS.certifications, label: 'Certificates', icon: Award },
+        { id: CMS_DOCS.badges, label: 'Digital Badges', icon: ShieldCheck },
         { id: CMS_DOCS.skills, label: 'Skills Layout', icon: Wrench },
         { id: CMS_DOCS.experience, label: 'Work Experience', icon: Sparkles },
         { id: CMS_DOCS.blog, label: 'Blog Posts', icon: BookOpen },
@@ -145,33 +148,35 @@ const AdminPage = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-primary bg-[radial-gradient(ellipse_90%_60%_at_50%_-15%,rgb(var(--color-accent-rgb)/0.1),transparent),radial-gradient(ellipse_60%_40%_at_100%_100%,rgb(var(--color-accent-rgb)/0.05),transparent)] px-4 py-10 text-text sm:py-14">
-        <div className="w-full max-w-6xl grid gap-8 xl:grid-cols-[1fr_1.02fr] xl:items-stretch">
-          <div className="flex flex-col justify-center rounded-3xl border border-white/10 bg-secondary/30 p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-md sm:p-10">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 bg-[radial-gradient(ellipse_80%_60%_at_50%_-15%,rgba(56,189,248,0.15),transparent),radial-gradient(ellipse_60%_40%_at_100%_100%,rgba(56,189,248,0.06),transparent)] px-4 py-10 text-slate-100 sm:py-14">
+
+        <div className="w-full max-w-5xl grid gap-8 lg:grid-cols-[1.1fr_1fr] items-stretch">
+          {/* Sign In Form Card */}
+          <div className="flex flex-col justify-center rounded-3xl border border-slate-800 bg-slate-900/60 p-8 shadow-2xl backdrop-blur-xl sm:p-10">
             <div className="mb-8">
               <Link
                 to="/"
-                className="group mb-8 inline-flex items-center gap-2 text-sm font-medium text-text-muted transition-colors hover:text-accent"
+                className="group mb-6 inline-flex items-center gap-2 text-xs font-semibold text-slate-400 transition-colors hover:text-sky-400"
               >
-                <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" />
-                Back to Homepage
+                <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-1" />
+                Back to Live Portfolio
               </Link>
               <div>
-                <div className="mb-5 inline-flex rounded-2xl border border-accent/25 bg-accent/10 p-3.5 text-accent">
-                  <LayoutDashboard size={26} strokeWidth={1.75} />
+                <div className="mb-4 inline-flex rounded-2xl border border-sky-500/25 bg-sky-500/10 p-3 text-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.15)]">
+                  <LayoutDashboard size={24} strokeWidth={2} />
                 </div>
-                <p className="text-xs font-mono uppercase tracking-[0.22em] text-accent">Portfolio CMS</p>
-                <h1 className="font-display mt-3 text-3xl font-bold tracking-tight text-text sm:text-4xl">Sign in</h1>
-                <p className="mt-3 max-w-md text-sm leading-relaxed text-text-muted">
-                  Edit site copy, projects, and media-backed content. Use your Firebase admin account below.
+                <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-sky-400 font-bold">Admin Console</p>
+                <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Sign in to CMS</h1>
+                <p className="mt-2 text-xs sm:text-sm leading-relaxed text-slate-400">
+                  Manage website copy, project case studies, and media uploads. Authenticate using your Firebase admin credentials.
                 </p>
               </div>
             </div>
 
-            <form onSubmit={login} className="space-y-5">
-              <div className="space-y-2">
-                <label htmlFor="admin-email" className="text-xs font-semibold uppercase tracking-[0.1em] text-text-muted">
-                  Email
+            <form onSubmit={login} className="space-y-4">
+              <div className="space-y-1.5">
+                <label htmlFor="admin-email" className="text-xs font-bold uppercase tracking-[0.08em] text-slate-300">
+                  Admin Email
                 </label>
                 <input
                   id="admin-email"
@@ -179,12 +184,12 @@ const AdminPage = () => {
                   autoComplete="username"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full rounded-xl border border-white/10 bg-primary/50 px-4 py-3 text-sm text-text outline-none transition-colors placeholder:text-text-muted/50 focus:border-accent focus:ring-1 focus:ring-accent/30"
+                  placeholder="admin@yourportfolio.com"
+                  className="w-full rounded-xl border border-slate-800 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 shadow-inner"
                 />
               </div>
-              <div className="space-y-2">
-                <label htmlFor="admin-password" className="text-xs font-semibold uppercase tracking-[0.1em] text-text-muted">
+              <div className="space-y-1.5">
+                <label htmlFor="admin-password" className="text-xs font-bold uppercase tracking-[0.08em] text-slate-300">
                   Password
                 </label>
                 <div className="relative">
@@ -194,67 +199,69 @@ const AdminPage = () => {
                     autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full rounded-xl border border-white/10 bg-primary/50 px-4 py-3 pr-12 text-sm text-text outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent/30"
+                    placeholder="••••••••••••"
+                    className="w-full rounded-xl border border-slate-800 bg-slate-950/80 px-4 py-3 pr-12 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 shadow-inner"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute inset-y-0 right-0 inline-flex items-center px-4 text-text-muted transition-colors hover:text-accent"
+                    className="absolute inset-y-0 right-0 inline-flex items-center px-4 text-slate-500 hover:text-slate-300 transition-colors"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
               {authError && (
-                <div className="rounded-xl border border-red-400/35 bg-red-400/10 px-4 py-3 text-sm text-red-200">
+                <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs sm:text-sm font-medium text-red-200">
                   {authError}
                 </div>
               )}
               <button
                 type="submit"
                 disabled={authBusy}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3.5 text-sm font-semibold text-primary shadow-[0_8px_32px_rgb(var(--color-accent-rgb)/0.28)] transition-transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60"
+                className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-slate-950 shadow-[0_4px_24px_rgba(56,189,248,0.3)] transition-all hover:bg-sky-400 hover:shadow-[0_4px_32px_rgba(56,189,248,0.4)] active:scale-[0.99] disabled:opacity-60"
               >
-                <LogIn size={18} />
-                {authBusy ? 'Signing in…' : 'Sign in to dashboard'}
+                <LogIn size={16} />
+                {authBusy ? 'Authenticating…' : 'Sign in to Dashboard'}
               </button>
             </form>
 
-            <div className="mt-8 rounded-2xl border border-amber-400/25 bg-amber-400/[0.07] p-4 text-xs leading-relaxed text-text-muted">
-              <div className="mb-2 flex items-center gap-2 font-medium text-amber-200/95">
-                <AlertTriangle size={15} className="shrink-0" />
-                Before first login
+            <div className="mt-6 rounded-2xl border border-amber-500/25 bg-amber-500/[0.08] p-4 text-xs leading-relaxed text-slate-300">
+              <div className="mb-1.5 flex items-center gap-2 font-bold text-amber-300">
+                <AlertTriangle size={14} className="shrink-0" />
+                Firebase Auth Required
               </div>
-              Enable Email/Password in Firebase Authentication and add your email to the <code className="rounded bg-primary/50 px-1.5 py-0.5 font-mono text-[0.7rem] text-accent">admins</code>{' '}
-              collection expected by Firestore rules.
+              Make sure Email/Password is enabled in your Firebase Authentication Console and your email is authorized in Firestore rules.
             </div>
           </div>
 
-          <div className="flex flex-col justify-between rounded-3xl border border-white/10 bg-[radial-gradient(circle_at_top_left,rgb(var(--color-accent-rgb)/0.14),transparent_40%),linear-gradient(145deg,rgba(15,23,42,0.92),rgba(30,41,59,0.88))] p-8 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-md sm:p-10">
+          {/* Right Showcase Card */}
+          <div className="flex flex-col justify-between rounded-3xl border border-slate-800 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_50%),linear-gradient(160deg,rgba(15,23,42,0.95),rgba(2,6,23,0.9))] p-8 shadow-2xl backdrop-blur-xl sm:p-10">
             <div>
-              <p className="text-xs font-mono uppercase tracking-[0.22em] text-accent">What you can manage</p>
-              <h2 className="font-display mt-4 text-3xl font-bold leading-tight tracking-tight text-text sm:text-[2rem]">
-                Content that stays in sync with your live site.
+              <p className="text-[11px] font-mono font-bold uppercase tracking-[0.2em] text-sky-400">Realtime Content System</p>
+              <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight text-white">
+                Content that stays in instant sync with your live portfolio.
               </h2>
-              <p className="mt-4 max-w-lg text-sm leading-relaxed text-text-muted">
-                Firestore documents power the public pages; Storage holds uploads. Change copy or add a project here and publish with Save.
+              <p className="mt-3 text-xs sm:text-sm leading-relaxed text-slate-400">
+                Every section of your website is powered by Firestore documents and Firebase Storage. Update copy, manage projects, and publish live with zero rebuilds.
               </p>
             </div>
-            <ul className="mt-10 grid gap-3 sm:grid-cols-2">
+            <ul className="mt-8 grid gap-2.5 sm:grid-cols-2">
               {[
-                'Site copy & hero',
-                'Projects & case studies',
-                'Skills, blog & testimonials',
-                'Certificates & resources',
+                'Hero & introduction',
+                'Interactive projects',
+                'Services & offerings',
+                'Certifications & badges',
+                'Skills & experience',
+                'Real-time messages inbox',
               ].map((item) => (
                 <li
                   key={item}
-                  className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-text"
+                  className="flex items-center gap-2.5 rounded-xl border border-slate-800/80 bg-slate-900/50 px-3.5 py-2.5 text-xs font-medium text-slate-200"
                 >
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-accent/30 bg-accent/10">
-                    <CheckCircle2 size={14} className="text-accent" />
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-sky-500/10 border border-sky-500/30">
+                    <CheckCircle2 size={12} className="text-sky-400" />
                   </span>
                   {item}
                 </li>
@@ -269,33 +276,34 @@ const AdminPage = () => {
   const activeSection = tabs.find((tab) => tab.id === activeTab) || tabs[0];
 
   return (
-    <div className="min-h-screen w-full flex bg-primary bg-[radial-gradient(ellipse_80%_45%_at_50%_-15%,rgb(var(--color-accent-rgb)/0.07),transparent)] text-text">
+    <div className="min-h-screen w-full flex bg-slate-950 bg-[radial-gradient(ellipse_80%_45%_at_50%_-15%,rgba(56,189,248,0.08),transparent)] text-slate-100 font-sans">
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-primary/80 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-md lg:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
-      {/* FIXED SIDEBAR (Zero Scroll Layout Shift) */}
+      {/* FIXED SIDEBAR */}
       <aside className={clsx(
-        "fixed inset-y-0 left-0 z-50 w-72 flex flex-col bg-primary/95 backdrop-blur-2xl border-r border-white/10 p-6 transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:w-72 lg:transform-none lg:bg-secondary/20 lg:backdrop-blur-md shrink-0",
+        "fixed inset-y-0 left-0 z-50 w-72 flex flex-col bg-slate-950/95 backdrop-blur-2xl border-r border-slate-800/80 p-5 transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:w-72 lg:transform-none lg:bg-slate-950/60 shrink-0",
         isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
-        <div className="flex items-center justify-between mb-6 shrink-0">
+        {/* Brand Header */}
+        <div className="flex items-center justify-between mb-6 shrink-0 border-b border-slate-800/80 pb-4">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl border border-accent/25 bg-accent/10 p-2.5 text-accent">
-              <Shield size={18} strokeWidth={2} />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-sky-500/30 bg-sky-500/10 text-sky-400 shadow-[0_0_16px_rgba(56,189,248,0.2)]">
+              <Shield size={20} strokeWidth={2} />
             </div>
             <div>
-              <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent">Console</p>
-              <h1 className="text-sm font-bold tracking-tight text-text">CMS Dashboard</h1>
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-sky-400">Admin</p>
+              <h1 className="text-sm font-extrabold tracking-tight text-white">Portfolio CMS</h1>
             </div>
           </div>
           <button 
             onClick={() => setIsMobileMenuOpen(false)}
-            className="lg:hidden p-2 rounded-xl text-text-muted hover:text-text hover:bg-white/5"
+            className="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800"
           >
             <X size={18} />
           </button>
@@ -303,12 +311,12 @@ const AdminPage = () => {
 
         {/* Scrollable Navigation Area inside Sidebar */}
         <nav
-          className="flex-1 overflow-y-auto space-y-5 pr-1 [scrollbar-width:thin]"
+          className="flex-1 overflow-y-auto space-y-6 pr-1 [scrollbar-width:thin]"
           aria-label="Admin sections"
         >
           {tabGroups.map((group) => (
-            <div key={group.label} className="mb-5 last:mb-0">
-              <p className="mb-2 px-3 text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/65">
+            <div key={group.label} className="space-y-1.5">
+              <p className="px-3 text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-slate-400">
                 {group.label}
               </p>
               <div className="space-y-1">
@@ -324,16 +332,16 @@ const AdminPage = () => {
                         setIsMobileMenuOpen(false);
                       }}
                       className={clsx(
-                        'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs transition-colors group/tab',
+                        'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs font-medium transition-all group/tab',
                         isActive
-                          ? 'border border-accent/35 bg-accent/15 font-semibold text-accent shadow-[0_0_0_1px_rgb(var(--color-accent-rgb)/0.08)]'
-                          : 'border border-transparent text-text-muted hover:border-white/10 hover:bg-primary/45 hover:text-text'
+                          ? 'border border-sky-500/40 bg-sky-500/15 font-bold text-sky-300 shadow-[0_0_16px_rgba(56,189,248,0.12)]'
+                          : 'border border-transparent text-slate-400 hover:border-slate-800 hover:bg-slate-900/60 hover:text-slate-200'
                       )}
                     >
-                      <Icon size={15} strokeWidth={1.75} className={isActive ? 'text-accent' : 'opacity-70'} />
+                      <Icon size={15} strokeWidth={isActive ? 2.2 : 1.75} className={isActive ? 'text-sky-400' : 'text-slate-500 group-hover/tab:text-slate-300'} />
                       <span className="truncate flex-1">{tab.label}</span>
                       {tab.badge !== undefined && tab.badge > 0 && (
-                        <span className="shrink-0 flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-accent text-[9px] font-bold text-primary font-mono shadow-[0_0_8px_rgba(var(--color-accent-rgb),0.4)] animate-pulse">
+                        <span className="shrink-0 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-sky-500 text-[10px] font-bold text-slate-950 font-mono shadow-[0_0_10px_rgba(56,189,248,0.5)] animate-pulse">
                           {tab.badge}
                         </span>
                       )}
@@ -346,39 +354,49 @@ const AdminPage = () => {
         </nav>
 
         {/* Pinned user profile footer inside Sidebar */}
-        <div className="mt-auto pt-4 border-t border-white/5 shrink-0">
-          <p className="text-[10px] truncate text-text-muted leading-tight">Signed in as:</p>
-          <p className="text-xs font-bold text-text truncate mt-1">{user.email}</p>
+        <div className="mt-auto pt-4 border-t border-slate-800/80 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-500/15 border border-sky-500/30 text-sky-400 text-xs font-bold font-mono">
+              {user.email?.[0]?.toUpperCase() || 'A'}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-mono text-slate-400 truncate">Signed in as</p>
+              <p className="text-xs font-bold text-slate-200 truncate">{user.email}</p>
+            </div>
+          </div>
         </div>
       </aside>
 
       {/* INDEPENDENT CONTENT AREA */}
       <div className="flex-1 flex flex-col min-h-screen min-w-0">
         {/* Top Header Panel */}
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-4 px-6 py-4 border-b border-white/10 bg-secondary/35 backdrop-blur-md shrink-0">
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-4 px-6 py-3.5 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-xl text-text-muted hover:text-text hover:bg-white/5 transition-colors"
+              className="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
             >
-              <Menu size={20} />
+              <Menu size={18} />
             </button>
-            <h2 className="text-lg font-bold text-text truncate">{activeSection.label}</h2>
+            <div>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Console / </span>
+              <h2 className="text-base sm:text-lg font-bold text-white truncate inline">{activeSection.label}</h2>
+            </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0">
             <Link
               to="/"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-primary/30 px-3 sm:px-4 py-2 text-xs font-semibold text-text transition-colors hover:border-accent/35 hover:bg-primary/55"
-              aria-label="View site"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-700/80 bg-slate-900/80 px-3.5 py-1.5 text-xs font-semibold text-slate-300 transition-all hover:border-sky-500/40 hover:text-sky-300"
+              aria-label="View live website"
             >
               <ArrowLeft size={13} />
-              <span className="hidden sm:inline">View site</span>
+              <span className="hidden sm:inline">View live site</span>
             </Link>
             <button
               type="button"
               onClick={logout}
-              className="inline-flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 sm:px-4 py-2 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/20"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-1.5 text-xs font-semibold text-red-300 transition-all hover:bg-red-500/20"
               aria-label="Sign out"
             >
               <LogOut size={13} />
@@ -387,8 +405,9 @@ const AdminPage = () => {
           </div>
         </header>
 
-        {/* Scrollable Work Workspace Pane */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Scrollable Workspace Main Pane */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
+
           {activeSection.id === 'site' && <SiteEditor />}
           {activeSection.id === 'media' && <MediaLibrary />}
           {activeSection.id === CMS_DOCS.messages && <MessagesInbox />}
@@ -405,6 +424,13 @@ const AdminPage = () => {
               docId={CMS_DOCS.certifications}
               section={sectionConfig[CMS_DOCS.certifications]}
               fields={certificateFields}
+            />
+          )}
+          {activeSection.id === CMS_DOCS.badges && (
+            <CollectionEditor
+              docId={CMS_DOCS.badges}
+              section={sectionConfig[CMS_DOCS.badges]}
+              fields={badgeFields}
             />
           )}
           {activeSection.id === CMS_DOCS.skills && (

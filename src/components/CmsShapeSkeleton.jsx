@@ -71,7 +71,13 @@ export function PageBodyCmsSkeleton() {
 export function FooterCmsSkeleton() {
   return (
     <footer className="relative z-10 border-t border-secondary bg-primary/90 pt-12 pb-8 backdrop-blur-md">
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 animate-pulse" aria-busy="true" aria-label="Loading footer">
+      <div
+        className="container mx-auto max-w-7xl px-4 sm:px-6 animate-pulse"
+        aria-busy="true"
+        aria-live="polite"
+        aria-label="Loading footer"
+        role="status"
+      >
         <div className="mb-8 flex flex-col items-center justify-between gap-8 md:flex-row">
           <div className="h-8 w-40 rounded bg-secondary/40" />
           <div className="flex gap-4">

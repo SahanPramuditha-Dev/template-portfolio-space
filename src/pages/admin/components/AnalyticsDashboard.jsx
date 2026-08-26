@@ -379,58 +379,59 @@ const AnalyticsDashboard = () => {
   const ag = aggregations;
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 pb-20">
+    <div className="space-y-6 rounded-3xl border border-slate-800/80 bg-slate-900/40 p-5 sm:p-7 shadow-2xl backdrop-blur-xl">
       
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-            <Activity className="text-accent" size={24} /> 
-            Analytics Insights
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-100 tracking-tight flex items-center gap-2.5">
+            <Activity className="text-sky-400" size={22} /> 
+            Analytics & Live Telemetry
           </h1>
-          <p className="text-slate-400 text-sm mt-1">Real-time performance and telemetry data</p>
+          <p className="text-slate-400 text-xs sm:text-sm mt-1">Real-time visitor performance, session tracking, and interaction analytics.</p>
         </div>
         
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
+          <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1.5 rounded-full">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span className="text-emerald-400 font-bold text-sm tracking-tight">{ag?.activeUsers || 0} active now</span>
+            <span className="text-emerald-400 font-bold text-xs font-mono tracking-tight">{ag?.activeUsers || 0} active now</span>
           </div>
 
           <div className="relative group">
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
-              className="appearance-none bg-slate-900 border border-white/10 text-white text-sm font-medium rounded-lg px-4 py-2 pr-10 focus:outline-none focus:border-accent hover:border-white/20 transition-colors"
+              className="appearance-none bg-slate-950 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl px-3.5 py-2 pr-9 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400/20 hover:border-slate-700 transition-colors"
             >
               <option value="24h">Last 24 Hours</option>
               <option value="7d">Last 7 Days</option>
               <option value="30d">Last 30 Days</option>
             </select>
-            <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
+            <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={13} />
           </div>
         </div>
       </div>
 
       {/* TABS */}
-      <div className="flex flex-wrap gap-1 bg-slate-900/50 p-1 rounded-xl border border-white/5 w-max mb-8">
+      <div className="flex flex-wrap gap-1.5 bg-slate-950/70 p-1.5 rounded-2xl border border-slate-800 w-max max-w-full shadow-inner">
         {['overview', 'portfolio', 'events', 'pages', 'geo', 'performance'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
               activeTab === tab 
-                ? 'bg-accent/10 text-accent shadow-sm' 
-                : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                ? 'border border-sky-500/40 bg-sky-500/15 font-bold text-sky-300 shadow-[0_0_12px_rgba(56,189,248,0.15)]' 
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
             }`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </div>
+
 
       {/* TAB CONTENT: OVERVIEW */}
       {activeTab === 'overview' && (

@@ -99,6 +99,7 @@ const Earth3D = ({ className = '' }) => {
     return (
       <div
         className={`relative h-full w-full overflow-hidden rounded-2xl border border-accent/15 bg-[radial-gradient(ellipse_at_center,rgb(var(--color-accent-rgb)/0.12),transparent_64%)] ${className}`}
+        role="img"
         aria-label="Decorative Earth model placeholder"
       />
     );
@@ -108,6 +109,7 @@ const Earth3D = ({ className = '' }) => {
     <div
       ref={containerRef}
       className={`relative h-full w-full overflow-hidden bg-transparent transition-opacity duration-700 ease-out ${isReady ? 'opacity-100' : 'opacity-0'} ${className}`}
+      role="img"
       aria-label="Interactive 3D Earth"
     >
       <Canvas

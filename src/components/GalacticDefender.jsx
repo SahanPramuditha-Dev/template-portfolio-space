@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trophy, Rocket, RefreshCw, TriangleAlert, Heart, Shield as ShieldIcon, Coins, Zap, ShieldPlus, ChevronRight, Medal } from 'lucide-react';
+import { X, Trophy, Rocket, RefreshCw, TriangleAlert, Heart, Shield as ShieldIcon, Coins, Zap, ShieldPlus, ChevronRight, Medal, Volume2, VolumeX, Sparkles, Flame } from 'lucide-react';
 import { useAchievements } from '../context/AchievementsContext';
 import { db } from '../lib/firebase';
 import { collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from 'firebase/firestore';
+import { soundFx } from '../utils/soundFx';
 
 const GAME_WIDTH = 500;
 const GAME_HEIGHT = 700;
@@ -31,6 +32,14 @@ class GameEngine {
     this.saveData = saveData;
     this.onAchievement = onAchievement;
     
+    // Screen Shake & Visual FX
+    this.screenShake = 0;
+    this.combo = 0;
+    this.comboTimer = 0;
+    this.overdrive = 0;
+    this.overdriveActive = false;
+    this.overdriveTimer = 0;
+    
     // Entities
     this.player = null;
     this.projectiles = [];
@@ -40,6 +49,7 @@ class GameEngine {
     this.stars = [];
     this.powerups = [];
     this.blackHoles = [];
+    this.floatingTexts = [];
     
     // Level & Boss System
     this.level = 1;
@@ -83,6 +93,46 @@ class GameEngine {
     }
   }
 
+  triggerShake(intensity = 8) {
+    this.screenShake = Math.max(this.screenShake, intensity);
+  }
+
+  addFloatingText(x, y, text, color = '#38bdf8') {
+    this.floatingTexts.push({
+      x, y, text, color, life: 1, vy: -40
+    });
+  }
+
+  addCombo(points, x, y) {
+    this.combo++;
+    this.comboTimer = 2500; // 2.5s combo window
+    const multiplier = Math.min(4, 1 + Math.floor(this.combo / 4) * 0.5);
+    const earned = Math.floor(points * multiplier);
+    this.score += earned;
+    
+    // Add Overdrive Charge
+    if (!this.overdriveActive) {
+      this.overdrive = Math.min(100, this.overdrive + (earned > 50 ? 8 : 4));
+    }
+
+    if (this.combo > 2 && x !== undefined && y !== undefined) {
+      this.addFloatingText(x, y - 10, `${this.combo}x COMBO!`, multiplier >= 3 ? '#f59e0b' : '#38bdf8');
+    }
+    return earned;
+  }
+
+  activateOverdrive() {
+    if (this.overdrive >= 100 && !this.overdriveActive) {
+      this.overdriveActive = true;
+      this.overdriveTimer = 6000;
+      this.overdrive = 0;
+      this.triggerShake(12);
+      soundFx.playPowerup();
+      this.addFloatingText(this.player.x + this.player.width/2, this.player.y - 20, '⚡ OVERDRIVE ACTIVE!', '#f59e0b');
+      this.onStateUpdateInner();
+    }
+  }
+
   start() {
     this.score = 0;
     this.timeSurvived = 0;
@@ -98,6 +148,12 @@ class GameEngine {
     this.bossState = 'normal';
     this.bossWarningTimer = 0;
     this.timeInLevel = 0;
+    this.combo = 0;
+    this.comboTimer = 0;
+    this.overdrive = 0;
+    this.overdriveActive = false;
+    this.overdriveTimer = 0;
+    this.screenShake = 0;
 
     this.projectiles = [];
     this.enemies = [];
@@ -105,6 +161,7 @@ class GameEngine {
     this.particles = [];
     this.powerups = [];
     this.blackHoles = [];
+    this.floatingTexts = [];
     this.sessionStats = { enemiesKilled: 0, asteroidsDestroyed: 0, bossesDefeated: 0, survivorUnlocked: false };
     
     this.enemyTimer = 0;
@@ -135,6 +192,7 @@ class GameEngine {
       weapon: WEAPON_TYPES.SINGLE,
       weaponTimer: 0,
       invulnTimer: 0,
+      skin: this.saveData.activeSkin || 'default',
       damageMultiplier: 1 + (this.saveData.upgrades.weapon * 0.25) // +25% dmg per level
     };
 
@@ -156,24 +214,27 @@ class GameEngine {
       if (e.key === '1' && this.inventory.nuke > 0) this.triggerNuke();
       if (e.key === '2' && this.inventory.emp > 0) this.triggerEmp();
       if (e.key === '3' && this.inventory.freeze > 0) this.triggerFreeze();
+      if ((e.key === 'Shift' || e.key === 'e' || e.key === 'E') && this.overdrive >= 100) this.activateOverdrive();
     }
   }
 
   triggerNuke() {
     this.inventory.nuke--;
+    this.triggerShake(20);
+    soundFx.playExplosion(true);
     this.createExplosion(this.width/2, this.height/2, '#ffffff', 200);
     
     this.enemies.forEach(e => {
        if (e.type !== 'boss') {
            this.createExplosion(e.x + e.width/2, e.y + e.height/2, '#f97316', 20);
-           this.score += e.scoreVal || 10;
+           this.addCombo(e.scoreVal || 10, e.x, e.y);
        }
     });
     this.enemies = this.enemies.filter(e => e.type === 'boss');
     
     this.asteroids.forEach(a => {
        this.createExplosion(a.x + a.width/2, a.y + a.height/2, '#94a3b8');
-       this.score += 10;
+       this.addCombo(10, a.x, a.y);
     });
     this.asteroids = [];
     this.projectiles = this.projectiles.filter(p => p.isPlayer);
@@ -192,6 +253,8 @@ class GameEngine {
   triggerEmp() {
     this.inventory.emp--;
     this.empTimer = 8000;
+    this.triggerShake(10);
+    soundFx.playPowerup();
     for(let i=0; i<30; i++) this.createExplosion(this.width*Math.random(), this.height*Math.random(), '#3b82f6', 5);
     this.onStateUpdateInner();
   }
@@ -199,6 +262,8 @@ class GameEngine {
   triggerFreeze() {
     this.inventory.freeze--;
     this.freezeTimer = 5000;
+    this.triggerShake(8);
+    soundFx.playPowerup();
     for(let i=0; i<30; i++) this.createExplosion(this.width*Math.random(), this.height*Math.random(), '#a855f7', 5);
     this.onStateUpdateInner();
   }
@@ -259,6 +324,9 @@ class GameEngine {
     this.sessionStats.bossesDefeated++;
     if (this.sessionStats.bossesDefeated === 1) this.onAchievement('galactic-boss-slayer');
     
+    this.triggerShake(25);
+    soundFx.playExplosion(true);
+
     for(let i=0; i<30; i++) {
        this.createExplosion(boss.x + boss.width*Math.random(), boss.y + boss.height*Math.random(), '#f97316');
     }
@@ -268,7 +336,7 @@ class GameEngine {
         this.spawnPowerup(boss.x + boss.width/2 + (i*40), boss.y + boss.height/2, true);
     }
     
-    this.score += boss.scoreVal;
+    this.addCombo(boss.scoreVal, boss.x + boss.width/2, boss.y);
     boss.dead = true;
     this.currentBoss = null;
 
@@ -323,9 +391,17 @@ class GameEngine {
   playerShoot() {
     const pX = this.player.x + this.player.width / 2;
     const pY = this.player.y;
-    const dmgMulti = this.player.damageMultiplier;
+    const dmgMulti = this.player.damageMultiplier * (this.overdriveActive ? 2 : 1);
 
-    if (this.player.weapon === WEAPON_TYPES.SINGLE) {
+    soundFx.playLaser(this.overdriveActive ? 'plasma' : this.player.weapon);
+
+    if (this.overdriveActive) {
+      // Overdrive Hyper-Spread Beam
+      this.projectiles.push({ x: pX - 4, y: pY - 10, width: 8, height: 24, vx: 0, vy: -750, isPlayer: true, type: 'plasma', dmg: 50 * dmgMulti, pierceCount: 5 });
+      this.projectiles.push({ x: pX - 8, y: pY, width: 6, height: 18, vx: -180, vy: -680, isPlayer: true, type: 'normal', dmg: 25 * dmgMulti });
+      this.projectiles.push({ x: pX + 2, y: pY, width: 6, height: 18, vx: 180, vy: -680, isPlayer: true, type: 'normal', dmg: 25 * dmgMulti });
+    }
+    else if (this.player.weapon === WEAPON_TYPES.SINGLE) {
       this.projectiles.push({ x: pX - 2, y: pY, width: 4, height: 15, vx: 0, vy: -600, isPlayer: true, type: 'normal', dmg: 10 * dmgMulti });
     } 
     else if (this.player.weapon === WEAPON_TYPES.TRIPLE) {
@@ -345,6 +421,9 @@ class GameEngine {
   damagePlayer(amount) {
     if (this.player.invulnTimer > 0) return;
 
+    this.triggerShake(12);
+    soundFx.playExplosion(false);
+
     if (this.player.shield > 0) {
       this.player.shield -= amount;
       if (this.player.shield < 0) {
@@ -358,9 +437,11 @@ class GameEngine {
     if (this.player.health <= 0) {
       this.createExplosion(this.player.x + this.player.width/2, this.player.y + this.player.height/2, '#ef4444', 40);
       this.player.lives--;
+      this.triggerShake(20);
+      soundFx.playExplosion(true);
       if (this.player.lives > 0) {
         this.player.health = this.player.maxHealth;
-        this.player.shield = this.player.maxShield; // Reset shield on death if they have it
+        this.player.shield = this.player.maxShield;
         this.player.x = this.width / 2;
         this.player.y = this.height - 80;
         this.player.weapon = WEAPON_TYPES.SINGLE;
@@ -479,7 +560,8 @@ class GameEngine {
       if (this.player.x < p.x + p.width && this.player.x + this.player.width > p.x && 
           this.player.y < p.y + p.height && this.player.y + this.player.height > p.y) {
         
-        this.score += 50;
+        this.addCombo(50, p.x, p.y);
+        soundFx.playPowerup();
         this.createExplosion(p.x, p.y, '#facc15', 20);
         
         switch (p.type) {
@@ -501,6 +583,35 @@ class GameEngine {
     this.powerups = this.powerups.filter(p => !p.collected && p.y < this.height);
 
     if (inventoryChanged) this.onStateUpdateInner();
+
+    // Combo timer decrement
+    if (this.comboTimer > 0) {
+      this.comboTimer -= dt;
+      if (this.comboTimer <= 0) {
+        this.combo = 0;
+      }
+    }
+
+    // Overdrive timer decrement
+    if (this.overdriveActive) {
+      this.overdriveTimer -= dt;
+      if (this.overdriveTimer <= 0) {
+        this.overdriveActive = false;
+        this.onStateUpdateInner();
+      }
+    }
+
+    // Floating text updates
+    this.floatingTexts.forEach(ft => {
+      ft.y += ft.vy * dtS;
+      ft.life -= dtS * 1.2;
+    });
+    this.floatingTexts = this.floatingTexts.filter(ft => ft.life > 0);
+
+    // Screen Shake decay
+    if (this.screenShake > 0) {
+      this.screenShake = Math.max(0, this.screenShake - dtS * 30);
+    }
 
     // Temporal Freeze logic - skip enemy/projectile updates
     if (this.freezeTimer > 0) {
@@ -637,7 +748,10 @@ class GameEngine {
               this.killBoss(e);
             } else {
               this.createExplosion(e.x + e.width/2, e.y + e.height/2, '#f97316', 20);
-              this.score += e.scoreVal;
+              this.addCombo(e.scoreVal, e.x + e.width/2, e.y);
+              soundFx.playExplosion(false);
+              this.triggerShake(4);
+
               if (Math.random() < 0.1) this.spawnPowerup(e.x + e.width/2, e.y + e.height/2);
               
               this.sessionStats.enemiesKilled++;
@@ -671,7 +785,9 @@ class GameEngine {
         if (a.dead) continue;
         if (p.x < a.x + a.width && p.x + p.width > a.x && p.y < a.y + a.height && p.y + p.height > a.y) {
           this.createExplosion(p.x, p.y, '#94a3b8');
-          this.score += 10;
+          this.addCombo(10, a.x + a.width/2, a.y);
+          soundFx.playExplosion(false);
+          this.triggerShake(2);
           a.dead = true;
           
           this.sessionStats.asteroidsDestroyed++;
@@ -856,17 +972,34 @@ class GameEngine {
   }
 
   draw() {
+    this.ctx.save();
+    
+    // 1. Screen Shake Translation
+    if (this.screenShake > 0) {
+      const shakeX = (Math.random() - 0.5) * this.screenShake;
+      const shakeY = (Math.random() - 0.5) * this.screenShake;
+      this.ctx.translate(shakeX, shakeY);
+    }
+
     this.ctx.fillStyle = '#020617';
     this.ctx.fillRect(0, 0, this.width, this.height);
 
+    // Warp speed stars when overdrive active
     this.stars.forEach(s => {
       this.ctx.fillStyle = s.color;
       this.ctx.globalAlpha = Math.random() * 0.5 + 0.5;
-      this.ctx.fillRect(s.x, s.y, s.size, s.size);
+      if (this.overdriveActive) {
+        this.ctx.fillRect(s.x, s.y, s.size, s.size * 5); // stretch into warp trails
+      } else {
+        this.ctx.fillRect(s.x, s.y, s.size, s.size);
+      }
     });
     this.ctx.globalAlpha = 1;
 
-    if (!this.isPlaying && !this.isGameOver) return;
+    if (!this.isPlaying && !this.isGameOver) {
+      this.ctx.restore();
+      return;
+    }
 
     if (this.bossState === 'warning') {
       this.ctx.fillStyle = `rgba(255, 50, 50, ${Math.abs(Math.sin(this.bossWarningTimer / 150))})`;
@@ -986,19 +1119,62 @@ class GameEngine {
       this.ctx.closePath(); this.ctx.fill(); this.ctx.stroke(); this.ctx.restore();
     });
 
+    // Floating Text FX (Combos, Milestones)
+    this.floatingTexts.forEach(ft => {
+      this.ctx.save();
+      this.ctx.globalAlpha = Math.max(0, ft.life);
+      this.ctx.fillStyle = ft.color;
+      this.ctx.shadowColor = ft.color;
+      this.ctx.shadowBlur = 10;
+      this.ctx.font = 'bold 16px monospace';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText(ft.text, ft.x, ft.y);
+      this.ctx.restore();
+    });
+
+    // Draw Player Ship with Skin Theme
     if (!this.isGameOver) {
       this.ctx.save(); this.ctx.translate(this.player.x + this.player.width / 2, this.player.y + this.player.height / 2);
       if (this.player.invulnTimer <= 0 || Math.floor(this.player.invulnTimer / 100) % 2 === 0) {
+        
+        // Overdrive Flaming Aura
+        if (this.overdriveActive) {
+          this.ctx.strokeStyle = '#f59e0b';
+          this.ctx.lineWidth = 3;
+          this.ctx.shadowBlur = 20;
+          this.ctx.shadowColor = '#f59e0b';
+          this.ctx.beginPath();
+          this.ctx.arc(0, 0, this.player.width * 1.3, 0, Math.PI * 2);
+          this.ctx.stroke();
+          this.ctx.shadowBlur = 0;
+        }
+
         if (this.player.shield > 0) {
           this.ctx.fillStyle = 'rgba(56, 189, 248, 0.2)'; this.ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
           this.ctx.lineWidth = 2; this.ctx.beginPath(); this.ctx.arc(0, 0, this.player.width, 0, Math.PI * 2); this.ctx.fill(); this.ctx.stroke();
         }
-        this.ctx.fillStyle = '#f59e0b'; this.ctx.globalAlpha = Math.random() * 0.5 + 0.5;
+
+        // Thruster flame
+        const flameColor = this.saveData.activeSkin === 'solar' ? '#f97316' : (this.saveData.activeSkin === 'stealth' ? '#a855f7' : '#f59e0b');
+        this.ctx.fillStyle = flameColor;
+        this.ctx.globalAlpha = Math.random() * 0.5 + 0.5;
         this.ctx.beginPath(); this.ctx.moveTo(-this.player.width / 4, this.player.height / 2); this.ctx.lineTo(this.player.width / 4, this.player.height / 2);
         this.ctx.lineTo(0, this.player.height / 2 + 15 + Math.random() * 15); this.ctx.closePath(); this.ctx.fill();
         this.ctx.fillStyle = '#fbbf24'; this.ctx.beginPath(); this.ctx.arc(0, this.player.height / 2 + 2, 4, 0, Math.PI * 2); this.ctx.fill();
         this.ctx.globalAlpha = 1;
-        this.ctx.fillStyle = '#0ea5e9'; this.ctx.shadowBlur = 8; this.ctx.shadowColor = '#38bdf8';
+
+        // Hull Colors according to Skin
+        let hullMain = '#0ea5e9';
+        let hullGlow = '#38bdf8';
+        if (this.saveData.activeSkin === 'solar') {
+          hullMain = '#eab308';
+          hullGlow = '#facc15';
+        } else if (this.saveData.activeSkin === 'stealth') {
+          hullMain = '#475569';
+          hullGlow = '#c084fc';
+        }
+
+        this.ctx.fillStyle = hullMain; this.ctx.shadowBlur = 8; this.ctx.shadowColor = hullGlow;
         this.ctx.beginPath(); this.ctx.moveTo(0, -this.player.height / 2); this.ctx.lineTo(-this.player.width / 2, this.player.height / 2);
         this.ctx.lineTo(-this.player.width / 4, this.player.height / 4); this.ctx.lineTo(this.player.width / 4, this.player.height / 4);
         this.ctx.lineTo(this.player.width / 2, this.player.height / 2); this.ctx.closePath(); this.ctx.fill();
@@ -1013,6 +1189,8 @@ class GameEngine {
         this.ctx.fillStyle = '#38bdf8'; this.ctx.fillRect(this.player.x, this.player.y - 18, this.player.width * (this.player.shield / this.player.maxShield), 4);
       }
     }
+
+    this.ctx.restore(); // Restore shake canvas state
   }
 
   onStateUpdateInner() {
@@ -1027,6 +1205,9 @@ class GameEngine {
         earnedCredits: Math.floor(this.score / 10),
         timeSurvived: Math.floor(this.timeSurvived / 1000),
         level: this.level,
+        combo: this.combo,
+        overdrive: this.overdrive,
+        overdriveActive: this.overdriveActive,
         inventory: this.inventory,
         boss: this.currentBoss ? { health: this.currentBoss.health, maxHealth: this.currentBoss.maxHealth, name: this.currentBoss.name, phase: this.currentBoss.phase } : null
       });
@@ -1146,6 +1327,14 @@ const GalacticDefender = ({ isOpen, onClose }) => {
     engineRef.current?.start();
   };
 
+  const [soundMuted, setSoundMuted] = useState(false);
+
+  const toggleSound = () => {
+    const next = !soundMuted;
+    setSoundMuted(next);
+    soundFx.setMuted(next);
+  };
+
   const buyUpgrade = (type) => {
     const cost = 100 + (saveData.upgrades[type] * 150);
     if (saveData.credits >= cost && saveData.upgrades[type] < 5) {
@@ -1153,6 +1342,20 @@ const GalacticDefender = ({ isOpen, onClose }) => {
         ...prev,
         credits: prev.credits - cost,
         upgrades: { ...prev.upgrades, [type]: prev.upgrades[type] + 1 }
+      }));
+    }
+  };
+
+  const equipSkin = (skinKey, cost = 0) => {
+    const unlocked = saveData.unlockedSkins || ['default'];
+    if (unlocked.includes(skinKey)) {
+      setSaveData(prev => ({ ...prev, activeSkin: skinKey }));
+    } else if (saveData.credits >= cost) {
+      setSaveData(prev => ({
+        ...prev,
+        credits: prev.credits - cost,
+        unlockedSkins: [...unlocked, skinKey],
+        activeSkin: skinKey
       }));
     }
   };
@@ -1206,6 +1409,20 @@ const GalacticDefender = ({ isOpen, onClose }) => {
     if (tab === 'leaderboard') fetchLeaderboard();
   }, [tab]);
 
+  // Touch Movement Controls
+  const handleTouchMove = (e) => {
+    if (!canvasRef.current || !engineRef.current || !gameState.isPlaying) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const touch = e.touches[0];
+    const touchX = ((touch.clientX - rect.left) / rect.width) * GAME_WIDTH;
+    const touchY = ((touch.clientY - rect.top) / rect.height) * GAME_HEIGHT;
+    
+    if (engineRef.current.player) {
+      engineRef.current.player.x = Math.max(0, Math.min(touchX - 15, GAME_WIDTH - 30));
+      engineRef.current.player.y = Math.max(0, Math.min(touchY - 20, GAME_HEIGHT - 40));
+    }
+  };
+
   const renderUpgradeRow = (type, name, icon, desc) => {
     const level = saveData.upgrades[type];
     const cost = 100 + (level * 150);
@@ -1241,17 +1458,28 @@ const GalacticDefender = ({ isOpen, onClose }) => {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-primary/95 backdrop-blur-md" />
           
           <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="relative bg-secondary/90 border border-accent/20 p-4 sm:p-6 rounded-2xl shadow-2xl backdrop-blur-xl flex flex-col items-center max-w-[100vw] max-h-[95vh] overflow-y-auto custom-scrollbar w-full sm:w-auto" data-lenis-prevent>
-            <button onClick={onClose} className="absolute top-4 right-4 text-text-muted hover:text-accent transition-colors bg-primary/50 p-2 rounded-full border border-white/5 z-30">
-              <X size={20} />
-            </button>
+            
+            {/* Top Bar Controls (Audio & Close) */}
+            <div className="absolute top-4 right-4 flex items-center gap-2 z-30">
+              <button 
+                onClick={toggleSound}
+                className="text-text-muted hover:text-accent transition-colors bg-primary/50 p-2 rounded-full border border-white/5"
+                title={soundMuted ? "Unmute Audio" : "Mute Audio"}
+              >
+                {soundMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+              </button>
+              <button onClick={onClose} className="text-text-muted hover:text-accent transition-colors bg-primary/50 p-2 rounded-full border border-white/5">
+                <X size={18} />
+              </button>
+            </div>
 
             {/* Header */}
-            <div className="flex flex-col items-center mb-4 w-full justify-center">
-              <div className="flex items-center gap-3">
-                <Rocket className="text-accent" size={24} />
-                <h3 className="text-xl font-bold text-white tracking-wider uppercase font-mono">Galactic Defender</h3>
+            <div className="flex flex-col items-center mb-3 w-full justify-center">
+              <div className="flex items-center gap-2">
+                <Rocket className="text-accent" size={22} />
+                <h3 className="text-lg font-bold text-white tracking-wider uppercase font-mono">Galactic Defender</h3>
               </div>
-              <div className="flex gap-4 mt-2 text-xs font-mono">
+              <div className="flex gap-4 mt-1 text-xs font-mono">
                 <span className="text-accent flex items-center gap-1"><Coins size={14}/> {saveData.credits} Credits</span>
                 <span className="text-text-muted flex items-center gap-1"><Trophy size={14}/> Best: {saveData.highestScore}</span>
               </div>
@@ -1259,12 +1487,12 @@ const GalacticDefender = ({ isOpen, onClose }) => {
 
             {/* In-Game HUD */}
             {gameState.isPlaying && (
-              <div className="flex flex-col items-center mb-4 w-full justify-center font-mono text-xs sm:text-sm relative">
+              <div className="flex flex-col items-center mb-3 w-full justify-center font-mono text-xs relative">
                 
                 {gameState.boss && (
-                  <div className="w-full max-w-sm mb-3">
+                  <div className="w-full max-w-sm mb-2">
                     <div className="flex justify-between text-[10px] mb-1 px-1">
-                      <span className="text-white font-bold">{gameState.boss.name}</span>
+                      <span className="text-red-400 font-bold">{gameState.boss.name}</span>
                       <span className="text-text-muted">{Math.ceil((gameState.boss.health / gameState.boss.maxHealth) * 100)}%</span>
                     </div>
                     <div className="h-2 w-full bg-black/50 rounded-full overflow-hidden border border-white/10">
@@ -1277,42 +1505,89 @@ const GalacticDefender = ({ isOpen, onClose }) => {
                 )}
 
                 <div className="flex flex-wrap gap-2 justify-center w-full">
-                  <div className="flex items-center gap-2 bg-primary/40 px-3 py-1.5 rounded border border-white/5">
+                  <div className="flex items-center gap-2 bg-primary/60 px-2.5 py-1 rounded border border-white/10">
                     <span className="text-text-muted">Score:</span><span className="text-accent font-bold">{gameState.score}</span>
                   </div>
-                  <div className="flex items-center gap-2 bg-primary/40 px-3 py-1.5 rounded border border-white/5">
-                    <Heart size={14} className="text-red-400" /><span className="text-white font-bold">x {gameState.lives}</span>
+                  {gameState.combo > 1 && (
+                    <div className="flex items-center gap-1 bg-amber-500/20 px-2 py-1 rounded border border-amber-500/40 text-amber-300 animate-pulse">
+                      <Zap size={12} /><span>{gameState.combo}x COMBO</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1.5 bg-primary/60 px-2.5 py-1 rounded border border-white/10">
+                    <Heart size={13} className="text-red-400" /><span className="text-white font-bold">x {gameState.lives}</span>
                   </div>
                   {gameState.shield > 0 && (
-                    <div className="flex items-center gap-2 bg-primary/40 px-3 py-1.5 rounded border border-white/5">
-                      <ShieldIcon size={14} className="text-blue-400" /><span className="text-white font-bold">{Math.ceil(gameState.shield)}</span>
+                    <div className="flex items-center gap-1.5 bg-blue-500/20 px-2.5 py-1 rounded border border-blue-500/30 text-blue-300">
+                      <ShieldIcon size={13} /><span>{Math.ceil(gameState.shield)}</span>
                     </div>
                   )}
                 </div>
 
-                <div className="flex gap-2 justify-center w-full mt-2 text-[10px]">
-                  <div className={`flex items-center gap-1 px-2 py-1 rounded border ${gameState.inventory?.nuke > 0 ? 'bg-red-500/20 border-red-500/50 text-red-200' : 'bg-black/40 border-white/5 text-text-muted opacity-50'}`}>
-                    <span className="font-bold">1</span> ☢ Nuke: {gameState.inventory?.nuke || 0}
-                  </div>
-                  <div className={`flex items-center gap-1 px-2 py-1 rounded border ${gameState.inventory?.emp > 0 ? 'bg-blue-500/20 border-blue-500/50 text-blue-200' : 'bg-black/40 border-white/5 text-text-muted opacity-50'}`}>
-                    <span className="font-bold">2</span> ⚡ EMP: {gameState.inventory?.emp || 0}
-                  </div>
-                  <div className={`flex items-center gap-1 px-2 py-1 rounded border ${gameState.inventory?.freeze > 0 ? 'bg-purple-500/20 border-purple-500/50 text-purple-200' : 'bg-black/40 border-white/5 text-text-muted opacity-50'}`}>
-                    <span className="font-bold">3</span> ❄ Freeze: {gameState.inventory?.freeze || 0}
-                  </div>
+                {/* Overdrive & Abilities Quick Row */}
+                <div className="flex items-center gap-2 justify-center w-full mt-2 text-[10px]">
+                  {/* Overdrive Meter */}
+                  <button
+                    onClick={() => engineRef.current?.activateOverdrive()}
+                    disabled={gameState.overdrive < 100 && !gameState.overdriveActive}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded border font-bold transition-all ${
+                      gameState.overdriveActive
+                        ? 'bg-amber-500 text-slate-950 border-amber-300 shadow-[0_0_15px_#f59e0b]'
+                        : gameState.overdrive >= 100
+                        ? 'bg-amber-500/30 border-amber-400 text-amber-300 animate-bounce'
+                        : 'bg-black/40 border-white/10 text-text-muted opacity-60'
+                    }`}
+                  >
+                    <Flame size={12} />
+                    {gameState.overdriveActive ? 'OVERDRIVE ACTIVE' : gameState.overdrive >= 100 ? 'OVERDRIVE READY (TAP/SHIFT)' : `CHARGE ${gameState.overdrive || 0}%`}
+                  </button>
+
+                  <button 
+                    onClick={() => engineRef.current?.inventory?.nuke > 0 && engineRef.current.triggerNuke()}
+                    className={`flex items-center gap-1 px-2 py-1 rounded border ${gameState.inventory?.nuke > 0 ? 'bg-red-500/30 border-red-500 text-red-200' : 'bg-black/40 border-white/5 text-text-muted opacity-40'}`}
+                  >
+                    ☢ Nuke: {gameState.inventory?.nuke || 0}
+                  </button>
+                  <button 
+                    onClick={() => engineRef.current?.inventory?.emp > 0 && engineRef.current.triggerEmp()}
+                    className={`flex items-center gap-1 px-2 py-1 rounded border ${gameState.inventory?.emp > 0 ? 'bg-blue-500/30 border-blue-500 text-blue-200' : 'bg-black/40 border-white/5 text-text-muted opacity-40'}`}
+                  >
+                    ⚡ EMP: {gameState.inventory?.emp || 0}
+                  </button>
+                  <button 
+                    onClick={() => engineRef.current?.inventory?.freeze > 0 && engineRef.current.triggerFreeze()}
+                    className={`flex items-center gap-1 px-2 py-1 rounded border ${gameState.inventory?.freeze > 0 ? 'bg-purple-500/30 border-purple-500 text-purple-200' : 'bg-black/40 border-white/5 text-text-muted opacity-40'}`}
+                  >
+                    ❄ Freeze: {gameState.inventory?.freeze || 0}
+                  </button>
                 </div>
               </div>
             )}
 
             <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-inner bg-primary flex flex-col" style={{ width: GAME_WIDTH, maxWidth: '100%' }}>
               
-              {/* Canvas Container */}
-              <div className="relative flex justify-center items-center" style={{ height: (!gameState.isPlaying && !gameState.isGameOver) ? 0 : 'auto' }}>
-                <canvas ref={canvasRef} width={GAME_WIDTH} height={GAME_HEIGHT} className={`max-w-full h-auto max-h-[65vh] object-contain block ${(!gameState.isPlaying && !gameState.isGameOver) ? 'hidden' : ''}`} />
+              {/* Canvas Container with Mobile Touch Listener */}
+              <div 
+                className="relative flex justify-center items-center select-none touch-none" 
+                style={{ height: (!gameState.isPlaying && !gameState.isGameOver) ? 0 : 'auto' }}
+                onTouchStart={() => {
+                  soundFx.init();
+                  if (engineRef.current) engineRef.current.keys[' '] = true;
+                }}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={() => {
+                  if (engineRef.current) engineRef.current.keys[' '] = false;
+                }}
+              >
+                <canvas 
+                  ref={canvasRef} 
+                  width={GAME_WIDTH} 
+                  height={GAME_HEIGHT} 
+                  className={`max-w-full h-auto max-h-[60vh] object-contain block ${(!gameState.isPlaying && !gameState.isGameOver) ? 'hidden' : ''}`} 
+                />
                 
                 {/* Game Over Overlay */}
                 {gameState.isGameOver && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md z-20 p-6 text-center">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 backdrop-blur-md z-20 p-6 text-center">
                     <h4 className="text-2xl font-bold text-white mb-2 font-mono">Mission Failed</h4>
                     <p className="text-text-muted mb-2">Final Score: <span className="text-accent font-bold">{gameState.score}</span></p>
                     <p className="text-green-400 text-sm mb-6 flex items-center justify-center gap-1"><Coins size={14}/> +{gameState.earnedCredits} Credits</p>
@@ -1343,11 +1618,11 @@ const GalacticDefender = ({ isOpen, onClose }) => {
 
               {/* Main Menu UI */}
               {!gameState.isPlaying && !gameState.isGameOver && (
-                <div className="flex flex-col h-[500px] bg-secondary p-4">
+                <div className="flex flex-col h-[480px] bg-secondary p-4">
                   {/* Tabs */}
                   <div className="flex border-b border-white/10 mb-4 font-mono text-sm">
                     <button onClick={() => setTab('play')} className={`flex-1 py-2 text-center transition-colors border-b-2 ${tab === 'play' ? 'border-accent text-accent bg-accent/5' : 'border-transparent text-text-muted hover:text-white'}`}>Play</button>
-                    <button onClick={() => setTab('shop')} className={`flex-1 py-2 text-center transition-colors border-b-2 ${tab === 'shop' ? 'border-accent text-accent bg-accent/5' : 'border-transparent text-text-muted hover:text-white'}`}>Upgrades</button>
+                    <button onClick={() => setTab('shop')} className={`flex-1 py-2 text-center transition-colors border-b-2 ${tab === 'shop' ? 'border-accent text-accent bg-accent/5' : 'border-transparent text-text-muted hover:text-white'}`}>Upgrades & Hangar</button>
                     <button onClick={() => setTab('leaderboard')} className={`flex-1 py-2 text-center transition-colors border-b-2 ${tab === 'leaderboard' ? 'border-accent text-accent bg-accent/5' : 'border-transparent text-text-muted hover:text-white'}`}>Rankings</button>
                   </div>
 
@@ -1356,27 +1631,71 @@ const GalacticDefender = ({ isOpen, onClose }) => {
                     
                     {tab === 'play' && (
                       <div className="flex flex-col items-center justify-center h-full text-center">
-                        <Rocket className="text-accent mb-6 animate-pulse" size={56} />
-                        <h2 className="text-2xl font-bold text-white mb-2 font-mono">Earth Needs You</h2>
-                        <p className="text-text-muted text-sm max-w-[280px] mb-8">Defend the sector. Earn credits. Upgrade your ship. Climb the ranks.</p>
-                        <button onClick={startGame} className="px-10 py-4 bg-accent text-primary font-bold rounded-full hover:bg-accent/90 transition-transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(56,189,248,0.4)] mb-4 text-lg">
+                        <Rocket className="text-accent mb-4 animate-pulse" size={48} />
+                        <h2 className="text-xl font-bold text-white mb-1 font-mono">Earth Needs You</h2>
+                        <p className="text-text-muted text-xs max-w-[280px] mb-6">Defend the sector. Earn credits. Upgrade ship systems & unlock chassis.</p>
+                        <button 
+                          onClick={() => {
+                            soundFx.init();
+                            startGame();
+                          }} 
+                          className="px-8 py-3 bg-accent text-primary font-bold rounded-full hover:bg-accent/90 transition-transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(56,189,248,0.4)] mb-3 text-base"
+                        >
                           Launch Mission
                         </button>
-                        <p className="text-xs text-text-muted font-mono">WASD to move • Hold SPACE to fire</p>
+                        <p className="text-[11px] text-text-muted font-mono">Desktop: WASD + SPACE • Mobile: Touch & Drag to Move</p>
                       </div>
                     )}
 
                     {tab === 'shop' && (
-                      <div className="flex flex-col h-full">
-                        <div className="flex items-center justify-between mb-4 bg-accent/10 p-3 rounded-lg border border-accent/20">
+                      <div className="flex flex-col h-full space-y-4">
+                        <div className="flex items-center justify-between bg-accent/10 p-3 rounded-lg border border-accent/20">
                           <span className="text-white font-mono text-sm">Available Funds</span>
                           <span className="text-accent font-bold font-mono flex items-center gap-2"><Coins size={16}/> {saveData.credits}</span>
                         </div>
-                        <div className="space-y-1">
-                          {renderUpgradeRow('weapon', 'Blaster Tech', <Zap size={18}/>, '+25% base weapon damage per level')}
-                          {renderUpgradeRow('health', 'Hull Integrity', <Heart size={18}/>, '+50 max health capacity per level')}
-                          {renderUpgradeRow('shield', 'Deflector Shields', <ShieldPlus size={18}/>, '+50 starting shield capacity per level')}
-                          {renderUpgradeRow('speed', 'Thruster Output', <Rocket size={18}/>, 'Increases ship movement speed')}
+
+                        {/* Ship Hangar / Skins */}
+                        <div>
+                          <h5 className="text-xs font-mono text-cyan-300 font-bold uppercase tracking-wider mb-2">Ship Chassis Hangar</h5>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { id: 'default', name: 'Interceptor', color: 'border-cyan-400', cost: 0 },
+                              { id: 'solar', name: 'Solar Falcon', color: 'border-amber-400', cost: 300 },
+                              { id: 'stealth', name: 'Void Phantom', color: 'border-purple-400', cost: 600 }
+                            ].map(skin => {
+                              const isOwned = (saveData.unlockedSkins || ['default']).includes(skin.id);
+                              const isEquipped = (saveData.activeSkin || 'default') === skin.id;
+                              return (
+                                <button
+                                  key={skin.id}
+                                  onClick={() => equipSkin(skin.id, skin.cost)}
+                                  className={`p-2.5 rounded-lg border text-left flex flex-col justify-between transition-all ${
+                                    isEquipped 
+                                      ? 'bg-cyan-500/20 border-cyan-400 text-white' 
+                                      : isOwned 
+                                      ? 'bg-white/5 border-white/10 text-text-muted hover:border-white/30' 
+                                      : 'bg-black/30 border-white/5 text-text-muted opacity-60 hover:opacity-100'
+                                  }`}
+                                >
+                                  <span className="text-xs font-bold font-mono block">{skin.name}</span>
+                                  <span className="text-[10px] font-mono mt-2">
+                                    {isEquipped ? '✓ EQUIPPED' : isOwned ? 'EQUIP' : `${skin.cost} Credits`}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Systems Upgrades */}
+                        <div>
+                          <h5 className="text-xs font-mono text-cyan-300 font-bold uppercase tracking-wider mb-2">Core Systems</h5>
+                          <div className="space-y-1">
+                            {renderUpgradeRow('weapon', 'Blaster Tech', <Zap size={18}/>, '+25% weapon damage per level')}
+                            {renderUpgradeRow('health', 'Hull Integrity', <Heart size={18}/>, '+50 max health capacity')}
+                            {renderUpgradeRow('shield', 'Deflector Shields', <ShieldPlus size={18}/>, '+50 shield capacity')}
+                            {renderUpgradeRow('speed', 'Thruster Output', <Rocket size={18}/>, 'Increases ship speed')}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -1428,8 +1747,8 @@ const GalacticDefender = ({ isOpen, onClose }) => {
               )}
             </div>
             
-            <p className="text-text-muted text-[10px] mt-4 font-mono opacity-60 text-center max-w-[300px]">
-              Keyboard required. Mobile controls disabled.
+            <p className="text-text-muted text-[11px] mt-3 font-mono opacity-80 text-center max-w-[340px]">
+              🚀 Full Mobile & Desktop Support Active
             </p>
           </motion.div>
         </div>

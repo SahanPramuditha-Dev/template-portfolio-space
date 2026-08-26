@@ -24,11 +24,13 @@ import {
   getMediaUrlStrings,
   getOutcomeBadge,
   getProjectStatusLabel,
+  getProjectSearchText,
+  isProjectPublished,
 } from '../utils/projectNormalize';
 
 const isAnimatedAsset = (src) => /\.(gif|mp4|webm)(\?|#|$)/i.test(src);
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const ProjectCard = ({ project, index, compact = false }) => {
   const navigate = useNavigate();
@@ -312,15 +314,18 @@ const ProjectsSkeleton = () => (
 );
 
 const Projects = ({ isHomepage = false }) => {
-  const { data: projectsDoc, loading } = useCmsDoc(CMS_DOCS.projects, { items: [] });
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [selectedTech, setSelectedTech] = useState([]);
-  const [onlyLive, setOnlyLive] = useState(false);
-  const [onlySource, setOnlySource] = useState(false);
-  const [onlyFeatured, setOnlyFeatured] = useState(false);
-  const [query, setQuery] = useState('');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const { data: projectsDoc, loading, error } = useCmsDoc(CMS_DOCS.projects, { items: [] });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeCategory, setActiveCategory] = useState(() => searchParams.get('category') || 'All');
+  const [selectedTech, setSelectedTech] = useState(() => searchParams.get('tech')?.split(',').filter(Boolean) || []);
+  const [onlyLive, setOnlyLive] = useState(() => searchParams.get('live') === '1');
+  const [onlySource, setOnlySource] = useState(() => searchParams.get('source') === '1');
+  const [onlyFeatured, setOnlyFeatured] = useState(() => searchParams.get('featured') === '1');
+  const [query, setQuery] = useState(() => searchParams.get('q') || '');
+  const [sortOrder, setSortOrder] = useState(() => searchParams.get('sort') === 'asc' ? 'asc' : 'desc');
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const projectsPerPage = 12;
 
   const projectsList = useMemo(
     () => (Array.isArray(projectsDoc?.items) ? projectsDoc.items : []),
@@ -333,12 +338,12 @@ const Projects = ({ isHomepage = false }) => {
   const startScroll = useRef(0);
 
   const categories = useMemo(
-    () => ['All', ...new Set(projectsList.map((p) => p.category).filter(Boolean))],
+    () => ['All', ...new Set(projectsList.map((p) => String(p.category || '').trim()).filter(Boolean))].sort((a, b) => a === 'All' ? -1 : b === 'All' ? 1 : a.localeCompare(b)),
     [projectsList]
   );
 
   const techOptions = useMemo(
-    () => [...new Set(projectsList.flatMap((p) => (Array.isArray(p.tech) ? p.tech : [])))].sort(),
+    () => [...new Set(projectsList.flatMap((p) => (Array.isArray(p.tech) ? p.tech : []).map((tech) => String(tech).trim()).filter(Boolean)))].sort((a, b) => a.localeCompare(b)),
     [projectsList]
   );
 
@@ -355,19 +360,13 @@ const Projects = ({ isHomepage = false }) => {
       const search = query.trim().toLowerCase();
       const searchMatch =
         !search ||
-        String(project.title || '').toLowerCase().includes(search) ||
-        String(project.shortDescription || '').toLowerCase().includes(search) ||
-        String(project.description || '').toLowerCase().includes(search) ||
-        String(project.client || '').toLowerCase().includes(search) ||
-        String(project.industry || '').toLowerCase().includes(search) ||
-        String(project.role || '').toLowerCase().includes(search) ||
-        tech.some((t) => t.toLowerCase().includes(search)) ||
-        (Array.isArray(project.tags) && project.tags.some((t) => t.toLowerCase().includes(search)));
+        [project.title, project.shortDescription, project.description, project.client, project.industry, project.role, ...(Array.isArray(project.tags) ? project.tags : []), ...tech]
+          .some((value) => getProjectSearchText(value).includes(search));
 
       const liveOk = !onlyLive || isUsableHttpUrl(project.external);
       const sourceOk = !onlySource || isUsableHttpUrl(project.github);
       const featuredOk = !onlyFeatured || project.featured;
-      const statusOk = project.status !== 'Draft';
+      const statusOk = isProjectPublished(project);
 
       return (
         categoryMatch &&
@@ -413,17 +412,23 @@ const Projects = ({ isHomepage = false }) => {
     n += selectedTech.length;
     if (query.trim().length > 0) n += 1;
     if (sortOrder !== 'desc') n += 1;
+    if (onlyLive) n += 1;
+    if (onlySource) n += 1;
+    if (onlyFeatured) n += 1;
     return n;
   }, [
     activeCategory,
     selectedTech.length,
     query,
     sortOrder,
+    onlyLive,
+    onlySource,
+    onlyFeatured,
   ]);
 
   const hasActiveFilters = filterCount > 0;
   const showClearPill = filterCount >= 2;
-  const isEmpty = !loading && projectsList.length === 0;
+  const isEmpty = !loading && !error && projectsList.length === 0;
 
   const clearAllFilters = () => {
     setActiveCategory('All');
@@ -435,21 +440,64 @@ const Projects = ({ isHomepage = false }) => {
     setSortOrder('desc');
   };
 
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (activeCategory !== 'All') next.set('category', activeCategory);
+    if (selectedTech.length) next.set('tech', selectedTech.join(','));
+    if (onlyLive) next.set('live', '1');
+    if (onlySource) next.set('source', '1');
+    if (onlyFeatured) next.set('featured', '1');
+    if (query.trim()) next.set('q', query.trim());
+    if (sortOrder !== 'desc') next.set('sort', sortOrder);
+    setSearchParams(next, { replace: true });
+  }, [activeCategory, selectedTech, onlyLive, onlySource, onlyFeatured, query, sortOrder, setSearchParams]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory, selectedTech, onlyLive, onlySource, onlyFeatured, query, sortOrder]);
+
+  const paginatedProjects = useMemo(
+    () => displayProjects.slice((currentPage - 1) * projectsPerPage, currentPage * projectsPerPage),
+    [displayProjects, currentPage]
+  );
+  const totalPages = Math.ceil(displayProjects.length / projectsPerPage);
+
   const ContainerWrapper = isHomepage ? SectionWrapper : 'section';
   const wrapperProps = isHomepage ? { id: 'projects' } : { id: 'projects', className: 'relative z-10' };
 
   return (
     <ContainerWrapper {...wrapperProps}>
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative">
-        {/* Header title (spacing fixed, 05. prefix hidden on subpage) */}
-        <div className="mb-6 flex flex-wrap items-center gap-2 text-xl sm:text-2xl md:text-3xl font-bold text-text font-display gradient-text">
-          {isHomepage && (
-            <span className="text-accent font-mono text-lg sm:text-xl mr-0 sm:mr-2">05.</span>
-          )}
-          <span className="flex-grow min-w-0">
-            {isHomepage ? 'Some Things I’ve Built' : 'All Projects'}
-          </span>
-          <span className="h-px bg-secondary flex-grow min-w-[60px] ml-0 sm:ml-4 opacity-50 w-full sm:w-auto order-3 sm:order-none"></span>
+        {/* Section Header */}
+        <div className="flex flex-col items-center text-center mb-12 md:mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/30 bg-accent/10 text-accent text-xs font-mono uppercase tracking-widest mb-3"
+          >
+            <Folder size={14} /> Selected Works & Systems
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.05 }}
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-text font-display mb-4"
+          >
+            Featured <span className="text-accent">Projects</span> & Engineering
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="max-w-2xl text-text-muted text-sm sm:text-base"
+          >
+            A curated collection of web applications, production systems, and creative software experiments.
+          </motion.p>
         </div>
 
         {/* 1. Conditionally render search and collapsible filters for subpage archive only */}
@@ -672,6 +720,11 @@ const Projects = ({ isHomepage = false }) => {
         {/* 2. Core content grid renderer */}
         {loading || projectsDoc === undefined ? (
           <ProjectsSkeleton />
+        ) : error ? (
+          <div role="alert" className="rounded-2xl border border-red-400/25 bg-red-500/10 px-6 py-16 text-center text-red-200">
+            <p className="text-lg font-semibold">Projects could not be loaded.</p>
+            <p className="mt-2 text-sm text-red-200/75">Check the connection or try refreshing the page.</p>
+          </div>
         ) : isEmpty ? (
           <motion.div
             initial={{ opacity: 0.6 }}
@@ -694,7 +747,7 @@ const Projects = ({ isHomepage = false }) => {
             ) : (
               <motion.div layout className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <AnimatePresence mode="popLayout">
-                  {displayProjects.map((project, index) => (
+                  {paginatedProjects.map((project, index) => (
                     <motion.div
                       layout
                       initial={{ opacity: 0, scale: 0.92 }}
@@ -717,6 +770,14 @@ const Projects = ({ isHomepage = false }) => {
                   ))}
                 </AnimatePresence>
               </motion.div>
+            )}
+
+            {!isHomepage && totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center gap-4" aria-label="Project pages">
+                <button type="button" disabled={currentPage === 1} onClick={() => setCurrentPage((page) => page - 1)} className="rounded-xl border border-white/10 px-4 py-2 text-sm text-text-muted disabled:opacity-40 hover:border-accent/40 hover:text-accent">Previous</button>
+                <span className="font-mono text-xs text-text-muted">Page {currentPage} of {totalPages}</span>
+                <button type="button" disabled={currentPage === totalPages} onClick={() => setCurrentPage((page) => page + 1)} className="rounded-xl border border-white/10 px-4 py-2 text-sm text-text-muted disabled:opacity-40 hover:border-accent/40 hover:text-accent">Next</button>
+              </div>
             )}
 
             {/* Homepage button navigation */}
