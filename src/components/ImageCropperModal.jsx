@@ -20,12 +20,17 @@ const centerAspectCrop = (mediaWidth, mediaHeight, aspect) => {
   );
 };
 
-export default function ImageCropperModal({ imageFile, onCropComplete, onCancel, aspect = 16 / 9 }) {
+export default function ImageCropperModal({ imageFile, onCropComplete, onCancel, aspect = null }) {
+  const [currentAspect, setCurrentAspect] = useState(aspect);
   const [imgSrc, setImgSrc] = useState('');
   const imgRef = useRef(null);
   const [crop, setCrop] = useState();
   const [completedCrop, setCompletedCrop] = useState(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setCurrentAspect(aspect);
+  }, [aspect]);
 
   useEffect(() => {
     if (imageFile) {
@@ -37,17 +42,37 @@ export default function ImageCropperModal({ imageFile, onCropComplete, onCancel,
 
   const onImageLoad = (e) => {
     const { width, height } = e.currentTarget;
-    if (aspect) {
-      setCrop(centerAspectCrop(width, height, aspect));
+    if (currentAspect) {
+      setCrop(centerAspectCrop(width, height, currentAspect));
     } else {
-      // Default to 90% size if no aspect ratio is enforced
       setCrop({
         unit: '%',
         width: 90,
         height: 90,
         x: 5,
-        y: 5
+        y: 5,
       });
+    }
+  };
+
+  const handleAspectChange = (newAspect) => {
+    setCurrentAspect(newAspect);
+    if (!imgRef.current) return;
+    const { width, height } = imgRef.current;
+    if (newAspect) {
+      const nextCrop = centerAspectCrop(width, height, newAspect);
+      setCrop(nextCrop);
+      setCompletedCrop(nextCrop);
+    } else {
+      const nextCrop = {
+        unit: '%',
+        width: 90,
+        height: 90,
+        x: 5,
+        y: 5,
+      };
+      setCrop(nextCrop);
+      setCompletedCrop(nextCrop);
     }
   };
 
@@ -62,7 +87,7 @@ export default function ImageCropperModal({ imageFile, onCropComplete, onCancel,
       const scaleX = image.naturalWidth / image.width;
       const scaleY = image.naturalHeight / image.height;
       const ctx = canvas.getContext('2d');
-      const pixelRatio = window.devicePixelRatio;
+      const pixelRatio = window.devicePixelRatio || 1;
 
       canvas.width = Math.floor(completedCrop.width * scaleX * pixelRatio);
       canvas.height = Math.floor(completedCrop.height * scaleY * pixelRatio);
@@ -89,6 +114,8 @@ export default function ImageCropperModal({ imageFile, onCropComplete, onCancel,
 
       ctx.restore();
 
+      const outputType = imageFile?.type?.includes('png') ? 'image/png' : imageFile?.type?.includes('webp') ? 'image/webp' : 'image/jpeg';
+
       canvas.toBlob((blob) => {
         if (!blob) {
           console.error('Canvas is empty');
@@ -96,7 +123,7 @@ export default function ImageCropperModal({ imageFile, onCropComplete, onCancel,
           return;
         }
         onCropComplete(blob);
-      }, imageFile.type || 'image/jpeg');
+      }, outputType, 0.95);
     } catch (err) {
       console.error(err);
       setBusy(false);
@@ -104,73 +131,113 @@ export default function ImageCropperModal({ imageFile, onCropComplete, onCancel,
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-primary/80 backdrop-blur-sm">
-      <div className="bg-secondary/95 border border-white/10 shadow-2xl rounded-3xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+      <div className="bg-slate-900 border border-slate-800 shadow-2xl rounded-3xl w-full max-w-2xl flex flex-col max-h-[92vh] overflow-hidden">
         
-        <div className="flex items-center justify-between p-5 border-b border-white/10">
+        <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-950/50">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-accent/10 text-accent">
+            <div className="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
               <ImageIcon size={20} />
             </div>
             <div>
-              <h3 className="text-text font-bold text-lg leading-tight">Crop Image</h3>
-              <p className="text-text-muted text-xs mt-0.5">
-                {aspect ? `Locked to ${Math.round(aspect * 100) / 100 === 16/9 ? '16:9' : Math.round(aspect * 100) / 100 === 1 ? '1:1' : 'fixed'} ratio` : 'Free crop — drag to any size'}
+              <h3 className="text-slate-100 font-bold text-base leading-tight">Image Cropper & Optimizer</h3>
+              <p className="text-slate-400 text-xs mt-0.5">
+                Select an aspect ratio or upload the original image unmodified.
               </p>
             </div>
           </div>
           <button 
             onClick={onCancel}
-            className="p-2 text-text-muted hover:text-text hover:bg-white/5 rounded-full transition-colors"
+            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-colors"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-auto p-6 flex items-center justify-center bg-[radial-gradient(circle_at_center,rgb(var(--color-accent-rgb)/0.05),transparent)]">
+        {/* Aspect Ratio Toolbar */}
+        <div className="flex items-center gap-2 px-6 py-3 border-b border-slate-800 bg-slate-950/30 overflow-x-auto">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 mr-2 shrink-0">Ratio:</span>
+          {[
+            { label: 'Square (1:1)', val: 1 },
+            { label: 'Landscape (16:9)', val: 16 / 9 },
+            { label: 'Standard (4:3)', val: 4 / 3 },
+            { label: 'Free Crop', val: null },
+          ].map((opt) => {
+            const isSelected = (opt.val === null && currentAspect === null) || (opt.val !== null && Math.abs((currentAspect || 0) - opt.val) < 0.05);
+            return (
+              <button
+                key={opt.label}
+                type="button"
+                onClick={() => handleAspectChange(opt.val)}
+                className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all shrink-0 ${
+                  isSelected
+                    ? 'bg-sky-500 text-slate-950 font-bold shadow-md shadow-sky-500/20'
+                    : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/50'
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex-1 overflow-auto p-6 flex items-center justify-center bg-slate-950/60 min-h-[300px]">
           {!!imgSrc && (
             <ReactCrop
               crop={crop}
               onChange={(_, percentCrop) => setCrop(percentCrop)}
               onComplete={(c) => setCompletedCrop(c)}
-              aspect={aspect}
-              className="max-h-[60vh] object-contain rounded-lg shadow-lg"
+              aspect={currentAspect || undefined}
+              className="max-h-[55vh] object-contain rounded-xl shadow-2xl"
             >
               <img
                 ref={imgRef}
-                alt="Crop me"
+                alt="Crop preview"
                 src={imgSrc}
                 onLoad={onImageLoad}
-                className="max-h-[60vh] object-contain"
+                className="max-h-[55vh] object-contain rounded-lg"
               />
             </ReactCrop>
           )}
         </div>
 
-        <div className="p-5 border-t border-white/10 flex justify-end gap-3 bg-primary/30">
+        <div className="p-4 sm:p-5 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-950/60">
           <button
-            onClick={onCancel}
-            className="px-5 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-text text-sm font-medium transition-colors"
+            type="button"
+            onClick={() => onCropComplete(imageFile)}
+            disabled={busy}
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 text-xs font-bold transition-all"
+            title="Upload original image without cropping"
           >
-            Cancel
+            Upload Original (Skip Crop)
           </button>
-          <button
-            onClick={handleComplete}
-            disabled={!completedCrop || busy}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-primary text-sm font-bold shadow-[0_4px_20px_rgb(var(--color-accent-rgb)/0.25)] hover:scale-[1.02] active:scale-[0.98] transition-transform disabled:opacity-50 disabled:pointer-events-none"
-          >
-            {busy ? (
-              <span className="animate-pulse">Processing...</span>
-            ) : (
-              <>
-                <Check size={16} />
-                Apply Crop & Upload
-              </>
-            )}
-          </button>
+
+          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+            <button
+              onClick={onCancel}
+              className="px-4 py-2.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs font-semibold transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleComplete}
+              disabled={!completedCrop || busy}
+              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-sky-500 text-slate-950 text-xs font-bold shadow-lg shadow-sky-500/25 hover:bg-sky-400 active:scale-[0.99] transition-all disabled:opacity-50"
+            >
+              {busy ? (
+                <span className="animate-pulse">Processing…</span>
+              ) : (
+                <>
+                  <Check size={14} />
+                  Apply Crop & Upload
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
       </div>
     </div>
   );
 }
+

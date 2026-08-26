@@ -488,7 +488,8 @@ export const badgeFields = [
   { key: 'issueDate', label: 'Earned Date / Period', type: 'text', group: 'identity', placeholder: 'e.g. Feb 2026' },
   { key: 'link', label: 'Verification / Credly URL', type: 'text', group: 'identity', placeholder: 'https://www.credly.com/... or verification link' },
   { key: 'skills', label: 'Skills Covered', type: 'list', placeholder: 'e.g. Aggregation, Atlas, Indexing', group: 'identity' },
-  { key: 'image', label: 'Badge Emblem Image', type: 'image', group: 'media', aspect: null },
+  { key: 'image', label: 'Badge Emblem Image', type: 'image', group: 'media', aspect: 1 },
+
   { key: 'featured', label: 'Featured (highlight on homepage)', type: 'checkbox', group: 'identity' },
   { key: 'status', label: 'Status', type: 'select', options: ['Published', 'Draft', 'Archived'], group: 'identity' },
   { key: 'order', label: 'Sort Order', type: 'number', group: 'identity' },
