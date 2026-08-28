@@ -125,6 +125,8 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
   const [syncBusy, setSyncBusy] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState('');
   const autoSaveTimeoutRef = useRef(null);
+  const isDirtyRef = useRef(false);
+  const lastSavedDraftJsonRef = useRef('');
   const [revisions, setRevisions] = useState([]);
   const [loadingRevisions, setLoadingRevisions] = useState(false);
   const [listQuery, setListQuery] = useState('');
@@ -170,15 +172,29 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
     const nextItems = Array.isArray(data) ? data : [];
     setItems(nextItems);
     if (selectedIndex === -1) {
-      setDraft(formFromItem(section.initialItem, fields, section.initialItem));
+      const newDraft = formFromItem(section.initialItem, fields, section.initialItem);
+      setDraft(newDraft);
+      lastSavedDraftJsonRef.current = JSON.stringify(newDraft);
+      isDirtyRef.current = false;
     } else if (selectedIndex === null && nextItems.length > 0) {
       setSelectedIndex(0);
-      setDraft(formFromItem(nextItems[0], fields, section.initialItem));
+      const newDraft = formFromItem(nextItems[0], fields, section.initialItem);
+      setDraft(newDraft);
+      lastSavedDraftJsonRef.current = JSON.stringify(newDraft);
+      isDirtyRef.current = false;
     } else if (selectedIndex !== null && nextItems[selectedIndex]) {
-      setDraft(formFromItem(nextItems[selectedIndex], fields, section.initialItem));
+      // If user is currently editing (isDirty), don't overwrite their local changes with background snapshot
+      if (!isDirtyRef.current) {
+        const newDraft = formFromItem(nextItems[selectedIndex], fields, section.initialItem);
+        setDraft(newDraft);
+        lastSavedDraftJsonRef.current = JSON.stringify(newDraft);
+      }
     } else if (nextItems.length === 0) {
       setSelectedIndex(-1);
-      setDraft(formFromItem(section.initialItem, fields, section.initialItem));
+      const newDraft = formFromItem(section.initialItem, fields, section.initialItem);
+      setDraft(newDraft);
+      lastSavedDraftJsonRef.current = JSON.stringify(newDraft);
+      isDirtyRef.current = false;
     }
   }, [data, collectionKey, fields, section.initialItem, selectedIndex]);
 
@@ -201,14 +217,22 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
 
   const createNew = () => {
     setSelectedIndex(-1);
-    setDraft(formFromItem(section.initialItem, fields, section.initialItem));
+    const newDraft = formFromItem(section.initialItem, fields, section.initialItem);
+    setDraft(newDraft);
+    lastSavedDraftJsonRef.current = JSON.stringify(newDraft);
+    isDirtyRef.current = false;
+    setAutoSaveStatus('');
     setRevisions([]);
     setStatus('New draft ready.');
   };
 
   const editItem = (index) => {
     setSelectedIndex(index);
-    setDraft(formFromItem(items[index], fields, section.initialItem));
+    const newDraft = formFromItem(items[index], fields, section.initialItem);
+    setDraft(newDraft);
+    lastSavedDraftJsonRef.current = JSON.stringify(newDraft);
+    isDirtyRef.current = false;
+    setAutoSaveStatus('');
     loadRevisions(index);
   };
 
@@ -216,12 +240,15 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
     const itemToRemove = items[index];
     const nextItems = items.filter((_, i) => i !== index);
     setItems(nextItems);
-    setSelectedIndex(nextItems.length === 0 ? -1 : Math.min(index, nextItems.length - 1));
-    setDraft(
-      nextItems.length === 0
-        ? formFromItem(section.initialItem, fields, section.initialItem)
-        : formFromItem(nextItems[Math.min(index, nextItems.length - 1)], fields, section.initialItem)
-    );
+    const newIndex = nextItems.length === 0 ? -1 : Math.min(index, nextItems.length - 1);
+    setSelectedIndex(newIndex);
+    const newDraft = nextItems.length === 0
+      ? formFromItem(section.initialItem, fields, section.initialItem)
+      : formFromItem(nextItems[newIndex], fields, section.initialItem);
+    setDraft(newDraft);
+    lastSavedDraftJsonRef.current = JSON.stringify(newDraft);
+    isDirtyRef.current = false;
+    setAutoSaveStatus('');
     if (itemToRemove && itemToRemove.id) {
         await softRemoveCmsItem(docId, itemToRemove.id);
     }
@@ -229,11 +256,13 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
   };
 
   const updateField = (key, value) => {
+    isDirtyRef.current = true;
     setDraft((prev) => ({ ...prev, [key]: value }));
   };
 
   useEffect(() => {
-    if (!draft || selectedIndex === -1) return; // Don't auto-save completely new items until first manual save
+    if (!isDirtyRef.current || !draft || selectedIndex === -1) return;
+    if (JSON.stringify(draft) === lastSavedDraftJsonRef.current) return;
     
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
@@ -242,10 +271,11 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
     setAutoSaveStatus('Drafting...');
     autoSaveTimeoutRef.current = setTimeout(() => {
       saveItem(true);
-    }, 2000);
+    }, 2500);
     
     return () => clearTimeout(autoSaveTimeoutRef.current);
   }, [draft]);
+
 
   const uploadAsset = async (key, accept) => {
     const resolvedAccept = accept || (key === 'pdfUrl' ? 'application/pdf,.pdf' : 'image/*,.gif,.mp4,.webm');
@@ -376,6 +406,8 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
           : items.map((item, index) => (index === selectedIndex ? itemToSave : item));
       
       await saveCmsItem(docId, itemId, itemToSave);
+      isDirtyRef.current = false;
+      lastSavedDraftJsonRef.current = JSON.stringify(draft);
       setItems(nextItems);
       setSelectedIndex(selectedIndex === -1 ? 0 : selectedIndex);
       if (!silent) loadRevisions(selectedIndex === -1 ? 0 : selectedIndex);
@@ -385,6 +417,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
         setAutoSaveStatus('Saved');
         setTimeout(() => setAutoSaveStatus(''), 3000);
       }
+
     } catch (error) {
       if (!silent) setStatus(getCmsErrorMessage(error));
       if (silent) setAutoSaveStatus('Save failed');
