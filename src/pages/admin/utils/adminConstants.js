@@ -373,6 +373,8 @@ export const initialCertificate = {
   pdfUrl: '',
   category: 'Other',
   featured: false,
+  status: 'Published',
+  order: 0,
 };
 
 export const initialBadge = {
@@ -391,6 +393,7 @@ export const initialBadge = {
 export const initialSkillGroup = {
   title: '',
   order: 0,
+  status: 'Published',
   skillsJson: [],
 };
 
@@ -405,6 +408,8 @@ export const initialResource = {
   fileUrl: '',
   thumbnail: '',
   featured: false,
+  status: 'Published',
+  order: 0,
 };
 
 export const initialBlogPost = {
@@ -420,6 +425,8 @@ export const initialBlogPost = {
   readTime: '5 min read',
   link: '',
   featured: false,
+  status: 'Published',
+  order: 0,
 };
 
 export const initialTestimonial = {
@@ -443,7 +450,10 @@ export const initialService = {
   deliverables: '',
   cta: '',
   featured: false,
+  status: 'Published',
+  order: 0,
 };
+
 
 export const initialOpenSource = {
   name: '',

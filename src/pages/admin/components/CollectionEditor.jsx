@@ -368,6 +368,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
       
       const itemToSave = { ...normalized, id: itemId };
       itemToSave.order = selectedIndex === -1 ? 0 : (items[selectedIndex]?.order ?? 0);
+      itemToSave.status = itemToSave.status || draft?.status || 'Published';
       
       const nextItems =
         selectedIndex === -1

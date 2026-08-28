@@ -474,6 +474,8 @@ export const certificateFields = [
   { key: 'category', label: 'Category', type: 'select', group: 'identity',
     options: ['Cloud', 'Data', 'Programming', 'Networking', 'Microsoft', 'AWS', 'Security', 'DevOps', 'AI/ML', 'Other'] },
   { key: 'featured', label: 'Featured (show on portfolio homepage)', type: 'checkbox', group: 'identity' },
+  { key: 'status', label: 'Status', type: 'select', options: ['Published', 'Draft', 'Archived'], group: 'identity' },
+  { key: 'order', label: 'Sort Order', type: 'number', group: 'identity' },
   { key: 'skills', label: 'Skills', type: 'list', placeholder: 'Enter a skill', group: 'identity' },
   { key: 'durationHours', label: 'Course Duration (Hours)', type: 'number', group: 'identity' },
   { key: 'image', label: 'Badge / Logo Image', type: 'image', group: 'media', aspect: null },
@@ -489,7 +491,6 @@ export const badgeFields = [
   { key: 'link', label: 'Verification / Credly URL', type: 'text', group: 'identity', placeholder: 'https://www.credly.com/... or verification link' },
   { key: 'skills', label: 'Skills Covered', type: 'list', placeholder: 'e.g. Aggregation, Atlas, Indexing', group: 'identity' },
   { key: 'image', label: 'Badge Emblem Image', type: 'image', group: 'media', aspect: 1 },
-
   { key: 'featured', label: 'Featured (highlight on homepage)', type: 'checkbox', group: 'identity' },
   { key: 'status', label: 'Status', type: 'select', options: ['Published', 'Draft', 'Archived'], group: 'identity' },
   { key: 'order', label: 'Sort Order', type: 'number', group: 'identity' },
@@ -497,6 +498,7 @@ export const badgeFields = [
 
 export const skillFields = [
   { key: 'title', label: 'Group Title', type: 'text', group: 'summary' },
+  { key: 'status', label: 'Status', type: 'select', options: ['Published', 'Draft', 'Archived'], group: 'summary' },
   { key: 'order', label: 'Order', type: 'number', group: 'summary' },
   {
     key: 'skillsJson',
@@ -521,6 +523,8 @@ export const skillFields = [
 
 export const resourceFields = [
   { key: 'title', label: 'Title', type: 'text', group: 'resourceMeta' },
+  { key: 'status', label: 'Status', type: 'select', options: ['Published', 'Draft', 'Archived'], group: 'resourceMeta' },
+  { key: 'order', label: 'Sort Order', type: 'number', group: 'resourceMeta' },
   { key: 'type', label: 'Resource Type', type: 'select', group: 'resourceMeta',
     options: ['Link', 'PDF', 'Document', 'Image', 'Video', 'Tool', 'Cheat Sheet', 'Template', 'Other'] },
   { key: 'category', label: 'Category', type: 'text', placeholder: 'e.g. Design, DevOps, AI…', group: 'resourceMeta' },
@@ -533,6 +537,7 @@ export const resourceFields = [
     accept: 'application/pdf,.pdf,.doc,.docx,image/*,video/*' },
   { key: 'thumbnail', label: 'Thumbnail / Preview Image', type: 'image', group: 'resourceMedia', aspect: null },
 ];
+
 
 export const blogFields = [
   { key: 'seoPreview', type: 'seo-preview', group: 'summary' },
