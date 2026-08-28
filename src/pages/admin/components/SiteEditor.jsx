@@ -354,17 +354,6 @@ const SiteEditor = () => {
                 title="Contact & availability"
                 description="How visitors reach you, response expectations, and résumé / CV links."
               >
-                <div className="mb-4">
-                  <FieldEditor
-                    field={{
-                      key: 'openToWork',
-                      label: 'Open to Work / Available for Hire (Pulsing badge in Navbar)',
-                      type: 'checkbox',
-                    }}
-                    value={draft.openToWork}
-                    onChange={(value) => updateField('openToWork', value)}
-                  />
-                </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   {['availability', 'contactEmail', 'preferredContact', 'responseSla', 'baseLocation', 'currentFocus', 'bookingUrl', 'cvVersion', 'cvUpdatedAt', 'githubUsername'].map(
                     (key) => (
