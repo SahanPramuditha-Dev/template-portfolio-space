@@ -61,6 +61,8 @@ import CropModalRoot from './admin/components/CropModalRoot';
 import AnalyticsDashboard from './admin/components/AnalyticsDashboard';
 import SiteEditor from './admin/components/SiteEditor';
 import CollectionEditor from './admin/components/CollectionEditor';
+import SessionTimeoutModal from './admin/components/SessionTimeoutModal';
+import { useSessionTimeout } from './admin/hooks/useSessionTimeout';
 
 const AdminPage = () => {
   const { user, loading } = useAuthState();
@@ -69,10 +71,21 @@ const AdminPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authBusy, setAuthBusy] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  const handleSessionExpired = (reason) => {
+    if (reason === 'inactivity') {
+      setAuthError('Your admin session was closed after 30 minutes of inactivity for security.');
+    } else if (reason === 'max_session') {
+      setAuthError('Your session reached the 8-hour maximum lifetime. Please sign in again.');
+    }
+  };
+
+  const { isWarningOpen, remainingSeconds, staySignedIn, signOutNow } = useSessionTimeout(user, handleSessionExpired);
 
   // Live query listener to update unread badge on message reception
   useEffect(() => {
@@ -125,13 +138,14 @@ const AdminPage = () => {
     setAuthBusy(true);
     setAuthError('');
     try {
-      await loginWithEmail(email, password);
+      await loginWithEmail(email, password, rememberMe);
     } catch (error) {
       setAuthError(getAuthErrorMessage(error));
     } finally {
       setAuthBusy(false);
     }
   };
+
 
   if (loading) {
     return (
@@ -212,6 +226,19 @@ const AdminPage = () => {
                   </button>
                 </div>
               </div>
+
+              <div className="flex items-center justify-between pt-1">
+                <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none hover:text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-400/30"
+                  />
+                  <span>Stay logged in on this device</span>
+                </label>
+              </div>
+
               {authError && (
                 <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs sm:text-sm font-medium text-red-200">
                   {authError}
@@ -226,6 +253,7 @@ const AdminPage = () => {
                 {authBusy ? 'Authenticating…' : 'Sign in to Dashboard'}
               </button>
             </form>
+
 
             <div className="mt-6 rounded-2xl border border-amber-500/25 bg-amber-500/[0.08] p-4 text-xs leading-relaxed text-slate-300">
               <div className="mb-1.5 flex items-center gap-2 font-bold text-amber-300">
@@ -494,9 +522,16 @@ const AdminPage = () => {
           )}
         </main>
       </div>
+      <SessionTimeoutModal
+        isOpen={isWarningOpen}
+        remainingSeconds={remainingSeconds}
+        onStaySignedIn={staySignedIn}
+        onSignOut={signOutNow}
+      />
       <CropModalRoot />
     </div>
   );
 };
 
 export default AdminPage;
+

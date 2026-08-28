@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { doc, getDoc, getDocs, onSnapshot, setDoc, serverTimestamp, deleteDoc, collection, query, writeBatch, where, orderBy, limit } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
 import { auth, db, storage } from './firebase';
 
 export const CMS_DOCS = {
@@ -436,5 +436,14 @@ export const useAdminSession = () => {
   return { user, loading, isSignedIn };
 };
 
-export const loginWithEmail = (email, password) => signInWithEmailAndPassword(auth, email, password);
+export const loginWithEmail = async (email, password, rememberMe = false) => {
+  try {
+    const persistenceMode = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+    await setPersistence(auth, persistenceMode);
+  } catch (err) {
+    console.warn('Set persistence warning:', err);
+  }
+  return signInWithEmailAndPassword(auth, email, password);
+};
 export const logout = () => signOut(auth);
+
