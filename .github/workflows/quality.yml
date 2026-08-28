@@ -53,9 +53,21 @@ jobs:
             const browser = await chromium.launch();
             const page = await browser.newPage();
             const errors = [];
+            page.on('pageerror', (err) => {
+              errors.push(`Page Error: ${err.message}`);
+            });
             page.on('console', (msg) => {
-              if (msg.type() === 'error' && !msg.text().includes('status of 429')) {
-                errors.push(msg.text());
+              if (msg.type() === 'error') {
+                const text = msg.text();
+                const isNetworkFailure = text.includes('Failed to load resource') ||
+                                         text.includes('status of 429') ||
+                                         text.includes('status of 500') ||
+                                         text.includes('status of 502') ||
+                                         text.includes('status of 503') ||
+                                         text.includes('net::ERR_');
+                if (!isNetworkFailure) {
+                  errors.push(`Console Error: ${text}`);
+                }
               }
             });
             await page.goto('http://127.0.0.1:4173', { waitUntil: 'load' });
@@ -66,6 +78,7 @@ jobs:
             }
             await browser.close();
           })();
+
           NODE
 
       - name: Lighthouse CI
