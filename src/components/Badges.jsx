@@ -111,30 +111,35 @@ const BadgePreviewModal = ({ badge, onClose }) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[9999] grid place-items-center overflow-y-auto p-3 sm:p-6"
-          style={{ backgroundColor: 'rgba(5, 8, 22, 0.90)', backdropFilter: 'blur(16px)' }}
+          style={{ backgroundColor: 'rgba(3, 7, 18, 0.92)', backdropFilter: 'blur(16px)' }}
           onClick={onClose}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.94, y: 24 }}
+            initial={{ opacity: 0, scale: 0.94, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 24 }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            exit={{ opacity: 0, scale: 0.94, y: 20 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
             role="dialog"
             aria-modal="true"
             aria-labelledby="badge-preview-title"
-            className="relative my-auto w-full max-w-3xl overflow-hidden rounded-3xl border border-accent/30 bg-[#080d1a] shadow-[0_0_60px_rgba(0,0,0,0.9)] ring-1 ring-white/10"
+            className="relative my-auto w-full max-w-4xl overflow-hidden rounded-3xl border border-accent/30 bg-[#070b16] shadow-[0_0_80px_rgba(0,0,0,0.95)] ring-1 ring-white/10"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-white/10 bg-secondary/30 backdrop-blur-md">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className={`p-1.5 rounded-lg border ${theme.bg} ${theme.border} ${theme.text}`}>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`p-2 rounded-xl border ${theme.bg} ${theme.border} ${theme.text}`}>
                   <ShieldCheck size={18} />
                 </div>
                 <div className="min-w-0">
-                  <span className="block text-xs font-mono font-bold uppercase tracking-wider text-text truncate">
-                    {badge.issuer} {badge.type ? `• ${badge.type}` : 'Verified Credential'}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-bold text-text truncate">
+                      {badge.issuer}
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-text-muted">
+                      {badge.type || 'Verified Badge'}
+                    </span>
+                  </div>
                 </div>
               </div>
               <button
@@ -143,50 +148,45 @@ const BadgePreviewModal = ({ badge, onClose }) => {
                 aria-label="Close badge details"
                 className="rounded-xl border border-white/10 bg-white/5 p-2 text-text-muted hover:text-text hover:bg-white/10 hover:border-white/20 transition-all"
               >
-                <X size={17} />
+                <X size={18} />
               </button>
             </div>
 
             {/* Modal Content */}
-            <div className="max-h-[calc(100vh-8rem)] overflow-y-auto p-5 sm:p-7 custom-scrollbar">
-              <div className="grid gap-7 lg:grid-cols-[minmax(0,1.2fr)_17rem] items-start">
-                {/* Left side: Information, Takeaways, Skills */}
-                <section className="order-2 text-left lg:order-1 flex flex-col justify-between">
+            <div className="max-h-[calc(100vh-8rem)] overflow-y-auto p-6 sm:p-8 custom-scrollbar">
+              <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_22rem] items-center">
+                {/* Left Column: Details & Takeaways */}
+                <section className="order-2 lg:order-1 flex flex-col justify-between h-full space-y-5">
                   <div>
-                    {/* Tags row */}
+                    {/* Issuer & Category Chips */}
                     <div className="flex flex-wrap items-center gap-2 mb-3">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold border ${theme.bg} ${theme.border} ${theme.text}`}>
                         <CheckCircle2 size={13} /> {badge.issuer}
                       </span>
-                      {badge.type && (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-white/5 border border-white/10 text-text-muted">
-                          {badge.type}
-                        </span>
-                      )}
                       {badge.category && (
-                        <span className="px-2.5 py-1 rounded-full text-[11px] font-mono text-accent/80 bg-accent/5 border border-accent/20">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-mono text-accent/80 bg-accent/5 border border-accent/20">
                           {badge.category}
                         </span>
                       )}
                     </div>
 
-                    <h3 id="badge-preview-title" className="text-xl sm:text-2xl font-extrabold text-text mb-3 leading-snug tracking-tight">
+                    <h3 id="badge-preview-title" className="text-2xl sm:text-3xl font-extrabold text-text leading-snug tracking-tight mb-2">
                       {badge.title}
                     </h3>
 
                     {badge.issueDate && (
                       <p className="text-xs text-text-muted font-mono mb-4 flex items-center gap-2">
                         <Calendar size={13} className="text-accent shrink-0" />
-                        <span>Earned / Attended: <strong className="text-text font-normal">{badge.issueDate}</strong></span>
+                        <span>Issued / Attended: <strong className="text-text font-normal">{badge.issueDate}</strong></span>
                       </p>
                     )}
 
-                    {/* Description / Takeaways Note */}
+                    {/* Takeaway / Description */}
                     {badge.description && (
                       <div className="mb-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4 relative overflow-hidden">
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-accent to-accent/20" />
-                        <h4 className="text-[11px] font-mono uppercase tracking-wider text-accent font-semibold mb-1.5">
-                          Highlights & Takeaways
+                        <h4 className="text-[11px] font-mono uppercase tracking-wider text-accent font-semibold mb-1.5 flex items-center gap-1.5">
+                          <Sparkles size={12} /> Highlights & Key Learnings
                         </h4>
                         <p className="text-xs sm:text-sm text-text-muted leading-relaxed whitespace-pre-line">
                           {badge.description}
@@ -196,7 +196,7 @@ const BadgePreviewModal = ({ badge, onClose }) => {
 
                     {/* Skills Covered */}
                     {Array.isArray(badge.skills) && badge.skills.length > 0 && (
-                      <div className="mb-6">
+                      <div className="mb-4">
                         <h4 className="text-[10px] font-mono uppercase tracking-widest text-text-muted mb-2.5">
                           Skills & Competencies Verified
                         </h4>
@@ -214,7 +214,7 @@ const BadgePreviewModal = ({ badge, onClose }) => {
                     )}
                   </div>
 
-                  {/* Actions Bar */}
+                  {/* Footer Actions */}
                   <div className="pt-4 border-t border-white/10 flex flex-wrap items-center gap-3">
                     {badge.link ? (
                       <a
@@ -223,11 +223,11 @@ const BadgePreviewModal = ({ badge, onClose }) => {
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-xs font-mono font-bold text-primary shadow-[0_0_25px_rgb(var(--color-accent-rgb)/0.35)] transition-all hover:bg-accent/90 hover:scale-[1.02] active:scale-[0.98]"
                       >
-                        Verify Credential <ExternalLink size={14} />
+                        Verify on {badge.issuer} / Credly <ExternalLink size={14} />
                       </a>
                     ) : (
                       <div className="inline-flex items-center gap-1.5 text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-2 rounded-xl">
-                        <CheckCircle2 size={14} /> Verified Participation
+                        <CheckCircle2 size={14} /> Verified Attendance & Badge
                       </div>
                     )}
 
@@ -237,73 +237,76 @@ const BadgePreviewModal = ({ badge, onClose }) => {
                         onClick={() => setLightboxOpen(true)}
                         className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-xs font-mono text-text hover:bg-white/10 hover:border-white/25 transition-all"
                       >
-                        <Maximize2 size={13} className="text-accent" /> Full Image
+                        <Maximize2 size={13} className="text-accent" /> Fullscreen View
                       </button>
                     )}
                   </div>
                 </section>
 
-                {/* Right side: Adaptive Image Display & Gallery */}
-                <section className="order-1 flex flex-col items-center lg:order-2 w-full">
-                  <div className="w-full flex items-center justify-between mb-2 px-1">
+                {/* Right Column: Prominent Badge / Card Showcase */}
+                <section className="order-1 lg:order-2 flex flex-col items-center w-full">
+                  <div className="w-full flex items-center justify-between mb-2.5 px-1">
                     <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-text-muted">
-                      {selectedImage === 0 && currentItem?.isPrimary ? 'Credential Badge' : `Photo ${selectedImage + 1} of ${galleryItems.length}`}
+                      {selectedImage === 0 && currentItem?.isPrimary ? 'Credential Badge' : `Event Photo ${selectedImage + 1} of ${galleryItems.length}`}
                     </span>
                     {galleryItems.length > 1 && (
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1.5">
                         <button
                           type="button"
                           onClick={() => setSelectedImage((prev) => (prev - 1 + galleryItems.length) % galleryItems.length)}
-                          className="p-1 rounded-md border border-white/10 bg-white/5 text-text-muted hover:text-text hover:bg-white/10 transition-colors"
+                          className="p-1.5 rounded-lg border border-white/10 bg-white/5 text-text-muted hover:text-text hover:bg-white/10 transition-colors"
                           aria-label="Previous image"
                         >
-                          <ChevronLeft size={13} />
+                          <ChevronLeft size={14} />
                         </button>
+                        <span className="text-[10px] font-mono text-text-muted px-1">
+                          {selectedImage + 1} / {galleryItems.length}
+                        </span>
                         <button
                           type="button"
                           onClick={() => setSelectedImage((prev) => (prev + 1) % galleryItems.length)}
-                          className="p-1 rounded-md border border-white/10 bg-white/5 text-text-muted hover:text-text hover:bg-white/10 transition-colors"
+                          className="p-1.5 rounded-lg border border-white/10 bg-white/5 text-text-muted hover:text-text hover:bg-white/10 transition-colors"
                           aria-label="Next image"
                         >
-                          <ChevronRight size={13} />
+                          <ChevronRight size={14} />
                         </button>
                       </div>
                     )}
                   </div>
 
-                  {/* Adaptive Showcase Container */}
+                  {/* Showcase Stage */}
                   <div
                     onClick={() => currentItem?.url && setLightboxOpen(true)}
-                    className="group relative w-full h-[260px] sm:h-[300px] rounded-2xl bg-gradient-to-b from-white/[0.04] to-black/60 border border-white/10 flex items-center justify-center p-3 cursor-pointer overflow-hidden shadow-2xl transition-all hover:border-accent/50"
+                    className="group relative w-full min-h-[340px] max-h-[420px] rounded-2xl bg-gradient-to-b from-white/[0.04] via-black/40 to-black/80 border border-white/15 p-4 flex items-center justify-center cursor-pointer overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.8)] transition-all hover:border-accent/60"
                   >
                     {currentItem?.url && !imgFailed ? (
                       <img
                         src={currentItem.url}
                         alt={badge.title}
                         onError={() => setImgFailed(true)}
-                        className="max-w-full max-h-full object-contain rounded-lg drop-shadow-[0_12px_28px_rgba(0,0,0,0.7)] group-hover:scale-105 transition-transform duration-300"
+                        className="max-w-full max-h-[380px] object-contain rounded-xl drop-shadow-[0_15px_30px_rgba(0,0,0,0.85)] group-hover:scale-[1.03] transition-transform duration-300"
                       />
                     ) : (
-                      <div className={`w-24 h-24 rounded-2xl border ${theme.bg} ${theme.border} flex flex-col items-center justify-center ${theme.text} shadow-inner`}>
-                        <ShieldCheck size={42} />
+                      <div className={`w-28 h-28 rounded-2xl border ${theme.bg} ${theme.border} flex flex-col items-center justify-center ${theme.text} shadow-inner`}>
+                        <ShieldCheck size={48} />
                         <span className="text-[10px] font-mono mt-1 opacity-80">{badge.issuer}</span>
                       </div>
                     )}
 
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white text-xs font-mono">
-                      <Maximize2 size={14} className="text-accent" /> Click to enlarge
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white text-xs font-mono font-medium">
+                      <Maximize2 size={15} className="text-accent" /> Click to view full size
                     </div>
                   </div>
 
                   {currentItem?.caption && (
-                    <p className="mt-2 text-center text-[11px] font-mono text-text-muted/80 truncate w-full px-2">
+                    <p className="mt-2.5 text-center text-xs font-mono text-text-muted/90 truncate w-full px-2">
                       {currentItem.caption}
                     </p>
                   )}
 
                   {/* Gallery Thumbnails Strip */}
                   {galleryItems.length > 1 && (
-                    <div className="mt-3.5 w-full flex items-center gap-2 overflow-x-auto pb-1 px-1 custom-scrollbar" aria-label="Badge and event images">
+                    <div className="mt-4 w-full flex items-center gap-2.5 overflow-x-auto pb-1 px-1 custom-scrollbar" aria-label="Badge and event images">
                       {galleryItems.map((item, index) => (
                         <button
                           key={item.url}
@@ -314,8 +317,8 @@ const BadgePreviewModal = ({ badge, onClose }) => {
                           }}
                           className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
                             selectedImage === index
-                              ? 'border-accent shadow-[0_0_12px_rgb(var(--color-accent-rgb)/0.4)] scale-105 ring-2 ring-accent/30'
-                              : 'border-white/15 opacity-70 hover:opacity-100 hover:border-white/30'
+                              ? 'border-accent shadow-[0_0_15px_rgb(var(--color-accent-rgb)/0.45)] scale-105 ring-2 ring-accent/30'
+                              : 'border-white/15 opacity-70 hover:opacity-100 hover:border-white/40'
                           }`}
                           aria-label={item.caption || `Image ${index + 1}`}
                         >
