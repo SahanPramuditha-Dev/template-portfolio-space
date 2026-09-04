@@ -9,6 +9,7 @@
     "rules": "storage.rules"
   },
   "hosting": {
+    "site": "sahanpramuditha-portfolio",
     "public": "dist",
     "ignore": [
       "firebase.json",

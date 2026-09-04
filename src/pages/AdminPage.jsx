@@ -434,7 +434,7 @@ const AdminPage = () => {
         </header>
 
         {/* Scrollable Workspace Main Pane */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
+        <main className="flex-1 w-full p-4 sm:p-6 lg:p-8 2xl:p-10 space-y-6">
 
           {activeSection.id === 'site' && <SiteEditor />}
           {activeSection.id === 'media' && <MediaLibrary />}
@@ -534,4 +534,3 @@ const AdminPage = () => {
 };
 
 export default AdminPage;
-

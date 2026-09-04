@@ -15,6 +15,7 @@ const SortableCollectionItem = ({ id, index, item, selectedIndex, editItem, remo
   const itemTitle = item.title || item.name || item.url || `Item ${index + 1}`;
   const itemSubtitle = item.category || item.issuer || item.type || item.organization || sectionTitle;
   const isDraft = item.status === 'Draft' || item.published === false;
+  const itemImage = item.thumbnail || item.image || item.eventPhoto || (Array.isArray(item.eventGallery) ? item.eventGallery.find((entry) => entry?.url)?.url : '') || (Array.isArray(item.screenshots) ? item.screenshots.find((entry) => entry?.url)?.url : '');
 
   return (
     <li ref={setNodeRef} style={style} className={clsx("relative group", isDragging && "z-20 opacity-80")}>
@@ -42,6 +43,14 @@ const SortableCollectionItem = ({ id, index, item, selectedIndex, editItem, remo
             onChange={(e) => { e.stopPropagation(); toggleSelection(index); }}
             className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-400 accent-sky-500 shrink-0"
           />
+        )}
+
+        {itemImage ? (
+          <img src={itemImage} alt="" className="h-10 w-10 shrink-0 rounded-lg border border-slate-700/80 bg-slate-900 object-cover" />
+        ) : (
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-800 bg-slate-900/70 text-[10px] font-mono font-bold text-slate-500">
+            {String(itemTitle).slice(0, 1).toUpperCase()}
+          </div>
         )}
 
         <div
@@ -92,4 +101,3 @@ const SortableCollectionItem = ({ id, index, item, selectedIndex, editItem, remo
 };
 
 export default SortableCollectionItem;
-

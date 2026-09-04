@@ -271,16 +271,13 @@ const SiteEditor = () => {
           icon={Settings2}
           title="Website Content"
           help="Configure general website copy, hero introduction, bios, career stats, social handles, and SEO."
-          onSave={save}
-          onReset={() => setDraft(normalizeSiteDraft(initialSiteContent))}
-          hidePrimarySave
         />
 
         <AdminStatus message={status} />
 
-        <div className="flex flex-col gap-6">
+        <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start">
           {/* Horizontal Section Index Navigation Tabs */}
-          <div className="flex flex-wrap gap-2 p-1.5 rounded-2xl border border-slate-800 bg-slate-950/60 shadow-inner">
+          <div className="flex flex-row flex-wrap gap-2 p-1.5 rounded-2xl border border-slate-800 bg-slate-950/60 shadow-inner lg:sticky lg:top-24 lg:flex-col">
             {SITE_CONTENT_TABS.map((tab) => {
               const active = siteTab === tab.id;
               const TabIcon = tab.icon;
@@ -290,7 +287,7 @@ const SiteEditor = () => {
                   type="button"
                   onClick={() => setSiteTab(tab.id)}
                   className={clsx(
-                    'flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-all outline-none',
+                    'flex items-center gap-2 rounded-xl px-4 py-2.5 text-left text-xs font-semibold whitespace-nowrap transition-all outline-none',
                     active
                       ? 'border border-sky-500/40 bg-sky-500/15 font-bold text-sky-300 shadow-[0_0_16px_rgba(56,189,248,0.15)]'
                       : 'border border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
@@ -529,7 +526,7 @@ const SiteEditor = () => {
         </div>
       </div>
 
-      <div className="sticky bottom-0 z-20 border-t border-slate-800/90 bg-slate-950/90 px-6 py-4 backdrop-blur-xl sm:px-8">
+      <div className="border-t border-slate-800/90 bg-slate-950/90 px-6 py-4 backdrop-blur-xl sm:px-8">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-slate-400">Saving publishes website content changes live to your portfolio.</p>
           <button

@@ -1,7 +1,7 @@
 import React from 'react';
-import { Upload, RotateCcw, Plus, Save } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
-const SectionBanner = ({ icon: SectionIcon, title, help, onAdd, onSave, onReset, onUpload, hidePrimarySave = false }) => {
+const SectionBanner = ({ icon: SectionIcon, title, help, onAdd }) => {
   return (
     <div className="flex flex-col gap-4 border-b border-slate-800/80 pb-6 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex items-start gap-4">
@@ -16,26 +16,6 @@ const SectionBanner = ({ icon: SectionIcon, title, help, onAdd, onSave, onReset,
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2.5 lg:justify-end shrink-0">
-        {onUpload && (
-          <button
-            type="button"
-            onClick={onUpload}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-700/80 bg-slate-800/60 px-3.5 py-2 text-xs font-semibold text-slate-200 transition-all hover:border-slate-600 hover:bg-slate-800 hover:text-white"
-          >
-            <Upload size={14} />
-            Upload
-          </button>
-        )}
-        {onReset && (
-          <button
-            type="button"
-            onClick={onReset}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-700/80 bg-slate-800/60 px-3.5 py-2 text-xs font-semibold text-slate-300 transition-all hover:border-slate-600 hover:bg-slate-800 hover:text-white"
-          >
-            <RotateCcw size={14} />
-            Reset draft
-          </button>
-        )}
         {onAdd && (
           <button
             type="button"
@@ -46,20 +26,9 @@ const SectionBanner = ({ icon: SectionIcon, title, help, onAdd, onSave, onReset,
             Add new
           </button>
         )}
-        {!hidePrimarySave && onSave && (
-          <button
-            type="button"
-            onClick={onSave}
-            className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-5 py-2 text-xs font-bold text-slate-950 shadow-[0_4px_16px_rgba(56,189,248,0.25)] transition-all hover:bg-sky-400 hover:shadow-[0_4px_24px_rgba(56,189,248,0.35)] active:scale-[0.98]"
-          >
-            <Save size={14} />
-            Save changes
-          </button>
-        )}
       </div>
     </div>
   );
 };
 
 export default SectionBanner;
-

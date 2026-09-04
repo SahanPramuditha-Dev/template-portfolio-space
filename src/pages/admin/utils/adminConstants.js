@@ -26,13 +26,8 @@ export const initialSiteContent = {
     "enabled": true
   },
   {
-    "id": "Certifications",
-    "type": "Certifications",
-    "enabled": true
-  },
-  {
-    "id": "Badges",
-    "type": "Badges",
+    "id": "GrowthCommunity",
+    "type": "GrowthCommunity",
     "enabled": true
   },
   {

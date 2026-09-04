@@ -884,8 +884,12 @@ const FieldEditor = ({ field, value, onChange, onUpload, section, docId, draft, 
             )}
           </div>
           {field.type === 'image' && value && (
-            <div className="mt-1 w-full max-w-sm rounded-xl overflow-hidden border border-slate-800 bg-slate-950/80 p-2">
-              <img src={value} alt="Preview" className="w-full h-auto max-h-48 object-contain rounded-lg" />
+            <div className="mt-1 w-full overflow-hidden rounded-xl border border-sky-500/20 bg-slate-950/80 p-2 shadow-inner">
+              <div className="flex items-center justify-between px-2 pb-2">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-sky-300">Visual preview</span>
+                <a href={value} target="_blank" rel="noopener noreferrer" className="text-[10px] font-semibold text-sky-400 hover:underline">Open</a>
+              </div>
+              <img src={value} alt="Preview" className="h-52 w-full rounded-lg bg-slate-900/60 object-contain" />
             </div>
           )}
           {field.type === 'pdf' && value && (

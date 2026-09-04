@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Award, ExternalLink, Calendar, FileText, X, Download, Search, Star, ChevronDown, Clock, Layers, Zap, Eye } from 'lucide-react';
 import SectionWrapper from './SectionWrapper';
@@ -10,7 +11,24 @@ import AnimatedCounter from './AnimatedCounter';
 const CATEGORIES = ['All', 'Cloud', 'Data', 'Programming', 'Networking', 'Microsoft', 'AWS', 'Security', 'DevOps', 'AI/ML', 'Other'];
 
 /* ─── Image / PDF Lightbox Modal ────────────────────────────── */
-const ImageOrPdfModal = ({ url, title, isPdf, onClose }) => (
+const ImageOrPdfModal = ({ url, title, isPdf, onClose }) => {
+  const closeButtonRef = useRef(null);
+  useEffect(() => {
+    if (!url) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event) => event.key === 'Escape' && onClose();
+    document.body.style.overflow = 'hidden';
+    window.dispatchEvent(new CustomEvent('modal-toggle', { detail: { isOpen: true } }));
+    closeButtonRef.current?.focus();
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+      window.dispatchEvent(new CustomEvent('modal-toggle', { detail: { isOpen: false } }));
+    };
+  }, [url, onClose]);
+
+  const modal = (
   <AnimatePresence>
     {url && (
       <motion.div
@@ -30,6 +48,8 @@ const ImageOrPdfModal = ({ url, title, isPdf, onClose }) => (
           exit={{ opacity: 0, scale: 0.92, y: 20 }}
           transition={{ duration: 0.25, ease: 'easeOut' }}
           className="relative w-full max-w-4xl flex flex-col rounded-2xl overflow-hidden border border-accent/30 shadow-[0_0_50px_rgba(0,0,0,0.8)]"
+          role="dialog"
+          aria-modal="true"
           style={{ maxHeight: '92vh', background: 'rgb(var(--color-primary-rgb, 10 10 20))' }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -47,7 +67,7 @@ const ImageOrPdfModal = ({ url, title, isPdf, onClose }) => (
                 className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-mono text-text-muted hover:text-text transition-colors">
                 <ExternalLink size={13} /> Open Original
               </a>
-              <button onClick={onClose}
+              <button onClick={onClose} ref={closeButtonRef}
                 className="rounded-lg border border-white/10 bg-white/5 p-1.5 text-text-muted hover:text-text hover:border-white/25 transition-colors"
                 aria-label="Close preview">
                 <X size={16} />
@@ -65,12 +85,29 @@ const ImageOrPdfModal = ({ url, title, isPdf, onClose }) => (
       </motion.div>
     )}
   </AnimatePresence>
-);
+  );
+  return typeof document === 'undefined' ? modal : createPortal(modal, document.body);
+};
 
 /* ─── View-All Modal ────────────────────────────────────────── */
 const AllCertsModal = ({ certs, onClose, onViewPdf }) => {
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const closeButtonRef = useRef(null);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event) => event.key === 'Escape' && onClose();
+    document.body.style.overflow = 'hidden';
+    window.dispatchEvent(new CustomEvent('modal-toggle', { detail: { isOpen: true } }));
+    closeButtonRef.current?.focus();
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+      window.dispatchEvent(new CustomEvent('modal-toggle', { detail: { isOpen: false } }));
+    };
+  }, [onClose]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -86,7 +123,7 @@ const AllCertsModal = ({ certs, onClose, onViewPdf }) => {
     return ['All', ...CATEGORIES.filter((c) => c !== 'All' && cats.has(c))];
   }, [certs]);
 
-  return (
+  const modal = (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
@@ -103,6 +140,8 @@ const AllCertsModal = ({ certs, onClose, onViewPdf }) => {
           exit={{ opacity: 0, y: 30, scale: 0.95 }}
           transition={{ duration: 0.28, ease: 'easeOut' }}
           className="relative w-full max-w-5xl flex flex-col rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
+          role="dialog"
+          aria-modal="true"
           style={{ maxHeight: '90vh', background: 'rgb(var(--color-primary-rgb, 10 10 20))' }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -112,7 +151,7 @@ const AllCertsModal = ({ certs, onClose, onViewPdf }) => {
               <p className="text-xs font-mono uppercase tracking-widest text-accent">Full Archive</p>
               <h3 className="text-lg font-bold text-text">All Certifications — {certs.length} total</h3>
             </div>
-            <button onClick={onClose}
+            <button onClick={onClose} ref={closeButtonRef}
               className="rounded-xl border border-white/10 bg-white/5 p-2 text-text-muted hover:text-text hover:border-white/25 transition-colors"
               aria-label="Close archive">
               <X size={18} />
@@ -197,6 +236,7 @@ const AllCertsModal = ({ certs, onClose, onViewPdf }) => {
       </motion.div>
     </AnimatePresence>
   );
+  return typeof document === 'undefined' ? modal : createPortal(modal, document.body);
 };
 
 /* ─── Stats Bar ─────────────────────────────────────────────── */
@@ -427,7 +467,7 @@ const CertificationCard = ({ cert, index, onViewPreview }) => (
 );
 
 /* ─── Main Section ──────────────────────────────────────────── */
-const Certifications = () => {
+const Certifications = ({ embedded = false }) => {
   const { data, loading } = useCmsDoc(CMS_DOCS.certifications, { items: [] });
   const certificationsList = Array.isArray(data?.items) ? data.items : [];
 
@@ -451,8 +491,11 @@ const Certifications = () => {
     return <CmsSectionSkeleton id="certifications" />;
   }
 
+  const Wrapper = embedded ? React.Fragment : SectionWrapper;
+  const wrapperProps = embedded ? {} : { id: 'certifications' };
+
   return (
-    <SectionWrapper id="certifications">
+    <Wrapper {...wrapperProps}>
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl relative">
         {/* Section Header */}
         <div className="flex flex-col items-center text-center mb-10 md:mb-14">
@@ -551,7 +594,7 @@ const Certifications = () => {
         isPdf={modalState.isPdf}
         onClose={closePreview}
       />
-    </SectionWrapper>
+    </Wrapper>
   );
 };
 

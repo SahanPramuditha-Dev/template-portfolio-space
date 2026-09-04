@@ -71,7 +71,7 @@ const Navbar = () => {
 
   // Active section highlighting on scroll
   useEffect(() => {
-    const sections = ['home', 'about', 'skills', 'experience', 'projects', 'certifications', 'badges', 'contact'];
+    const sections = ['home', 'about', 'skills', 'experience', 'projects', 'growth-community', 'contact'];
     const sectionElements = sections.map(id => document.getElementById(id)).filter(Boolean);
     let activeRatios = new Map();
 
@@ -114,8 +114,7 @@ const Navbar = () => {
     { name: 'Projects', href: '#projects', id: 'projects' },
     { name: 'Skills', href: '#skills', id: 'skills' },
     { name: 'Experience', href: '#experience', id: 'experience' },
-    { name: 'Certifications', href: '#certifications', id: 'certifications' },
-    { name: 'Badges', href: '#badges', id: 'badges' },
+    { name: 'Growth & Community', href: '#growth-community', id: 'growth-community' },
     { name: 'Contact', href: '#contact', id: 'contact' },
   ];
 

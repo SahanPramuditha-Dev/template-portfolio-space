@@ -21,10 +21,9 @@ import { BlockRenderer } from './blocks/BlockRenderer';
 const ThreeBackground = lazy(() => import('./components/ThreeBackground'));
 const CustomCursor = lazy(() => import('./components/CustomCursor'));
 const Skills = lazy(() => import('./components/Skills'));
-const Badges = lazy(() => import('./components/Badges'));
 const Experience = lazy(() => import('./components/Experience'));
 const Projects = lazy(() => import('./components/Projects'));
-const Certifications = lazy(() => import('./components/Certifications'));
+const GrowthCommunity = lazy(() => import('./components/GrowthCommunity'));
 const Testimonials = lazy(() => import('./components/Testimonials'));
 const Contact = lazy(() => import('./components/Contact'));
 const Footer = lazy(() => import('./components/Footer'));
@@ -123,11 +122,8 @@ function App() {
                   <Suspense fallback={<CmsSectionSkeleton id="projects" />}>
                     <Projects isHomepage={true} />
                   </Suspense>
-                  <Suspense fallback={<CmsSectionSkeleton id="certifications" />}>
-                    <Certifications />
-                  </Suspense>
-                  <Suspense fallback={<CmsSectionSkeleton id="badges" />}>
-                    <Badges />
+                  <Suspense fallback={<CmsSectionSkeleton id="growth-community" />}>
+                    <GrowthCommunity />
                   </Suspense>
                   <Suspense fallback={<CmsSectionSkeleton id="testimonials" />}>
                     <Testimonials />

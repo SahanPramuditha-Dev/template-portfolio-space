@@ -484,16 +484,31 @@ export const certificateFields = [
 
 export const badgeFields = [
   { key: 'title', label: 'Badge Title', type: 'text', group: 'identity', placeholder: 'e.g. MongoDB Node.js Developer Path' },
+  { key: 'type', label: 'Growth Type', type: 'select', group: 'identity', options: ['Learning Badge', 'Event Attendance', 'Workshop', 'Meetup', 'Hackathon', 'Community Contribution'] },
   { key: 'issuer', label: 'Issuer / Platform', type: 'text', group: 'identity', placeholder: 'e.g. MongoDB, Google Cloud, AWS, Credly, Postman', suggestions: ['MongoDB', 'Google Cloud', 'AWS', 'Microsoft Learn', 'Postman', 'Credly', 'Holopin', 'GitHub', 'LeetCode', 'HackerRank', 'Other'] },
   { key: 'category', label: 'Category', type: 'select', group: 'identity',
     options: ['Database', 'Cloud', 'Backend', 'Frontend', 'AI/ML', 'DevOps', 'Security', 'Data', 'Problem Solving', 'Other'] },
   { key: 'issueDate', label: 'Earned Date / Period', type: 'text', group: 'identity', placeholder: 'e.g. Feb 2026' },
   { key: 'link', label: 'Verification / Credly URL', type: 'text', group: 'identity', placeholder: 'https://www.credly.com/... or verification link' },
   { key: 'skills', label: 'Skills Covered', type: 'list', placeholder: 'e.g. Aggregation, Atlas, Indexing', group: 'identity' },
+  { key: 'description', label: 'Event Takeaway / Note', type: 'textarea', group: 'community', placeholder: 'A short note about what you learned or contributed.', visibleWhen: (draft) => ['Event Attendance', 'Workshop', 'Meetup', 'Hackathon', 'Community Contribution'].includes(draft.type) },
   { key: 'image', label: 'Badge Emblem Image', type: 'image', group: 'media', aspect: 1 },
-  { key: 'featured', label: 'Featured (highlight on homepage)', type: 'checkbox', group: 'identity' },
-  { key: 'status', label: 'Status', type: 'select', options: ['Published', 'Draft', 'Archived'], group: 'identity' },
-  { key: 'order', label: 'Sort Order', type: 'number', group: 'identity' },
+  { key: 'eventPhoto', label: 'Event Photo / Screenshot', type: 'image', group: 'media', aspect: null, visibleWhen: (draft) => ['Event Attendance', 'Workshop', 'Meetup', 'Hackathon', 'Community Contribution'].includes(draft.type) },
+  {
+    key: 'eventGallery',
+    label: 'Event Photo Gallery',
+    type: 'object-list',
+    group: 'media',
+    createItem: () => ({ url: '', caption: '' }),
+    fields: [
+      { key: 'url', label: 'Photo / Screenshot', type: 'image', aspect: null },
+      { key: 'caption', label: 'Caption (optional)', type: 'text', placeholder: 'e.g. Microsoft FoundryX Sri Lanka' },
+    ],
+    visibleWhen: (draft) => ['Event Attendance', 'Workshop', 'Meetup', 'Hackathon', 'Community Contribution'].includes(draft.type),
+  },
+  { key: 'featured', label: 'Featured (highlight on homepage)', type: 'checkbox', group: 'publishing' },
+  { key: 'status', label: 'Status', type: 'select', options: ['Published', 'Draft', 'Archived'], group: 'publishing' },
+  { key: 'order', label: 'Sort Order', type: 'number', group: 'publishing' },
 ];
 
 export const skillFields = [

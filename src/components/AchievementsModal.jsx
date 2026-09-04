@@ -1,10 +1,12 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trophy, Lock, Unlock, RotateCcw, Calendar } from 'lucide-react';
 import { useAchievements } from '../context/AchievementsContext';
 
 const AchievementsModal = ({ isOpen, onClose }) => {
   const { achievements, resetAchievements, unlockedCount } = useAchievements();
+  const closeButtonRef = React.useRef(null);
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -12,16 +14,22 @@ const AchievementsModal = ({ isOpen, onClose }) => {
     const previousHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
+    window.dispatchEvent(new CustomEvent('modal-toggle', { detail: { isOpen: true } }));
+    closeButtonRef.current?.focus();
+    const handleKeyDown = (event) => event.key === 'Escape' && onClose();
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       document.body.style.overflow = previousBodyOverflow;
       document.documentElement.style.overflow = previousHtmlOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+      window.dispatchEvent(new CustomEvent('modal-toggle', { detail: { isOpen: false } }));
     };
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
-  return (
+  const modal = (
     <AnimatePresence>
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
         {/* Backdrop overlay */}
@@ -39,11 +47,15 @@ const AchievementsModal = ({ isOpen, onClose }) => {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-secondary/90 p-6 shadow-[0_0_50px_rgba(var(--color-accent-rgb)/0.15)] backdrop-blur-xl md:p-8"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="achievements-title"
         >
           {/* Close Button */}
           <button
             type="button"
             onClick={onClose}
+            ref={closeButtonRef}
             className="absolute right-4 top-4 rounded-full border border-white/5 bg-primary/45 p-2 text-text-muted hover:border-accent/40 hover:text-accent transition-colors"
             aria-label="Close dialog"
           >
@@ -56,7 +68,7 @@ const AchievementsModal = ({ isOpen, onClose }) => {
               <Trophy size={24} className="animate-pulse" />
             </div>
             <div>
-              <h2 className="font-display text-xl font-bold text-text">Space Mission Badges</h2>
+              <h2 id="achievements-title" className="font-display text-xl font-bold text-text">Space Mission Badges</h2>
               <p className="font-mono text-[10px] text-text-muted">Unlocking cosmic achievements as you explore</p>
             </div>
           </div>
@@ -150,6 +162,7 @@ const AchievementsModal = ({ isOpen, onClose }) => {
       </div>
     </AnimatePresence>
   );
+  return typeof document === 'undefined' ? modal : createPortal(modal, document.body);
 };
 
 export default AchievementsModal;

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
@@ -343,6 +344,7 @@ const ContactModal = ({ isOpen, onClose, initialData, fallbackEmail }) => {
   });
   const [formState, setFormState] = useState('idle'); // idle, submitting, success, error
   const [errorMessage, setErrorMessage] = useState('');
+  const closeButtonRef = React.useRef(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -359,6 +361,21 @@ const ContactModal = ({ isOpen, onClose, initialData, fallbackEmail }) => {
       setErrorMessage('');
     }
   }, [isOpen, initialData]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event) => event.key === 'Escape' && onClose();
+    document.body.style.overflow = 'hidden';
+    window.dispatchEvent(new CustomEvent('modal-toggle', { detail: { isOpen: true } }));
+    closeButtonRef.current?.focus();
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+      window.dispatchEvent(new CustomEvent('modal-toggle', { detail: { isOpen: false } }));
+    };
+  }, [isOpen, onClose]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -394,7 +411,7 @@ const ContactModal = ({ isOpen, onClose, initialData, fallbackEmail }) => {
 
   if (!isOpen) return null;
 
-  return (
+  const modal = (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         {/* Backdrop overlay */}
@@ -412,8 +429,11 @@ const ContactModal = ({ isOpen, onClose, initialData, fallbackEmail }) => {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           className="relative w-full max-w-xl rounded-3xl border border-white/15 bg-[#090D16] p-6 sm:p-8 shadow-[0_0_50px_rgba(56,189,248,0.25)] z-10 max-h-[90vh] overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="contact-modal-title"
         >
-          <button onClick={onClose} className="absolute top-5 right-5 text-white/50 hover:text-white p-2 rounded-full hover:bg-white/10 transition-all">
+          <button onClick={onClose} ref={closeButtonRef} aria-label="Close contact form" className="absolute top-5 right-5 text-white/50 hover:text-white p-2 rounded-full hover:bg-white/10 transition-all">
             <X size={18} />
           </button>
 
@@ -433,7 +453,7 @@ const ContactModal = ({ isOpen, onClose, initialData, fallbackEmail }) => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4 text-left">
               <div>
-                <h3 className="text-2xl font-bold text-white mb-1">Send Project Brief</h3>
+                <h3 id="contact-modal-title" className="text-2xl font-bold text-white mb-1">Send Project Brief</h3>
                 <p className="text-xs text-white/60">Fill out the form below. Your message will be sent directly to my inbox.</p>
               </div>
 
@@ -525,6 +545,7 @@ const ContactModal = ({ isOpen, onClose, initialData, fallbackEmail }) => {
       </div>
     </AnimatePresence>
   );
+  return typeof document === 'undefined' ? modal : createPortal(modal, document.body);
 };
 
 /* ── Main Page ─────────────────────────────────────────────── */

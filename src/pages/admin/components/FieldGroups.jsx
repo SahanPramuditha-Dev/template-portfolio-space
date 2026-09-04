@@ -25,13 +25,15 @@ export const COLLECTION_FIELD_GROUPS = {
   },
   metrics: { label: 'Impact Metrics', hint: 'Optional headline numbers.' },
   links: { label: 'Outbound Links', hint: 'Demo and source URLs.' },
-  media: { label: 'Media & Visuals', hint: 'Thumbnails, GIFs, and screenshots.' },
+  media: { label: 'Media & Visuals', hint: 'Images, documents, galleries, and visual assets.' },
   meta: {
     label: 'Metadata & Publishing',
     hint: 'Slug, dates, categories, and flags.',
   },
   content: { label: 'Article Body', hint: 'Main text and optional code block.' },
   identity: { label: 'Basics & Identity', hint: 'Names, titles, and verification.' },
+  community: { label: 'Community Context', hint: 'What happened and what you took away.' },
+  publishing: { label: 'Publishing & Placement', hint: 'Visibility, homepage highlighting, and display order.' },
   stats: { label: 'Repository Stats', hint: 'Stars, forks, and watchers.' },
   skills: { label: 'Skill Entries', hint: 'Cards inside this group.' },
   resourceMeta: { label: 'Listing Details', hint: 'How this resource appears in lists.' },
@@ -90,8 +92,15 @@ const FieldGroups = ({ fields, renderField }) => {
                 </div>
               </div>
             </summary>
-            <div className="grid gap-5 border-t border-slate-800/70 px-4 pb-5 pt-4">
-              {groupFields.map((field) => renderField(field))}
+            <div className="grid gap-5 border-t border-slate-800/70 px-4 pb-5 pt-4 md:grid-cols-2">
+              {groupFields.map((field) => {
+                const needsFullWidth = ['textarea', 'json', 'markdown', 'list', 'object-list', 'github-import', 'seo-preview'].includes(field.type);
+                return (
+                  <div key={field.key} className={needsFullWidth ? 'md:col-span-2' : ''}>
+                    {renderField(field)}
+                  </div>
+                );
+              })}
             </div>
           </details>
         );
@@ -101,4 +110,3 @@ const FieldGroups = ({ fields, renderField }) => {
 };
 
 export default FieldGroups;
-

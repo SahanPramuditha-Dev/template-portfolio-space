@@ -1,5 +1,6 @@
 {
   "projects": {
+    "default": "sahanpramuditha-portfolio",
     "portfolio": "sahanpramuditha-portfolio"
   },
   "targets": {},

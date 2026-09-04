@@ -119,7 +119,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
   const { data: siteDoc } = useCmsDoc(CMS_DOCS.site, null);
   const [items, setItems] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [draft, setDraft] = useState(() => formFromItem(section.initialItem, fields, section.initialItem));
+  const [draft, setDraft] = useState(() => ({ ...formFromItem(section.initialItem, fields, section.initialItem), status: 'Draft' }));
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
   const [syncBusy, setSyncBusy] = useState(false);
@@ -167,12 +167,17 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
   };
   const [selectedIndices, setSelectedIndices] = useState(new Set());
 
+  const createEmptyDraft = () => ({
+    ...formFromItem(section.initialItem, fields, section.initialItem),
+    status: 'Draft',
+  });
+
   useEffect(() => {
     if (data === undefined) return;
     const nextItems = Array.isArray(data) ? data : [];
     setItems(nextItems);
     if (selectedIndex === -1) {
-      const newDraft = formFromItem(section.initialItem, fields, section.initialItem);
+      const newDraft = createEmptyDraft();
       setDraft(newDraft);
       lastSavedDraftJsonRef.current = JSON.stringify(newDraft);
       isDirtyRef.current = false;
@@ -191,7 +196,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
       }
     } else if (nextItems.length === 0) {
       setSelectedIndex(-1);
-      const newDraft = formFromItem(section.initialItem, fields, section.initialItem);
+      const newDraft = createEmptyDraft();
       setDraft(newDraft);
       lastSavedDraftJsonRef.current = JSON.stringify(newDraft);
       isDirtyRef.current = false;
@@ -217,7 +222,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
 
   const createNew = () => {
     setSelectedIndex(-1);
-    const newDraft = formFromItem(section.initialItem, fields, section.initialItem);
+    const newDraft = createEmptyDraft();
     setDraft(newDraft);
     lastSavedDraftJsonRef.current = JSON.stringify(newDraft);
     isDirtyRef.current = false;
@@ -370,7 +375,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
     });
   };
 
-  const saveItem = async (silent = false) => {
+  const saveItem = async (silent = false, requestedStatus = '') => {
     if (!draft) return;
     if (!silent) setBusy(true);
     if (silent) setAutoSaveStatus('Saving...');
@@ -398,7 +403,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
       
       const itemToSave = { ...normalized, id: itemId };
       itemToSave.order = selectedIndex === -1 ? 0 : (items[selectedIndex]?.order ?? 0);
-      itemToSave.status = itemToSave.status || draft?.status || 'Published';
+      itemToSave.status = requestedStatus || itemToSave.status || draft?.status || 'Draft';
       
       const nextItems =
         selectedIndex === -1
@@ -408,6 +413,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
       await saveCmsItem(docId, itemId, itemToSave);
       isDirtyRef.current = false;
       lastSavedDraftJsonRef.current = JSON.stringify(draft);
+      if (requestedStatus) setDraft((current) => ({ ...current, status: requestedStatus }));
       setItems(nextItems);
       setSelectedIndex(selectedIndex === -1 ? 0 : selectedIndex);
       if (!silent) loadRevisions(selectedIndex === -1 ? 0 : selectedIndex);
@@ -426,15 +432,6 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
     }
   };
 
-  const uploadButtons = useMemo(() => {
-    return fields
-      .filter((field) => field.type === 'image' || field.type === 'pdf')
-      .map((field) => ({
-        key: field.key,
-        accept: field.type === 'pdf' ? 'application/pdf,.pdf' : 'image/*,.gif,.mp4,.webm',
-      }));
-  }, [fields]);
-
   const listEntries = useMemo(() => {
     const q = listQuery.trim().toLowerCase();
     return items
@@ -446,6 +443,11 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
         return primary.includes(q) || secondary.includes(q);
       });
   }, [items, listQuery]);
+
+  const visibleFields = useMemo(
+    () => fields.filter((field) => !field.visibleWhen || field.visibleWhen(draft)),
+    [fields, draft]
+  );
 
   const totalPages = Math.ceil(listEntries.length / itemsPerPage);
   const paginatedEntries = useMemo(() => {
@@ -562,20 +564,13 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
   }
 
   return (
-    <div className="space-y-6 rounded-3xl border border-slate-800/80 bg-slate-900/40 p-5 sm:p-7 shadow-2xl backdrop-blur-xl">
+    <div className="space-y-6 rounded-3xl border border-slate-800/80 bg-slate-900/40 p-5 sm:p-7 2xl:p-8 shadow-2xl backdrop-blur-xl">
 
       <SectionBanner
         icon={section.icon}
         title={section.title}
         help={section.help}
         onAdd={createNew}
-        onSave={saveItem}
-        onReset={() => setDraft(formFromItem(section.initialItem, fields, section.initialItem))}
-        onUpload={
-          uploadButtons.length
-            ? () => uploadAsset(uploadButtons[0].key, uploadButtons[0].accept)
-            : null
-        }
       />
       <AdminStatus message={status} />
 
@@ -604,9 +599,9 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
         </div>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)] items-start">
+      <div className="grid gap-6 xl:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] items-start">
         {/* Left Master List Sidebar */}
-        <div className="flex flex-col xl:sticky xl:top-24 xl:h-[calc(100vh-8.5rem)] rounded-2xl border border-slate-800/90 bg-slate-950/70 p-4 shadow-inner">
+        <div className="flex flex-col xl:sticky xl:top-24 xl:max-h-[calc(100vh-8.5rem)] rounded-2xl border border-slate-800/90 bg-slate-950/70 p-4 shadow-inner">
           <div className="mb-3 shrink-0">
             <label className="sr-only" htmlFor={`list-search-${docId}`}>
               Filter {section.title} list
@@ -621,6 +616,10 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
                 placeholder="Search collection…"
                 className="min-w-0 flex-1 bg-transparent text-xs text-slate-100 outline-none placeholder:text-slate-500"
               />
+            </div>
+            <div className="mt-3 flex items-center justify-between px-1 text-[10px] font-mono uppercase tracking-[0.12em] text-slate-500">
+              <span>{listEntries.length} shown</span>
+              <span>{items.length} total</span>
             </div>
           </div>
 
@@ -718,18 +717,18 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
         </div>
 
         {/* Right Detail Form Area */}
-        <div className="space-y-6 min-w-0 pb-28">
+        <div className="min-w-0 pb-28 space-y-6 2xl:grid 2xl:grid-cols-[minmax(0,1fr)_minmax(300px,360px)] 2xl:items-start 2xl:gap-x-6 2xl:gap-y-6 2xl:space-y-0">
           <div className="rounded-2xl border border-slate-800/90 bg-slate-950/60 p-5 sm:p-6 shadow-inner">
             <div className="flex items-center justify-between mb-4 border-b border-slate-800/70 pb-3">
               <div>
                 <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-sky-400">
-                  {selectedIndex === -1 ? 'Creating New Entry' : 'Editing Selected Item'}
+                  {selectedIndex === -1 ? 'New unsaved entry' : 'Editing saved item'}
                 </p>
                 <h3 className="text-base sm:text-lg font-bold text-slate-100 mt-0.5">
                   {draft?.title || draft?.name || draft?.url || `${section.title} Item`}
                 </h3>
               </div>
-              {draft?.status && (
+              {selectedIndex !== -1 && draft?.status && (
                 <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider ${
                   draft.status === 'Draft' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                 }`}>
@@ -739,7 +738,7 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
             </div>
 
             <FieldGroups
-              fields={fields}
+              fields={visibleFields}
               renderField={(field) => (
                 <FieldEditor
                   key={field.key}
@@ -760,10 +759,15 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
             />
           </div>
 
-          <DraftPreview draft={draft} fields={fields} title={section.title} />
+          <DraftPreview
+            draft={draft}
+            fields={fields}
+            title={section.title}
+            className="2xl:sticky 2xl:top-24"
+          />
 
           {selectedIndex !== -1 && (
-            <div className="rounded-2xl border border-slate-800/90 bg-slate-950/60 p-5 shadow-inner">
+            <div className="rounded-2xl border border-slate-800/90 bg-slate-950/60 p-5 shadow-inner 2xl:col-start-1">
               <div className="flex items-center justify-between mb-4 border-b border-slate-800/70 pb-3">
                 <p className="text-xs font-mono font-bold uppercase tracking-[0.14em] text-slate-300">Revision History</p>
                 <button 
@@ -807,25 +811,36 @@ const CollectionEditor = ({ docId, section, fields, collectionKey = 'items' }) =
           )}
 
           {/* Fixed Save Bar with clear shadow and padding */}
-          <div className="sticky bottom-4 z-20 rounded-2xl border border-slate-800 bg-slate-950/95 px-5 py-3.5 backdrop-blur-xl shadow-2xl shadow-black/80">
+          <div className="z-20 rounded-2xl border border-slate-800 bg-slate-950/95 px-5 py-3.5 backdrop-blur-xl shadow-xl shadow-black/40 2xl:col-span-2">
             <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <p className="text-xs text-slate-400">Save commits changes for this item to Firestore.</p>
+                <p className="text-xs text-slate-400">Save a draft while working, then publish when the entry is ready for the portfolio.</p>
                 {autoSaveStatus && (
                   <span className="text-[10px] font-mono font-semibold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">
                     {autoSaveStatus}
                   </span>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={saveItem}
-                disabled={busy}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500 px-6 py-2.5 text-xs sm:text-sm font-bold text-slate-950 shadow-[0_4px_20px_rgba(56,189,248,0.25)] transition-all hover:bg-sky-400 hover:shadow-[0_4px_28px_rgba(56,189,248,0.35)] active:scale-[0.99] disabled:opacity-60 sm:w-auto"
-              >
-                <Save size={15} />
-                {busy ? 'Saving…' : 'Save item'}
-              </button>
+              <div className="flex w-full gap-2 sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => saveItem(false, 'Draft')}
+                  disabled={busy}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800/70 px-4 py-2.5 text-xs font-bold text-slate-200 transition-colors hover:border-slate-600 hover:bg-slate-800 disabled:opacity-60 sm:flex-none"
+                >
+                  <Save size={15} />
+                  Save draft
+                </button>
+                <button
+                  type="button"
+                  onClick={() => saveItem(false, 'Published')}
+                  disabled={busy}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 py-2.5 text-xs sm:text-sm font-bold text-slate-950 shadow-[0_4px_20px_rgba(56,189,248,0.25)] transition-all hover:bg-sky-400 hover:shadow-[0_4px_28px_rgba(56,189,248,0.35)] active:scale-[0.99] disabled:opacity-60 sm:flex-none"
+                >
+                  <Save size={15} />
+                  {busy ? 'Saving…' : 'Publish'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

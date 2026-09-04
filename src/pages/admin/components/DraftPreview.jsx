@@ -1,7 +1,7 @@
 import React from 'react';
 import { Eye, FileText } from 'lucide-react';
 
-const DraftPreview = ({ draft, fields, title }) => {
+const DraftPreview = ({ draft, fields, className = '' }) => {
   if (!draft) return null;
 
   const primary = draft.title || draft.name || draft.program || draft.url || 'Untitled Draft';
@@ -19,11 +19,11 @@ const DraftPreview = ({ draft, fields, title }) => {
   const pdfUrl = pdfFieldWithValue ? draft[pdfFieldWithValue.key] : '';
 
   return (
-    <div className="rounded-2xl border border-sky-500/20 bg-sky-500/[0.03] p-5">
+    <aside className={`rounded-2xl border border-sky-500/20 bg-sky-500/[0.03] p-5 ${className}`}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-sky-400">Live Card Preview</p>
-          <h3 className="mt-0.5 text-base font-bold text-slate-100">{title}</h3>
+          <h3 className="mt-0.5 text-base font-bold text-slate-100">Portfolio preview</h3>
         </div>
         <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
           <Eye size={16} aria-hidden />
@@ -37,7 +37,7 @@ const DraftPreview = ({ draft, fields, title }) => {
             </div>
           ) : (
             <div className="flex h-28 items-center justify-center bg-slate-900/40 text-[11px] font-mono uppercase tracking-[0.14em] text-slate-500">
-              No media selected
+              Add media to preview
             </div>
           )
         ) : null}
@@ -65,9 +65,8 @@ const DraftPreview = ({ draft, fields, title }) => {
           ) : null}
         </div>
       </div>
-    </div>
+    </aside>
   );
 };
 
 export default DraftPreview;
-

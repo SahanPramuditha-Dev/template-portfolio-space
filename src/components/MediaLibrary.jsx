@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { ImageIcon, Trash2, Copy, Loader2, UploadCloud, FileText as FileIcon, Eye, ExternalLink } from 'lucide-react';
+import { ImageIcon, Trash2, Copy, Loader2, UploadCloud, FileText as FileIcon, Eye } from 'lucide-react';
 import { listCmsAssets, deleteCmsAsset, uploadCmsAsset } from '../lib/cms';
 
 const MediaLibrary = () => {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [query, setQuery] = useState('');
 
   const fetchAssets = async () => {
     setLoading(true);
@@ -55,6 +56,8 @@ const MediaLibrary = () => {
     // Optionally add a toast here
   };
 
+  const visibleAssets = assets.filter((asset) => asset.name.toLowerCase().includes(query.trim().toLowerCase()));
+
   return (
     <div className="space-y-6 rounded-3xl border border-slate-800/80 bg-slate-900/40 p-5 sm:p-7 shadow-2xl backdrop-blur-xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800/80 pb-5 gap-4">
@@ -70,6 +73,17 @@ const MediaLibrary = () => {
         </label>
       </div>
 
+      <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-800/80 bg-slate-950/50 p-3">
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search files…"
+          className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900/80 px-3.5 py-2 text-xs text-slate-100 outline-none transition-colors placeholder:text-slate-500 focus:border-sky-400"
+        />
+        <span className="shrink-0 text-[10px] font-mono uppercase tracking-wider text-slate-500">{visibleAssets.length} assets</span>
+      </div>
+
       {loading ? (
         <div className="flex justify-center p-12">
           <Loader2 size={32} className="animate-spin text-sky-400" />
@@ -81,8 +95,8 @@ const MediaLibrary = () => {
           <p className="text-xs text-slate-400">Upload images or documents to attach them to your projects and site content.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
-          {assets.map((asset) => {
+        <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-7">
+          {visibleAssets.map((asset) => {
             const isPdf = asset.name.toLowerCase().endsWith('.pdf');
             const isDoc = /\.(docx|doc|xls|xlsx|ppt|pptx|txt|csv)$/i.test(asset.name);
 
@@ -141,6 +155,9 @@ const MediaLibrary = () => {
               </div>
             );
           })}
+          {visibleAssets.length === 0 && (
+            <div className="col-span-full rounded-2xl border border-dashed border-slate-800 bg-slate-950/40 p-10 text-center text-sm text-slate-500">No files match that search.</div>
+          )}
         </div>
       )}
     </div>
