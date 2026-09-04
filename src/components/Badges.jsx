@@ -396,7 +396,7 @@ const BadgeCard = ({ badge, index, onPreview }) => {
       viewport={{ once: true }}
       transition={{ duration: 0.35, delay: index * 0.04 }}
       whileHover={{ y: -5, transition: { duration: 0.2 } }}
-      className="group relative flex flex-col justify-between rounded-2xl border border-white/10 bg-secondary/15 p-5 hover:border-accent/40 hover:bg-secondary/25 transition-all duration-300 shadow-lg hover:shadow-[0_12px_35px_rgba(0,0,0,0.6)] overflow-hidden backdrop-blur-sm"
+      className="group relative flex flex-col justify-between h-full rounded-2xl border border-white/10 bg-secondary/15 p-5 hover:border-accent/40 hover:bg-secondary/25 transition-all duration-300 shadow-lg hover:shadow-[0_12px_35px_rgba(0,0,0,0.6)] overflow-hidden backdrop-blur-sm"
     >
       {/* Top glowing issuer border strip */}
       <div
@@ -404,9 +404,9 @@ const BadgeCard = ({ badge, index, onPreview }) => {
         style={{ backgroundColor: theme.glow }}
       />
 
-      <div>
+      <div className="flex-1 flex flex-col">
         {/* Top meta row */}
-        <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center justify-between gap-2 mb-3 min-h-[26px]">
           <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold border ${theme.bg} ${theme.border} ${theme.text}`}>
             {badge.issuer}
           </span>
@@ -427,7 +427,7 @@ const BadgeCard = ({ badge, index, onPreview }) => {
         {/* Badge emblem thumbnail with hover preview hint */}
         <div
           onClick={() => onPreview(badge)}
-          className="relative w-full h-36 rounded-xl bg-gradient-to-b from-black/20 via-black/40 to-black/60 border border-white/5 flex items-center justify-center p-3 mb-4 cursor-pointer group/thumb overflow-hidden shadow-inner"
+          className="relative w-full h-40 rounded-xl bg-gradient-to-b from-black/20 via-black/40 to-black/60 border border-white/5 flex items-center justify-center p-3 mb-4 cursor-pointer group/thumb overflow-hidden shadow-inner shrink-0"
         >
           {cardImage && !imgFailed ? (
             <img
@@ -459,42 +459,53 @@ const BadgeCard = ({ badge, index, onPreview }) => {
         </div>
 
         {/* Title and Date */}
-        <h4 className="font-bold text-text text-sm sm:text-base leading-snug mb-1.5 group-hover:text-accent transition-colors line-clamp-2">
-          {badge.title}
-        </h4>
+        <div className="min-h-[46px] mb-1.5 flex flex-col justify-start">
+          <h4 className="font-bold text-text text-sm sm:text-base leading-snug group-hover:text-accent transition-colors line-clamp-2">
+            {badge.title}
+          </h4>
+        </div>
 
-        {badge.issueDate && (
+        {badge.issueDate ? (
           <div className="flex items-center gap-1.5 text-[11px] text-text-muted font-mono mb-2.5">
             <Calendar size={11} className="text-accent/80 shrink-0" />
             <span>{badge.issueDate}</span>
           </div>
+        ) : (
+          <div className="h-[21px] mb-2.5" />
         )}
 
-        {badge.description && (
-          <p className="mb-3 line-clamp-2 text-xs leading-relaxed text-text-muted/90">
+        {/* Description / Highlights */}
+        {badge.description ? (
+          <p className="mb-3 line-clamp-2 text-xs leading-relaxed text-text-muted/90 min-h-[34px]">
             {badge.description}
           </p>
+        ) : (
+          <div className="mb-3 min-h-[34px]" />
         )}
 
         {/* Skills Covered */}
-        {Array.isArray(badge.skills) && badge.skills.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-4">
-            {badge.skills.slice(0, 3).map((sk) => (
-              <span key={sk} className="px-2 py-0.5 bg-white/5 border border-white/5 rounded text-[10px] font-mono text-text-muted group-hover:border-white/15 transition-colors">
-                {sk}
-              </span>
-            ))}
-            {badge.skills.length > 3 && (
-              <span className="px-1.5 py-0.5 text-text-muted/60 text-[9px] font-mono">
-                +{badge.skills.length - 3}
-              </span>
-            )}
-          </div>
-        )}
+        <div className="mt-auto mb-4 min-h-[28px] flex flex-wrap gap-1 items-center">
+          {Array.isArray(badge.skills) && badge.skills.length > 0 ? (
+            <>
+              {badge.skills.slice(0, 3).map((sk) => (
+                <span key={sk} className="px-2 py-0.5 bg-white/5 border border-white/5 rounded text-[10px] font-mono text-text-muted group-hover:border-white/15 transition-colors">
+                  {sk}
+                </span>
+              ))}
+              {badge.skills.length > 3 && (
+                <span className="px-1.5 py-0.5 text-text-muted/60 text-[9px] font-mono">
+                  +{badge.skills.length - 3}
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="text-[10px] font-mono text-text-muted/40 italic">General Proficiency</span>
+          )}
+        </div>
       </div>
 
       {/* Footer verification link */}
-      <div className="pt-3 border-t border-white/10 flex items-center justify-between">
+      <div className="pt-3 border-t border-white/10 flex items-center justify-between shrink-0">
         <button
           type="button"
           onClick={() => onPreview(badge)}
